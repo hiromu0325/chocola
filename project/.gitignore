@@ -1,0 +1,23 @@
+# Unity関連
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Visual Studio関連
+.vs/
+*.csproj
+*.sln
+
+# MacOS関連
+.DS_Store
+
+# Windows関連
+Thumbs.db
+
+# Builds
+*.apk
+*.exe
+*.unitypackage
