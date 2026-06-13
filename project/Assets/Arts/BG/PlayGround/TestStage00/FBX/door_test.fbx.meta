@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:project/Assets/Arts/BG/PlayGround/TestStage00/FBX/door_test.fbx.meta
 guid: 0d8388d9fa043ce43a3729a1af54f114
+========
+guid: b3a168104573eb44899c94f16d639129
+>>>>>>>> e93fdb5 (インタラクションtest):project/Assets/Arts/BG/PlayGround/TestStage00/FBX/tansu_01.fbx.meta
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
