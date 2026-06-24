@@ -65,6 +65,7 @@ namespace EscapeProto
         public bool CanInteract =>
             !IsSolved &&
             _phase != GamePhase.Visit &&            // 来訪フェーズ中は操作不可
+            !(PhaseManager.Instance != null && PhaseManager.Instance.EventActive) && // 笑い声イベント中も停止
             Time.time >= _lockoutUntil &&
             (GameManager.Instance == null || !GameManager.Instance.IsGameEnded);
 
@@ -99,6 +100,15 @@ namespace EscapeProto
             _player = FindFirstObjectByType<PlayerStatus>();
             if (_player != null)
                 _playerInputs = _player.GetComponent<StarterAssetsInputs>();
+
+            // ScriptableObject の設定値で調整（各ギミックの基準時間に倍率を掛ける）
+            var cfg = GameBalanceConfig.Instance;
+            if (cfg != null)
+            {
+                _requiredSeconds *= Mathf.Max(0.01f, cfg.gimmickSolveTimeMultiplier);
+                _rushMultiplier = cfg.gimmickRushMultiplier;
+            }
+
             UpdateVisual();
         }
 
@@ -173,6 +183,8 @@ namespace EscapeProto
         {
             if (IsSolved) return $"{_displayName}（解除済み）";
             if (_phase == GamePhase.Visit) return $"{_displayName}（来訪中は操作不可）";
+            if (PhaseManager.Instance != null && PhaseManager.Instance.EventActive)
+                return $"{_displayName}（…どこかで誰かが笑っている）";
             if (Time.time < _lockoutUntil) return "（動揺している…）";
             return $"[E] 長押しで {_displayName} を解除（Shift併用で急ぐ：危険）";
         }

@@ -4,33 +4,35 @@ using StarterAssets;
 namespace EscapeProto
 {
     /// <summary>
-    /// プレイヤーの「敵から知覚される状態」を一元管理する
-    /// ・移動速度 → 動体型の検知 / ノイズレベル
-    /// ・ノイズ半径 → 聴覚型の検知
-    /// ・隠れ状態 → 視覚型/動体型からの遮蔽
+    /// プレイヤーの「探索者から知覚される状態」を一元管理
+    /// ・移動速度 → 足音ノイズ（聴覚型）
+    /// ・隠れ状態 → 視覚型/嗅覚型の遮蔽
+    /// ・香水による消臭 → 嗅覚型対策
+    /// ・懐中電灯/部屋の電気 → 視覚型の可視条件、入室40秒の死亡判定
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerStatus : MonoBehaviour
     {
-        [Header("ノイズが聞こえる半径（m）")]
+        [Header("ノイズ半径（m）")]
         [SerializeField] private float _walkNoiseRadius = 6f;
         [SerializeField] private float _sprintNoiseRadius = 14f;
-        [Tooltip("この速度未満は「静止」とみなす（動体型対策）")]
         [SerializeField] private float _stillThreshold = 0.3f;
 
         private CharacterController _cc;
         private StarterAssetsInputs _inputs;
 
-        /// <summary>現在の水平移動速度（m/s）</summary>
         public float CurrentSpeed { get; private set; }
-        /// <summary>動いているか（動体型の検知対象か）</summary>
         public bool IsMoving => !IsHidden && CurrentSpeed > _stillThreshold;
-        /// <summary>ロッカー等に隠れているか（視線が通らない）</summary>
         public bool IsHidden { get; private set; }
-        /// <summary>現在の足音が聞こえる半径。静止/隠れ中は0</summary>
         public float CurrentNoiseRadius { get; private set; }
-        /// <summary>現在入っている隠れスポット</summary>
         public HidingSpot CurrentHidingSpot { get; private set; }
+
+        /// <summary>香水で消臭中か（嗅覚型に検知されない）</summary>
+        public bool IsScentMasked => Time.time < _scentMaskUntil;
+        /// <summary>懐中電灯が点いているか</summary>
+        public bool FlashlightOn { get; private set; }
+
+        private float _scentMaskUntil = -1f;
 
         private void Awake()
         {
@@ -38,10 +40,39 @@ namespace EscapeProto
             _inputs = GetComponent<StarterAssetsInputs>();
         }
 
+        private void Start()
+        {
+            // ScriptableObject の設定値で移動速度を上書き
+            var cfg = GameBalanceConfig.Instance;
+            if (cfg != null)
+            {
+                var fpc = GetComponent<FirstPersonController>();
+                if (fpc != null)
+                {
+                    fpc.MoveSpeed = cfg.playerMoveSpeed;
+                    fpc.SprintSpeed = cfg.playerSprintSpeed;
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            GameEvents.OnPerfumeUsed += HandlePerfume;
+            GameEvents.OnFlashlightChanged += HandleFlashlight;
+        }
+
+        private void OnDisable()
+        {
+            GameEvents.OnPerfumeUsed -= HandlePerfume;
+            GameEvents.OnFlashlightChanged -= HandleFlashlight;
+        }
+
+        private void HandlePerfume(float dur) => _scentMaskUntil = Time.time + dur;
+        private void HandleFlashlight(bool on) => FlashlightOn = on;
+
         private void Update()
         {
-            var v = _cc.velocity;
-            v.y = 0f;
+            var v = _cc.velocity; v.y = 0f;
             CurrentSpeed = _cc.enabled ? v.magnitude : 0f;
 
             if (IsHidden || CurrentSpeed <= _stillThreshold)
@@ -55,24 +86,17 @@ namespace EscapeProto
             }
         }
 
-        /// <summary>単発ノイズを発生させる（ロッカー開閉、ジャンプスケア絶叫など）</summary>
-        public void EmitNoise(float radius)
-        {
-            GameEvents.RaiseNoiseEmitted(transform.position, radius);
-        }
+        public void EmitNoise(float radius) => GameEvents.RaiseNoiseEmitted(transform.position, radius);
 
-        /// <summary>HidingSpot から呼ばれる</summary>
         public void SetHidden(bool hidden, HidingSpot spot)
         {
             IsHidden = hidden;
             CurrentHidingSpot = hidden ? spot : null;
         }
 
-        /// <summary>リスポーン時などの強制解除</summary>
         public void ForceExitHiding()
         {
-            if (CurrentHidingSpot != null)
-                CurrentHidingSpot.ForceExit();
+            if (CurrentHidingSpot != null) CurrentHidingSpot.ForceExit();
             IsHidden = false;
             CurrentHidingSpot = null;
         }

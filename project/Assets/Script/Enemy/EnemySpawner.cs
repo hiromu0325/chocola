@@ -3,22 +3,23 @@ using UnityEngine;
 namespace EscapeProto
 {
     /// <summary>
-    /// 来訪フェーズ開始イベントを受けて敵を生成する
-    /// プレハブ不要：プリミティブから敵を組み立てる（プロトタイプ用）
+    /// 来訪フェーズ開始で探索者を生成する（プレハブ不要）
+    /// ロング黒髪・和装をプリミティブで表現
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
         [Header("配置（シーンビルダーが自動設定）")]
-        public Transform EntryPoint;      // 入口（スポーン位置）
-        public Transform ExitPoint;       // 出口（撤収先。未設定なら入口を流用）
-        public Transform[] PatrolPoints;  // 巡回ポイント
+        public Transform EntryPoint;
+        public Transform ExitPoint;
+        public Transform[] PatrolPoints;
 
-        private EnemyController _current;
+        private SearcherController _current;
 
         private void OnEnable()
         {
             GameEvents.OnVisitStart += Spawn;
             GameEvents.OnPlayerCaught += DespawnImmediate;
+            GameEvents.OnSpecialDeath += HandleSpecialDeath;
             GameEvents.OnGameOver += DespawnImmediate;
             GameEvents.OnGameClear += DespawnImmediate;
         }
@@ -27,80 +28,100 @@ namespace EscapeProto
         {
             GameEvents.OnVisitStart -= Spawn;
             GameEvents.OnPlayerCaught -= DespawnImmediate;
+            GameEvents.OnSpecialDeath -= HandleSpecialDeath;
             GameEvents.OnGameOver -= DespawnImmediate;
             GameEvents.OnGameClear -= DespawnImmediate;
         }
 
-        private void Spawn(EnemyType type)
+        private void HandleSpecialDeath(string id) => DespawnImmediate();
+
+        private void Spawn(SearcherType type)
         {
             DespawnImmediate();
-
             Vector3 pos = EntryPoint != null ? EntryPoint.position : transform.position;
-            var go = BuildEnemyVisual(type);
+            var go = BuildVisual(type);
             go.transform.position = pos;
 
-            var ctrl = go.AddComponent<EnemyController>();
+            var ctrl = go.AddComponent<SearcherController>();
             ctrl.Type = type;
             ctrl.PatrolPoints = PatrolPoints;
             ctrl.ExitPoint = (ExitPoint != null ? ExitPoint : EntryPoint != null ? EntryPoint : transform).position;
-
             _current = ctrl;
         }
 
         private void DespawnImmediate()
         {
-            if (_current != null)
-            {
-                Destroy(_current.gameObject);
-                _current = null;
-            }
+            if (_current != null) { Destroy(_current.gameObject); _current = null; }
         }
 
-        /// <summary>プリミティブで敵の見た目を構築</summary>
-        public static GameObject BuildEnemyVisual(EnemyType type)
+        /// <summary>ロング黒髪・和装の探索者をプリミティブで構築</summary>
+        public static GameObject BuildVisual(SearcherType type)
         {
-            var root = new GameObject($"Enemy_{type}");
+            var root = new GameObject($"Searcher_{type}");
 
-            // 胴体
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            // 和服の胴（細い円柱）
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             body.name = "Body";
             body.transform.SetParent(root.transform, false);
-            body.transform.localPosition = new Vector3(0f, 1f, 0f);
-            Object.Destroy(body.GetComponent<Collider>()); // 当たりはCharacterController側
-            SetColor(body, new Color(0.08f, 0.06f, 0.08f));
+            body.transform.localPosition = new Vector3(0f, 0.95f, 0f);
+            body.transform.localScale = new Vector3(0.55f, 0.95f, 0.4f);
+            Object.Destroy(body.GetComponent<Collider>());
+            SetColor(body, new Color(0.06f, 0.05f, 0.08f));   // 黒い和服
 
-            // 単眼（タイプ色で発光）
+            // 頭
+            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            head.name = "Head";
+            head.transform.SetParent(root.transform, false);
+            head.transform.localPosition = new Vector3(0f, 1.95f, 0f);
+            head.transform.localScale = Vector3.one * 0.34f;
+            Object.Destroy(head.GetComponent<Collider>());
+            SetColor(head, new Color(0.82f, 0.78f, 0.72f));   // 蒼白い肌
+
+            // ロング黒髪（前後に垂らす）
+            var hairBack = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            hairBack.name = "HairBack";
+            hairBack.transform.SetParent(root.transform, false);
+            hairBack.transform.localPosition = new Vector3(0f, 1.35f, -0.16f);
+            hairBack.transform.localScale = new Vector3(0.42f, 1.3f, 0.12f);
+            Object.Destroy(hairBack.GetComponent<Collider>());
+            SetColor(hairBack, new Color(0.02f, 0.02f, 0.03f));
+
+            var hairTop = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            hairTop.name = "HairTop";
+            hairTop.transform.SetParent(root.transform, false);
+            hairTop.transform.localPosition = new Vector3(0f, 2.02f, -0.02f);
+            hairTop.transform.localScale = new Vector3(0.38f, 0.34f, 0.4f);
+            Object.Destroy(hairTop.GetComponent<Collider>());
+            SetColor(hairTop, new Color(0.02f, 0.02f, 0.03f));
+
+            // 単眼の眼光（種類色）
             var eye = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             eye.name = "Eye";
             eye.transform.SetParent(root.transform, false);
-            eye.transform.localPosition = new Vector3(0f, 1.55f, 0.32f);
-            eye.transform.localScale = Vector3.one * 0.28f;
+            eye.transform.localPosition = new Vector3(0f, 1.97f, 0.16f);
+            eye.transform.localScale = Vector3.one * 0.1f;
             Object.Destroy(eye.GetComponent<Collider>());
-            Color c = EnemyController.GetTypeColor(type);
-            var mat = SetColor(eye, c);
-            mat.EnableKeyword("_EMISSION");
-            mat.SetColor("_EmissionColor", c * 2.5f);
+            Color c = SearcherController.GetTypeColor(type);
+            var em = SetColor(eye, c);
+            em.EnableKeyword("_EMISSION");
+            em.SetColor("_EmissionColor", c * 2.5f);
 
-            // 眼光（不気味さ＆視認性）
             var lightGo = new GameObject("EyeLight");
             lightGo.transform.SetParent(root.transform, false);
-            lightGo.transform.localPosition = new Vector3(0f, 1.55f, 0.45f);
+            lightGo.transform.localPosition = new Vector3(0f, 1.97f, 0.3f);
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Point;
-            light.color = c;
-            light.range = 7f;
-            light.intensity = 2.2f;
+            light.color = c; light.range = 6f; light.intensity = 1.8f;
 
             return root;
         }
 
         private static Material SetColor(GameObject go, Color c)
         {
-            var r = go.GetComponent<Renderer>();
             var shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
             var mat = new Material(shader) { color = c };
-            r.material = mat;
+            go.GetComponent<Renderer>().material = mat;
             return mat;
         }
     }

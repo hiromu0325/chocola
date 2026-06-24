@@ -4,26 +4,25 @@ using UnityEngine;
 namespace EscapeProto
 {
     /// <summary>
-    /// ゲーム全体統括：残機（人形）管理、死亡→リスポーン、クリア/ゲームオーバー
+    /// ゲーム全体統括：陶器人形（残機5体）、死亡→ホワイトアウト→人形破壊→12時から再開
+    /// 人形が全て壊れた状態で死ぬとゲームオーバー。「そして誰もいなくなった」
     /// </summary>
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
 
-        [Header("残機（テーブル上の人形の数と連動）")]
-        [SerializeField] private int _lives = 3;
+        [Header("陶器の人形（残機）")]
+        [SerializeField] private int _dolls = 5;
 
         [Header("プレイヤー")]
         [SerializeField] private Transform _player;
         [SerializeField] private Transform _respawnPoint;
 
-        public int Lives => _lives;
+        public int Dolls => _dolls;
         public bool IsGameEnded { get; private set; }
+        public bool IsRespawning { get; private set; }
 
-        private void Awake()
-        {
-            Instance = this;
-        }
+        private void Awake() { Instance = this; }
 
         private void Start()
         {
@@ -32,39 +31,44 @@ namespace EscapeProto
                 var pc = FindFirstObjectByType<CharacterController>();
                 if (pc != null) _player = pc.transform;
             }
-            GameEvents.OnPlayerCaught += HandleCaught;
-            GameEvents.RaiseLivesChanged(_lives);
+            GameEvents.OnPlayerCaught += HandleDeath;
+            GameEvents.OnSpecialDeath += HandleSpecialDeath;
+            GameEvents.RaiseDollsChanged(_dolls);
         }
 
         private void OnDestroy()
         {
-            GameEvents.OnPlayerCaught -= HandleCaught;
+            GameEvents.OnPlayerCaught -= HandleDeath;
+            GameEvents.OnSpecialDeath -= HandleSpecialDeath;
             if (Instance == this) Instance = null;
         }
 
-        private void HandleCaught()
+        private void HandleSpecialDeath(string id) => HandleDeath();
+
+        private void HandleDeath()
         {
-            if (IsGameEnded) return;
+            if (IsGameEnded || IsRespawning) return;
 
-            _lives--;
-            GameEvents.RaiseJumpScare(1f);           // 捕獲時は最大強度のホラー演出
-            GameEvents.RaiseLivesChanged(_lives);    // DollRack が人形を1体破壊する
-
-            if (_lives <= 0)
+            // 人形が残っていなければゲームオーバー
+            if (_dolls <= 0)
             {
                 IsGameEnded = true;
+                GameEvents.RaiseWhiteout(1f);
                 GameEvents.RaiseGameOver();
                 StartCoroutine(UnlockCursorDelayed());
                 return;
             }
 
-            // リスポーン & サイクル仕切り直し
+            IsRespawning = true;
+            _dolls--;
+            GameEvents.RaiseWhiteout(1f);          // ホワイトアウト
+            GameEvents.RaiseDollsChanged(_dolls);  // 人形が1体壊れる
             StartCoroutine(RespawnRoutine());
         }
 
         private IEnumerator RespawnRoutine()
         {
-            yield return new WaitForSeconds(1.2f); // ジャンプスケアを見せる時間
+            yield return new WaitForSeconds(1.6f); // ホワイトアウトの間
 
             if (_player != null && _respawnPoint != null)
             {
@@ -73,15 +77,16 @@ namespace EscapeProto
                 _player.SetPositionAndRotation(_respawnPoint.position, _respawnPoint.rotation);
                 if (cc != null) cc.enabled = true;
             }
-            // 隠れ中に捕まった場合の解除
             var status = _player != null ? _player.GetComponent<PlayerStatus>() : null;
             if (status != null) status.ForceExitHiding();
 
+            // 12時（来訪直後）から仕切り直し
             if (PhaseManager.Instance != null)
-                PhaseManager.Instance.RestartCycleFromExploration();
+                PhaseManager.Instance.RestartCycleAtTwelve();
+
+            IsRespawning = false;
         }
 
-        /// <summary>脱出成功（ExitDoor から呼ばれる）</summary>
         public void NotifyEscaped()
         {
             if (IsGameEnded) return;
@@ -97,7 +102,6 @@ namespace EscapeProto
             Cursor.visible = true;
         }
 
-        /// <summary>リスタート（HUDのボタン等から）</summary>
         public void RestartGame()
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene(

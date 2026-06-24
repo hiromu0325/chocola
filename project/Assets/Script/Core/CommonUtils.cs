@@ -108,6 +108,42 @@ namespace EscapeProto
             return _click;
         }
 
+        private static AudioClip _bell, _laugh;
+
+        /// <summary>探索者の鈴の音（澄んだ金属音）</summary>
+        public static AudioClip Bell()
+        {
+            if (_bell != null) return _bell;
+            _bell = Generate("bell", 0.6f, (t, dur) =>
+            {
+                float env = Mathf.Exp(-5f * t / dur);
+                // 倍音を重ねた鈴
+                float s = Mathf.Sin(2f * Mathf.PI * 2100f * t) * 0.5f
+                        + Mathf.Sin(2f * Mathf.PI * 3150f * t) * 0.3f
+                        + Mathf.Sin(2f * Mathf.PI * 4480f * t) * 0.2f;
+                return s * env * 0.4f;
+            });
+            return _bell;
+        }
+
+        /// <summary>女の子の笑い声（イベント開始合図）</summary>
+        public static AudioClip Laugh()
+        {
+            if (_laugh != null) return _laugh;
+            _laugh = Generate("laugh", 1.6f, (t, dur) =>
+            {
+                // 「ふふふ」を模した断続的なフォルマント
+                float syl = Mathf.Repeat(t, 0.32f);
+                float gate = syl < 0.16f ? 1f : 0f;
+                float pitch = 620f + Mathf.Sin(2f * Mathf.PI * 5f * t) * 60f;
+                float vib = Mathf.Sin(2f * Mathf.PI * pitch * t)
+                          + 0.5f * Mathf.Sin(2f * Mathf.PI * pitch * 2f * t);
+                float env = Mathf.Exp(-1.0f * t / dur);
+                return vib * gate * env * 0.3f;
+            });
+            return _laugh;
+        }
+
         /// <summary>ギミック解除成功音</summary>
         public static AudioClip Unlock()
         {

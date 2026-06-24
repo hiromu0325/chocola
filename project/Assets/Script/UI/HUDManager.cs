@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,26 +12,26 @@ namespace EscapeProto
 {
     /// <summary>
     /// HUD（実行時にUGUIをコード生成。アセット不要）
-    /// ・クロスヘア / インタラクトプロンプト / ギミック進捗バー
-    /// ・上部ステータス（フェーズ・残機・解除数）
-    /// ・メモ帳パネル（Tab）
-    /// ・ジャンプスケア演出（画面・音・カメラシェイク）
-    /// ・ゲームオーバー / クリア画面（Rでリスタート）
+    /// ・ステータス（フェーズ・残り人形・解除数・電気・懐中電灯・香水）
+    /// ・手帳パネル / 死亡ホワイトアウト / 会話ダイアログ / ゲーム終了画面
     /// </summary>
     public class HUDManager : MonoBehaviour
     {
         public static HUDManager Instance { get; private set; }
 
         private Font _font;
-        private Text _topText, _promptText, _memoText, _endText;
-        private GameObject _memoPanel, _endPanel, _scarePanel;
+        private Text _topText, _stateText, _promptText, _memoText, _endText, _dialogText, _subtitle;
+        private GameObject _memoPanel, _endPanel, _scarePanel, _dialogPanel;
         private RawImage _scareFace;
-        private Image _scareFlash;
+        private Image _scareFlash, _whiteout;
         private RectTransform _progressFill;
         private GameObject _progressRoot;
         private InteractionController _interaction;
-        private bool _memoOpen;
-        private bool _gameEnded;
+        private PlayerStatus _player;
+
+        private bool _memoOpen, _gameEnded;
+        private Action<int> _dialogCallback;
+        private int _dialogChoiceCount;
 
         private void Awake()
         {
@@ -42,20 +43,26 @@ namespace EscapeProto
         private void Start()
         {
             _interaction = FindFirstObjectByType<InteractionController>();
+            _player = FindFirstObjectByType<PlayerStatus>();
         }
 
         private void OnEnable()
         {
             GameEvents.OnJumpScare += PlayJumpScare;
+            GameEvents.OnWhiteout += PlayWhiteout;
             GameEvents.OnGameOver += ShowGameOver;
             GameEvents.OnGameClear += ShowGameClear;
+            GameEvents.OnLaughterEventStart += OnEventStart;
+            GameEvents.OnLaughterEventEnd += OnEventEnd;
         }
-
         private void OnDisable()
         {
             GameEvents.OnJumpScare -= PlayJumpScare;
+            GameEvents.OnWhiteout -= PlayWhiteout;
             GameEvents.OnGameOver -= ShowGameOver;
             GameEvents.OnGameClear -= ShowGameClear;
+            GameEvents.OnLaughterEventStart -= OnEventStart;
+            GameEvents.OnLaughterEventEnd -= OnEventEnd;
             if (Instance == this) Instance = null;
         }
 
@@ -66,8 +73,7 @@ namespace EscapeProto
             HandleKeys();
         }
 
-        // ============================== 入力 ==============================
-
+        // ============= 入力 =============
         private void HandleKeys()
         {
 #if ENABLE_INPUT_SYSTEM
@@ -75,9 +81,21 @@ namespace EscapeProto
             if (kb == null) return;
             if (kb.tabKey.wasPressedThisFrame) ToggleMemo();
             if (_gameEnded && kb.rKey.wasPressedThisFrame) GameManager.Instance?.RestartGame();
+            if (_dialogPanel.activeSelf)
+            {
+                if (kb.digit1Key.wasPressedThisFrame) PickDialog(0);
+                else if (kb.digit2Key.wasPressedThisFrame) PickDialog(1);
+                else if (kb.digit3Key.wasPressedThisFrame) PickDialog(2);
+            }
 #else
             if (Input.GetKeyDown(KeyCode.Tab)) ToggleMemo();
             if (_gameEnded && Input.GetKeyDown(KeyCode.R)) GameManager.Instance?.RestartGame();
+            if (_dialogPanel.activeSelf)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1)) PickDialog(0);
+                else if (Input.GetKeyDown(KeyCode.Alpha2)) PickDialog(1);
+                else if (Input.GetKeyDown(KeyCode.Alpha3)) PickDialog(2);
+            }
 #endif
         }
 
@@ -87,8 +105,7 @@ namespace EscapeProto
             _memoPanel.SetActive(_memoOpen);
         }
 
-        // ============================== 更新 ==============================
-
+        // ============= ステータス =============
         private void UpdateTopBar()
         {
             var pm = PhaseManager.Instance;
@@ -96,43 +113,90 @@ namespace EscapeProto
             string phase = "";
             if (pm != null)
             {
-                switch (pm.CurrentPhase)
+                if (pm.EventActive)
+                    phase = "<color=#E060FF>…笑い声がする</color>";
+                else switch (pm.CurrentPhase)
                 {
-                    case GamePhase.Exploration: phase = $"<color=#7CFC8C>探索中</color> {MonitorDisplay.FormatTime(pm.PhaseRemaining)}"; break;
-                    case GamePhase.Warning: phase = $"<color=#FFC832>警告！</color> {MonitorDisplay.FormatTime(pm.PhaseRemaining)}"; break;
-                    case GamePhase.Visit: phase = $"<color=#FF4030>来訪中…隠れろ</color> {MonitorDisplay.FormatTime(pm.PhaseRemaining)}"; break;
+                    case GamePhase.Exploration: phase = $"<color=#7CFC8C>探索</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
+                    case GamePhase.Warning: phase = $"<color=#FFC832>接近中</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
+                    case GamePhase.Visit: phase = $"<color=#FF4030>来訪中…机から離れるな</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
                 }
             }
-            int lives = gm != null ? gm.Lives : 0;
-            _topText.text = $"{phase}    人形: {new string('●', Mathf.Max(0, lives))}    " +
-                            $"ギミック: {GimmickBase.SolvedCount}/{GimmickBase.TotalCount}";
+            int dolls = gm != null ? gm.Dolls : 0;
+            _topText.text = $"{phase}    人形:{new string('●', Mathf.Max(0, dolls))}    " +
+                            $"ギミック:{GimmickBase.SolvedCount}/{GimmickBase.TotalCount}";
+
+            // 環境ステータス（電気/懐中電灯/香水）
+            string lights = (RoomLightController.Instance == null || RoomLightController.Instance.LightsOn)
+                ? "電気:点" : "<color=#888>電気:消</color>";
+            string flash = (_player != null && _player.FlashlightOn) ? "<color=#FFE060>懐中電灯:点</color>" : "懐中電灯:消";
+            string scent = (_player != null && _player.IsScentMasked) ? "<color=#80D0FF>消臭中</color>" : "";
+            _stateText.text = $"{lights}   {flash}   {scent}";
         }
 
         private void UpdatePrompt()
         {
-            string prompt = "";
-            float progress = -1f;
-
+            string prompt = ""; float progress = -1f;
             var target = _interaction != null ? _interaction.GetCurrentInteractable() : null;
-            if (target is IPromptProvider provider)
-            {
-                prompt = provider.GetPrompt();
-                progress = provider.GetProgress01();
-            }
-            else if (target != null && target.CanInteract)
-            {
-                prompt = "[E] 使う";
-            }
+            if (target is IPromptProvider p) { prompt = p.GetPrompt(); progress = p.GetProgress01(); }
+            else if (target != null && target.CanInteract) prompt = "[E] 使う";
 
             _promptText.text = prompt;
             bool showBar = progress >= 0f && progress > 0.001f;
             _progressRoot.SetActive(showBar);
-            if (showBar)
-                _progressFill.anchorMax = new Vector2(Mathf.Clamp01(progress), 1f);
+            if (showBar) _progressFill.anchorMax = new Vector2(Mathf.Clamp01(progress), 1f);
         }
 
-        // ============================== ジャンプスケア ==============================
+        // ============= 会話ダイアログ =============
+        public void ShowDialogue(string speaker, string body, string[] choices, Action<int> onChoice)
+        {
+            _dialogCallback = onChoice;
+            _dialogChoiceCount = choices != null ? choices.Length : 0;
+            string c = "";
+            if (choices != null)
+                for (int i = 0; i < choices.Length; i++)
+                    c += $"\n[{i + 1}] {choices[i]}";
+            _dialogText.text = $"<color=#FFD0E0>{speaker}</color>\n\n{body}\n{c}";
+            _dialogPanel.SetActive(true);
+        }
 
+        public void HideDialogue()
+        {
+            _dialogPanel.SetActive(false);
+            _dialogCallback = null;
+        }
+
+        private void PickDialog(int idx)
+        {
+            if (idx >= _dialogChoiceCount) return;
+            var cb = _dialogCallback;
+            HideDialogue();
+            cb?.Invoke(idx);
+        }
+
+        /// <summary>画面下部に字幕を表示（数秒で消える）</summary>
+        public void ShowSubtitle(string text, float seconds = 3f)
+        {
+            StopCoroutine(nameof(SubtitleRoutine));
+            StartCoroutine(SubtitleRoutine(text, seconds));
+        }
+        private IEnumerator SubtitleRoutine(string text, float seconds)
+        {
+            _subtitle.text = text;
+            yield return new WaitForSeconds(seconds);
+            if (_subtitle.text == text) _subtitle.text = "";
+        }
+
+        // ============= イベント演出 =============
+        private void OnEventStart()
+        {
+            ProceduralAudio.PlayAt(ProceduralAudio.Laugh(), Camera.main != null
+                ? Camera.main.transform.position : Vector3.zero, 0.9f, false);
+            ShowSubtitle("…どこかで女の子が笑っている。時計が止まった。", 5f);
+        }
+        private void OnEventEnd() => HideDialogue();
+
+        // ============= ジャンプスケア =============
         private Coroutine _scareCoroutine;
         private Vector3 _camBaseLocal;
         private bool _camBaseCaptured;
@@ -150,24 +214,17 @@ namespace EscapeProto
                 ? Camera.main.transform.position : Vector3.zero, intensity, false);
 
             var cam = Camera.main != null ? Camera.main.transform : null;
-            if (cam != null && !_camBaseCaptured)
-            {
-                _camBaseLocal = cam.localPosition;
-                _camBaseCaptured = true;
-            }
+            if (cam != null && !_camBaseCaptured) { _camBaseLocal = cam.localPosition; _camBaseCaptured = true; }
             Vector3 camLocal = _camBaseCaptured ? _camBaseLocal : Vector3.zero;
 
-            float dur = 0.55f + intensity * 0.35f;
-            float t = 0f;
+            float dur = 0.55f + intensity * 0.35f, t = 0f;
             while (t < dur)
             {
-                t += Time.deltaTime;
-                float k = 1f - t / dur;
+                t += Time.deltaTime; float k = 1f - t / dur;
                 _scareFlash.color = new Color(0.6f, 0f, 0f, 0.55f * k);
                 _scareFace.color = new Color(1f, 1f, 1f, Mathf.Clamp01(k * 2f));
-                _scareFace.rectTransform.localScale = Vector3.one * (1f + Random.value * 0.12f * intensity);
-                if (cam != null)
-                    cam.localPosition = camLocal + (Vector3)Random.insideUnitCircle * 0.06f * intensity * k;
+                _scareFace.rectTransform.localScale = Vector3.one * (1f + UnityEngine.Random.value * 0.12f * intensity);
+                if (cam != null) cam.localPosition = camLocal + (Vector3)UnityEngine.Random.insideUnitCircle * 0.06f * intensity * k;
                 yield return null;
             }
             if (cam != null) cam.localPosition = camLocal;
@@ -175,22 +232,44 @@ namespace EscapeProto
             _scareCoroutine = null;
         }
 
+        // ============= 死亡ホワイトアウト =============
+        private void PlayWhiteout(float intensity)
+        {
+            StopCoroutine(nameof(WhiteoutRoutine));
+            StartCoroutine(WhiteoutRoutine());
+        }
+        private IEnumerator WhiteoutRoutine()
+        {
+            // 一瞬で白へ → ゆっくり戻る（再開しない＝GameOver時はそのまま白を残す）
+            _whiteout.gameObject.SetActive(true);
+            ProceduralAudio.PlayAt(ProceduralAudio.Scream(), Camera.main != null
+                ? Camera.main.transform.position : Vector3.zero, 0.7f, false);
+            float t = 0f;
+            while (t < 0.15f) { t += Time.deltaTime; _whiteout.color = new Color(1, 1, 1, t / 0.15f); yield return null; }
+            _whiteout.color = Color.white;
+
+            // ゲームオーバーなら白いまま終了演出へ任せる
+            if (_gameEnded) yield break;
+            yield return new WaitForSeconds(1.0f);
+            t = 0f;
+            while (t < 0.6f) { t += Time.deltaTime; _whiteout.color = new Color(1, 1, 1, 1f - t / 0.6f); yield return null; }
+            _whiteout.gameObject.SetActive(false);
+        }
+
         private void ShowGameOver()
         {
             _gameEnded = true;
             _endPanel.SetActive(true);
-            _endText.text = "<color=#FF3020>GAME OVER</color>\n人形はすべて壊れた…\n\n[R] リスタート";
+            _endText.text = "<color=#FF3020>そして誰もいなくなった</color>\n陶器の人形はすべて砕けた…\n\n[R] リスタート";
         }
-
         private void ShowGameClear()
         {
             _gameEnded = true;
             _endPanel.SetActive(true);
-            _endText.text = "<color=#60FF80>ESCAPED!</color>\n脱出に成功した！\n\n[R] リスタート";
+            _endText.text = "<color=#60FF80>ESCAPED</color>\n地下室から脱出した\n\n[R] リスタート";
         }
 
-        // ============================== UI構築 ==============================
-
+        // ============= UI構築 =============
         private void BuildCanvas()
         {
             var canvasGo = new GameObject("HUDCanvas");
@@ -201,83 +280,88 @@ namespace EscapeProto
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             canvasGo.AddComponent<GraphicRaycaster>();
-
             EnsureEventSystem();
 
-            // クロスヘア
-            var cross = MakeImage(canvasGo.transform, "Crosshair", new Color(1f, 1f, 1f, 0.7f));
+            var cross = MakeImage(canvasGo.transform, "Crosshair", new Color(1, 1, 1, 0.7f));
             SetRect(cross.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(5, 5));
 
-            // 上部ステータス
             _topText = MakeText(canvasGo.transform, "TopBar", 30, TextAnchor.UpperCenter);
-            SetRect(_topText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -16), new Vector2(1400, 50));
+            SetRect(_topText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -16), new Vector2(1500, 50));
 
-            // プロンプト
+            _stateText = MakeText(canvasGo.transform, "StateBar", 26, TextAnchor.UpperCenter);
+            SetRect(_stateText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -58), new Vector2(1500, 40));
+
             _promptText = MakeText(canvasGo.transform, "Prompt", 28, TextAnchor.MiddleCenter);
-            SetRect(_promptText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -90), new Vector2(1200, 44));
+            SetRect(_promptText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -90), new Vector2(1300, 44));
 
-            // 進捗バー
+            _subtitle = MakeText(canvasGo.transform, "Subtitle", 30, TextAnchor.LowerCenter);
+            SetRect(_subtitle.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 120), new Vector2(1500, 80));
+            _subtitle.color = new Color(0.9f, 0.85f, 0.9f);
+
             _progressRoot = new GameObject("ProgressBar");
             _progressRoot.transform.SetParent(canvasGo.transform, false);
             var barBg = _progressRoot.AddComponent<Image>();
-            barBg.color = new Color(0f, 0f, 0f, 0.6f);
+            barBg.color = new Color(0, 0, 0, 0.6f);
             SetRect(barBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -135), new Vector2(420, 18));
-            var fillGo = new GameObject("Fill");
-            fillGo.transform.SetParent(_progressRoot.transform, false);
-            var fillImg = fillGo.AddComponent<Image>();
-            fillImg.color = new Color(0.95f, 0.7f, 0.2f);
+            var fillGo = new GameObject("Fill"); fillGo.transform.SetParent(_progressRoot.transform, false);
+            var fillImg = fillGo.AddComponent<Image>(); fillImg.color = new Color(0.95f, 0.7f, 0.2f);
             _progressFill = fillImg.rectTransform;
-            _progressFill.anchorMin = Vector2.zero;
-            _progressFill.anchorMax = new Vector2(0f, 1f);
-            _progressFill.offsetMin = new Vector2(2, 2);
-            _progressFill.offsetMax = new Vector2(-2, -2);
-            _progressFill.pivot = new Vector2(0f, 0.5f);
+            _progressFill.anchorMin = Vector2.zero; _progressFill.anchorMax = new Vector2(0, 1);
+            _progressFill.offsetMin = new Vector2(2, 2); _progressFill.offsetMax = new Vector2(-2, -2);
+            _progressFill.pivot = new Vector2(0, 0.5f);
             _progressRoot.SetActive(false);
 
-            // メモパネル
-            _memoPanel = new GameObject("MemoPanel");
-            _memoPanel.transform.SetParent(canvasGo.transform, false);
-            var memoBg = _memoPanel.AddComponent<Image>();
-            memoBg.color = new Color(0.07f, 0.06f, 0.05f, 0.93f);
-            SetRect(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 620));
-            _memoText = MakeText(_memoPanel.transform, "MemoText", 26, TextAnchor.UpperLeft);
-            SetRect(_memoText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820, 540));
+            // 手帳
+            _memoPanel = new GameObject("MemoPanel"); _memoPanel.transform.SetParent(canvasGo.transform, false);
+            var memoBg = _memoPanel.AddComponent<Image>(); memoBg.color = new Color(0.07f, 0.06f, 0.05f, 0.94f);
+            SetRect(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960, 700));
+            _memoText = MakeText(_memoPanel.transform, "MemoText", 25, TextAnchor.UpperLeft);
+            SetRect(_memoText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880, 620));
             _memoText.text = BuildMemoText();
             _memoPanel.SetActive(false);
 
-            // ジャンプスケアパネル
-            _scarePanel = new GameObject("ScarePanel");
-            _scarePanel.transform.SetParent(canvasGo.transform, false);
-            _scareFlash = _scarePanel.AddComponent<Image>();
-            _scareFlash.color = Color.clear;
-            _scareFlash.raycastTarget = false;
+            // 会話ダイアログ
+            _dialogPanel = new GameObject("DialogPanel"); _dialogPanel.transform.SetParent(canvasGo.transform, false);
+            var dbg = _dialogPanel.AddComponent<Image>(); dbg.color = new Color(0.04f, 0.02f, 0.06f, 0.95f);
+            SetRect(dbg.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 240), new Vector2(1200, 360));
+            _dialogText = MakeText(_dialogPanel.transform, "DialogText", 30, TextAnchor.UpperLeft);
+            SetRect(_dialogText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120, 300));
+            _dialogPanel.SetActive(false);
+
+            // ジャンプスケア
+            _scarePanel = new GameObject("ScarePanel"); _scarePanel.transform.SetParent(canvasGo.transform, false);
+            _scareFlash = _scarePanel.AddComponent<Image>(); _scareFlash.color = Color.clear; _scareFlash.raycastTarget = false;
             SetRect(_scareFlash.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var faceGo = new GameObject("Face");
-            faceGo.transform.SetParent(_scarePanel.transform, false);
-            _scareFace = faceGo.AddComponent<RawImage>();
-            _scareFace.texture = BuildScareFaceTexture();
-            _scareFace.raycastTarget = false;
+            var faceGo = new GameObject("Face"); faceGo.transform.SetParent(_scarePanel.transform, false);
+            _scareFace = faceGo.AddComponent<RawImage>(); _scareFace.texture = BuildScareFaceTexture(); _scareFace.raycastTarget = false;
             SetRect(_scareFace.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 560));
             _scarePanel.SetActive(false);
 
-            // 終了パネル
-            _endPanel = new GameObject("EndPanel");
-            _endPanel.transform.SetParent(canvasGo.transform, false);
-            var endBg = _endPanel.AddComponent<Image>();
-            endBg.color = new Color(0f, 0f, 0f, 0.85f);
+            // ホワイトアウト
+            var whiteGo = new GameObject("Whiteout"); whiteGo.transform.SetParent(canvasGo.transform, false);
+            _whiteout = whiteGo.AddComponent<Image>(); _whiteout.color = Color.clear; _whiteout.raycastTarget = false;
+            SetRect(_whiteout.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            whiteGo.SetActive(false);
+
+            // 終了画面
+            _endPanel = new GameObject("EndPanel"); _endPanel.transform.SetParent(canvasGo.transform, false);
+            var endBg = _endPanel.AddComponent<Image>(); endBg.color = new Color(0, 0, 0, 0.85f);
             SetRect(endBg.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _endText = MakeText(_endPanel.transform, "EndText", 52, TextAnchor.MiddleCenter);
-            SetRect(_endText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1200, 400));
+            SetRect(_endText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1300, 400));
             _endPanel.SetActive(false);
         }
 
         private static string BuildMemoText()
         {
-            return "■ 古びたメモ帳 ■\n\n" +
-                   $"◆ {GameEvents.GetEnemyName(EnemyType.Sight)}\n{GameEvents.GetEnemyHint(EnemyType.Sight)}\n\n" +
-                   $"◆ {GameEvents.GetEnemyName(EnemyType.Sound)}\n{GameEvents.GetEnemyHint(EnemyType.Sound)}\n\n" +
-                   $"◆ {GameEvents.GetEnemyName(EnemyType.Motion)}\n{GameEvents.GetEnemyHint(EnemyType.Motion)}\n\n" +
-                   "…奴らは時間きっかりにやって来る。\nモニターを見ろ。時計を見ろ。急ぐな。\n（Tabで閉じる）";
+            return "■ 古びた手帳 ■\n\n" +
+                   "モニターに映る『特徴』を見て、\n下の対策と照らし合わせろ。\n\n" +
+                   $"{GameEvents.GetSearcherCounter(SearcherType.Sight)}\n\n" +
+                   $"{GameEvents.GetSearcherCounter(SearcherType.Sound)}\n\n" +
+                   $"{GameEvents.GetSearcherCounter(SearcherType.Smell)}\n\n" +
+                   "── 笑い声が聞こえたら ──\n" +
+                   "金髪の人形が現れる。話しかけてきても\n決して答えるな。20秒、無視してやり過ごせ。\n" +
+                   "『目』を探して渡してもいけない。\n\n（Tabで閉じる）";
         }
 
         private void EnsureEventSystem()
@@ -294,95 +378,63 @@ namespace EscapeProto
 
         private Text MakeText(Transform parent, string name, int size, TextAnchor anchor)
         {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
+            var go = new GameObject(name); go.transform.SetParent(parent, false);
             var text = go.AddComponent<Text>();
-            text.font = _font;
-            text.fontSize = size;
-            text.alignment = anchor;
-            text.color = Color.white;
-            text.supportRichText = true;
+            text.font = _font; text.fontSize = size; text.alignment = anchor;
+            text.color = Color.white; text.supportRichText = true;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
-            // 視認性用の縁取り
             var outline = go.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            outline.effectColor = new Color(0, 0, 0, 0.9f); outline.effectDistance = new Vector2(1.5f, -1.5f);
             return text;
         }
 
         private static Image MakeImage(Transform parent, string name, Color color)
         {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            var img = go.AddComponent<Image>();
-            img.color = color;
-            img.raycastTarget = false;
+            var go = new GameObject(name); go.transform.SetParent(parent, false);
+            var img = go.AddComponent<Image>(); img.color = color; img.raycastTarget = false;
             return img;
         }
 
-        private static void SetRect(RectTransform rt, Vector2 anchorMin, Vector2 anchorMax,
-            Vector2 anchoredPos, Vector2 size)
+        private static void SetRect(RectTransform rt, Vector2 aMin, Vector2 aMax, Vector2 pos, Vector2 size)
         {
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.anchoredPosition = anchoredPos;
+            rt.anchorMin = aMin; rt.anchorMax = aMax; rt.anchoredPosition = pos;
             if (size != Vector2.zero) rt.sizeDelta = size;
             else { rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero; }
         }
 
-        /// <summary>不気味な顔テクスチャをプロシージャル生成</summary>
         private static Texture2D BuildScareFaceTexture()
         {
             const int size = 256;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            var pixels = new Color32[size * size];
-
+            var px = new Color32[size * size];
             for (int y = 0; y < size; y++)
-            {
                 for (int x = 0; x < size; x++)
                 {
-                    float nx = (x - size * 0.5f) / (size * 0.5f);
-                    float ny = (y - size * 0.5f) / (size * 0.5f);
+                    float nx = (x - size * 0.5f) / (size * 0.5f), ny = (y - size * 0.5f) / (size * 0.5f);
                     float r = Mathf.Sqrt(nx * nx + ny * ny);
-
-                    // 楕円の顔（暗い肌色〜黒）
                     Color c = Color.clear;
-                    if (r < 0.95f)
-                    {
-                        float shade = Mathf.Clamp01(1f - r) * 0.25f;
-                        c = new Color(shade, shade * 0.85f, shade * 0.8f, 1f);
-                    }
-
-                    // 目（白目＋小さな黒点）
+                    if (r < 0.95f) { float s = Mathf.Clamp01(1f - r) * 0.25f; c = new Color(s, s * 0.85f, s * 0.8f, 1f); }
                     c = DrawEye(c, nx, ny, -0.35f, 0.25f);
                     c = DrawEye(c, nx, ny, 0.35f, 0.25f);
-
-                    // 裂けた口
                     if (ny < -0.25f && ny > -0.45f)
                     {
                         float mouth = Mathf.Abs(nx) - (0.55f - Mathf.Abs(ny + 0.35f) * 2.2f);
                         float jag = Mathf.PerlinNoise(x * 0.25f, 0f) * 0.08f;
-                        if (mouth + jag < 0f)
-                            c = new Color(0.05f, 0f, 0f, 1f);
+                        if (mouth + jag < 0f) c = new Color(0.05f, 0f, 0f, 1f);
                     }
-
-                    pixels[y * size + x] = c;
+                    px[y * size + x] = c;
                 }
-            }
-            tex.SetPixels32(pixels);
-            tex.Apply();
+            tex.SetPixels32(px); tex.Apply();
             return tex;
         }
 
-        private static Color DrawEye(Color baseColor, float nx, float ny, float cx, float cy)
+        private static Color DrawEye(Color b, float nx, float ny, float cx, float cy)
         {
-            float dx = (nx - cx) / 0.22f;
-            float dy = (ny - cy) / 0.30f;
-            float d = dx * dx + dy * dy;
-            if (d < 1f) baseColor = new Color(0.95f, 0.93f, 0.9f, 1f);
-            if (d < 0.06f) baseColor = new Color(0.02f, 0f, 0f, 1f);
-            return baseColor;
+            float dx = (nx - cx) / 0.22f, dy = (ny - cy) / 0.30f, d = dx * dx + dy * dy;
+            if (d < 1f) b = new Color(0.95f, 0.93f, 0.9f, 1f);
+            if (d < 0.06f) b = new Color(0.02f, 0f, 0f, 1f);
+            return b;
         }
     }
 }
