@@ -35,6 +35,10 @@ namespace EscapeProto
         [Tooltip("Shift併用『急ぎ解除』の進行速度倍率")]
         public float gimmickRushMultiplier = 2f;
 
+        [Header("配電盤の復旧作業")]
+        [Tooltip("コード入力後、長押しで復旧が完了するまでの作業秒数")]
+        public float boardRepairDuration = 12f;
+
         [Header("プレイヤー移動速度（m/s）")]
         public float playerMoveSpeed = 2.4f;
         public float playerSprintSpeed = 4.6f;

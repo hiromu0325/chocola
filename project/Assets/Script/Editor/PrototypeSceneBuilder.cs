@@ -74,7 +74,9 @@ namespace EscapeProto.EditorTools
             var player = BuildPlayer(new Vector3(-5f, 0.1f, -3.5f));
             BuildManagers(player);
             BuildCentralDesk();
-            BuildGimmicks();
+            BuildPuzzleDocs();
+            BuildPowerRoom();
+            BuildSecondFloor();
             BuildHidingSpots();
             BuildLightSwitch();
             BuildDisplays();
@@ -150,7 +152,7 @@ namespace EscapeProto.EditorTools
 
             Box(root.transform, "Floor", new Vector3(0, -0.05f, 0), new Vector3(RoomW, 0.1f, RoomD), floorMat);
             Box(root.transform, "CorridorFloor", new Vector3(0, -0.05f, RoomD * 0.5f + 2f), new Vector3(3f, 0.1f, 4f), floorMat);
-            Box(root.transform, "Ceiling", new Vector3(0, WallH + 0.05f, 0), new Vector3(RoomW, 0.1f, RoomD), wallMat);
+            // ※天井は撤去（2階メザニンの吹き抜けスペースを確保）
 
             float hw = RoomW * 0.5f, hd = RoomD * 0.5f;
 
@@ -253,7 +255,7 @@ namespace EscapeProto.EditorTools
             var interaction = player.AddComponent<InteractionController>();
             var so = new SerializedObject(interaction);
             so.FindProperty("_camera").objectReferenceValue = cam;
-            so.FindProperty("_interactDistance").floatValue = 3f;
+            so.FindProperty("_interactDistance").floatValue = 3.5f;
             so.FindProperty("_interactLayer").intValue = ~0;
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -300,6 +302,20 @@ namespace EscapeProto.EditorTools
             var hudGo = new GameObject("HUD");
             hudGo.transform.SetParent(root.transform, false);
             hudGo.AddComponent<HUDManager>();
+
+            // タイトル / ポーズ / オプションのメニュー
+            var menuGo = new GameObject("MenuManager");
+            menuGo.transform.SetParent(root.transform, false);
+            menuGo.AddComponent<MenuManager>();
+
+            // 謎解き状態とUI
+            var puzzleStateGo = new GameObject("PuzzleState");
+            puzzleStateGo.transform.SetParent(root.transform, false);
+            puzzleStateGo.AddComponent<PuzzleState>();
+
+            var puzzleUiGo = new GameObject("PuzzleUI");
+            puzzleUiGo.transform.SetParent(root.transform, false);
+            puzzleUiGo.AddComponent<PuzzleUI>();
         }
 
         // ============================== 中央の大きい机 ==============================
@@ -341,31 +357,196 @@ namespace EscapeProto.EditorTools
 
         // ============================== ギミック ==============================
 
-        private static void BuildGimmicks()
+        // ============================== 謎解き：資料（社員証・名簿・アルバム・人事ファイル・PC）==============================
+
+        private static void BuildPuzzleDocs()
         {
-            var root = new GameObject("Gimmicks");
-            var mat = GetMat("Gimmick", new Color(0.85f, 0.25f, 0.2f), 0.5f);
-            float hw = RoomW * 0.5f, hd = RoomD * 0.5f;
+            var root = new GameObject("PuzzleDocs");
+            Vector3 desk = new Vector3(0f, 0f, -1.5f);
 
-            var g1 = Box(root.transform, "Gimmick_配電盤", new Vector3(-hw + 0.35f, 1.4f, 2.5f), new Vector3(0.25f, 0.9f, 0.7f), mat);
-            AddGimmick(g1, "配電盤", 10f);
+            // 社員証（中央机の上・左寄り）
+            var cardMat = GetMat("Card", new Color(0.85f, 0.85f, 0.9f), 0.6f);
+            var card = Box(root.transform, "EmployeeCard", desk + new Vector3(-0.6f, 0.92f, 0.25f), new Vector3(0.3f, 0.04f, 0.2f), cardMat);
+            card.AddComponent<DocumentInteract>().Type = DocumentType.EmployeeCard;
 
-            var g2 = Cylinder(root.transform, "Gimmick_バルブ", new Vector3(-hw + 0.4f, 1.2f, -3.5f), new Vector3(0.5f, 0.12f, 0.5f), mat);
-            g2.transform.rotation = Quaternion.Euler(0f, 0f, 90f);
-            AddGimmick(g2, "バルブ", 14f);
+            // 社員名簿（番号→部署）（机の上・右寄り）
+            var rosterMat = GetMat("Roster", new Color(0.9f, 0.88f, 0.78f));
+            var roster = Box(root.transform, "DepartmentRoster", desk + new Vector3(0.55f, 0.92f, 0.25f), new Vector3(0.35f, 0.05f, 0.28f), rosterMat);
+            roster.AddComponent<DocumentInteract>().Type = DocumentType.DepartmentRoster;
 
-            var g3 = Box(root.transform, "Gimmick_暗号装置", new Vector3(3.5f, 0.95f, 2.0f), new Vector3(0.6f, 0.5f, 0.45f), mat);
-            AddGimmick(g3, "暗号装置", 18f);
+            // アルバム（別の小机の上：部屋を行き来させる）
+            var tableMat = GetMat("SideTable", new Color(0.4f, 0.28f, 0.18f));
+            Box(root.transform, "AlbumTable", new Vector3(4.8f, 0.45f, 3.2f), new Vector3(0.8f, 0.9f, 0.6f), tableMat);
+            var albumMat = GetMat("Album", new Color(0.5f, 0.3f, 0.55f));
+            var album = Box(root.transform, "Album", new Vector3(4.8f, 0.95f, 3.2f), new Vector3(0.45f, 0.08f, 0.34f), albumMat);
+            album.AddComponent<DocumentInteract>().Type = DocumentType.Album;
+
+            // 人事ファイル（氏名→生年月日）：書類棚の上（南西）
+            var cabMat = GetMat("FileCabinet", new Color(0.3f, 0.32f, 0.35f), 0.4f);
+            Box(root.transform, "FileCabinet", new Vector3(-6.6f, 0.6f, -4.0f), new Vector3(0.8f, 1.2f, 0.5f), cabMat);
+            var fileMat = GetMat("PersonnelFile", new Color(0.8f, 0.75f, 0.6f));
+            var file = Box(root.transform, "PersonnelFile", new Vector3(-6.6f, 1.25f, -4.0f), new Vector3(0.4f, 0.06f, 0.3f), fileMat);
+            file.AddComponent<DocumentInteract>().Type = DocumentType.PersonnelFile;
+
+            // 社内PCデスク（南東）：ID=社員番号 / PW=生年月日 でログイン
+            // モニターは机の手前・上面に置き、部屋側（+Z）から正面で触れるようにする
+            var pcDeskMat = GetMat("PcDesk", new Color(0.35f, 0.3f, 0.26f));
+            Box(root.transform, "PcDeskBody", new Vector3(5.5f, 0.4f, -3.7f), new Vector3(1.4f, 0.8f, 0.7f), pcDeskMat);
+            Box(root.transform, "PcDeskTop", new Vector3(5.5f, 0.82f, -3.7f), new Vector3(1.5f, 0.08f, 0.8f), pcDeskMat);
+            var pcMat = GetMat("PcMonitor", new Color(0.1f, 0.12f, 0.16f), 0.5f);
+            Box(root.transform, "PcStand", new Vector3(5.5f, 0.98f, -3.75f), new Vector3(0.1f, 0.25f, 0.1f), pcMat);
+            // 画面は机の前縁（部屋側）に大きめに。プレイヤーは北側(+Z)から正対して触れる
+            var pc = Box(root.transform, "SocialPC", new Vector3(5.5f, 1.3f, -3.35f), new Vector3(0.8f, 0.55f, 0.1f), pcMat);
+            pc.AddComponent<PcDesk>();
         }
 
-        private static void AddGimmick(GameObject go, string displayName, float seconds)
+        // ============================== 謎解き：配電室（配電盤＋説明書）==============================
+
+        private static void BuildPowerRoom()
         {
-            var gimmick = go.AddComponent<GimmickBase>();
-            var so = new SerializedObject(gimmick);
-            so.FindProperty("_displayName").stringValue = displayName;
-            so.FindProperty("_requiredSeconds").floatValue = seconds;
-            so.FindProperty("_statusRenderer").objectReferenceValue = go.GetComponent<Renderer>();
-            so.ApplyModifiedPropertiesWithoutUndo();
+            var root = new GameObject("PowerRoom");
+            var wallMat = GetMat("PowerWall", new Color(0.2f, 0.22f, 0.26f));
+            float hw = RoomW * 0.5f, hd = RoomD * 0.5f;   // 8, 6
+
+            // 北西コーナーを間仕切りして配電室にする（出入口は開放）
+            const float zS = 2.0f;    // 南境界
+            const float xE = -3.8f;   // 東境界
+            const float gapC = -5.8f; // 出入口中心X
+            const float gap = 1.6f;
+
+            // 南壁（出入口の隙間つき）
+            float leftRight = gapC - gap * 0.5f;
+            float leftLen = Mathf.Max(0.1f, leftRight - (-hw));
+            Box(root.transform, "PWall_S_L", new Vector3((-hw + leftRight) * 0.5f, WallH * 0.5f, zS), new Vector3(leftLen, WallH, 0.3f), wallMat);
+            float rightLeft = gapC + gap * 0.5f;
+            float rightLen = Mathf.Max(0.1f, xE - rightLeft);
+            Box(root.transform, "PWall_S_R", new Vector3((rightLeft + xE) * 0.5f, WallH * 0.5f, zS), new Vector3(rightLen, WallH, 0.3f), wallMat);
+            Box(root.transform, "PWall_S_Top", new Vector3(gapC, WallH - 0.35f, zS), new Vector3(gap, 0.7f, 0.3f), wallMat);
+
+            // 東壁
+            Box(root.transform, "PWall_E", new Vector3(xE, WallH * 0.5f, (zS + hd) * 0.5f), new Vector3(0.3f, WallH, hd - zS), wallMat);
+
+            // 配電室の入口表示
+            CreatePointLight("Light_Power", new Vector3(-5.8f, 2.6f, 4.0f), new Color(0.7f, 0.8f, 1f), 0.6f, 7f);
+
+            // 施錠ドア（配電室の鍵で解錠）
+            var doorRoot = new GameObject("PowerRoomDoor");
+            doorRoot.transform.position = new Vector3(gapC, 0f, zS);
+            var kd = doorRoot.AddComponent<KeyedDoor>();
+            var doorMat = GetMat("SecDoor", new Color(0.3f, 0.32f, 0.38f), 0.5f);
+            var door = Box(doorRoot.transform, "Door", new Vector3(0f, 1.25f, 0f), new Vector3(gap - 0.05f, 2.5f, 0.2f), doorMat);
+            var lockMat = GetMat("SecLock", new Color(0.9f, 0.2f, 0.2f));
+            var lockBox = Box(doorRoot.transform, "Lock", new Vector3(gap * 0.5f - 0.2f, 1.3f, 0.13f), new Vector3(0.12f, 0.18f, 0.06f), lockMat);
+            var kdSo = new SerializedObject(kd);
+            kdSo.FindProperty("_door").objectReferenceValue = door.transform;
+            kdSo.FindProperty("_doorCollider").objectReferenceValue = door.GetComponent<Collider>();
+            kdSo.FindProperty("_lockIndicator").objectReferenceValue = lockBox.GetComponent<Renderer>();
+            kdSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // 配電盤（配電室の西壁・大きめで正面から触れる。壁から少し張り出す）
+            var boardMat = GetMat("Board", new Color(0.2f, 0.2f, 0.22f), 0.3f);
+            var board = Box(root.transform, "DistributionBoard", new Vector3(-hw + 0.55f, 1.3f, 4.0f), new Vector3(0.35f, 1.3f, 1.1f), boardMat);
+            board.AddComponent<DistributionBoard>();
+
+            // 説明書3種（棚に並べる：部署ページが指定する型番を選ぶ）
+            var shelfMat = GetMat("ManualShelf", new Color(0.35f, 0.28f, 0.2f));
+            Box(root.transform, "ManualShelf", new Vector3(-5.8f, 0.85f, 5.6f), new Vector3(2.6f, 0.1f, 0.5f), shelfMat);
+            string[] models = { "DXR-100", "DXR-200", "DXR-330" };
+            for (int i = 0; i < models.Length; i++)
+            {
+                var mMat = GetMat("Manual_" + models[i], new Color(0.85f, 0.8f, 0.7f));
+                var man = Box(root.transform, "Manual_" + models[i], new Vector3(-6.8f + i * 1.0f, 0.95f, 5.6f), new Vector3(0.4f, 0.06f, 0.3f), mMat);
+                var di = man.AddComponent<DocumentInteract>();
+                di.Type = DocumentType.Manual;
+                di.ManualModel = models[i];
+            }
+        }
+
+        // ============================== 2階：社員個室（鍵の保管場所）==============================
+
+        private const float MezzY = 2.6f;   // 2階の床高さ
+
+        private static void BuildSecondFloor()
+        {
+            var root = new GameObject("SecondFloor");
+            var stepMat = GetMat("Stairs", new Color(0.3f, 0.3f, 0.33f), 0.3f);
+            var floorMat = GetMat("MezzFloor", new Color(0.22f, 0.22f, 0.25f));
+            var railMat = GetMat("Railing", new Color(0.35f, 0.3f, 0.25f));
+
+            // --- 階段（東中央から北へ登る。1段0.26m×10段=2.6m）---
+            var stairs = new GameObject("Stairs"); stairs.transform.SetParent(root.transform, false);
+            const int steps = 10; const float rise = 0.26f, depth = 0.4f, zStart = -2.2f;
+            for (int i = 0; i < steps; i++)
+            {
+                float h = (i + 1) * rise;
+                Box(stairs.transform, $"Step_{i}", new Vector3(2f, h * 0.5f, zStart + i * depth + 0.2f),
+                    new Vector3(1.8f, h, depth), stepMat);
+            }
+
+            // --- メザニン床（東半分の北側。x[-1,7], z[1.5,5.7]）---
+            Box(root.transform, "MezzFloor", new Vector3(3f, MezzY - 0.1f, 3.6f), new Vector3(8f, 0.2f, 4.2f), floorMat);
+
+            // --- 手すり（落下防止。高さ1m）---
+            float ry = MezzY + 0.5f;
+            // 南縁（階段の隙間 x[1.1,2.9] を除く）
+            Box(root.transform, "Rail_S_L", new Vector3(0.05f, ry, 1.5f), new Vector3(2.1f, 1f, 0.12f), railMat);
+            Box(root.transform, "Rail_S_R", new Vector3(4.95f, ry, 1.5f), new Vector3(4.1f, 1f, 0.12f), railMat);
+            // 西縁・東縁
+            Box(root.transform, "Rail_W", new Vector3(-1f, ry, 3.6f), new Vector3(0.12f, 1f, 4.2f), railMat);
+            Box(root.transform, "Rail_E", new Vector3(7f, ry, 3.6f), new Vector3(0.12f, 1f, 4.2f), railMat);
+
+            // 2階の明かり
+            CreatePointLight("Light_2F", new Vector3(3f, MezzY + 2.2f, 4f), new Color(0.8f, 0.82f, 0.9f), 0.7f, 10f);
+
+            // --- 4つの個室（RoomEmployeeNumbers と対応）---
+            float[] cxs = { 0f, 2f, 4f, 6f };
+            for (int i = 0; i < PuzzleState.RoomEmployeeNumbers.Length && i < cxs.Length; i++)
+                BuildPrivateRoom(root.transform, PuzzleState.RoomEmployeeNumbers[i], cxs[i]);
+        }
+
+        private static void BuildPrivateRoom(Transform parent, string employeeNumber, float cx)
+        {
+            string name = EmployeeName(employeeNumber);
+            var wallMat = GetMat("RoomWall", new Color(0.26f, 0.25f, 0.28f));
+            var roomRoot = new GameObject($"PrivateRoom_{employeeNumber}");
+            roomRoot.transform.SetParent(parent, false);
+
+            const float RW = 2.0f, RD = 2.6f, RH = 2.4f, t = 0.12f;
+            float zS = 2.8f, zN = zS + RD;                 // 2.8 〜 5.4
+            float yB = MezzY, yC = yB + RH * 0.5f;          // 壁の中心高さ
+
+            // 北・東・西壁
+            Box(roomRoot.transform, "W_N", new Vector3(cx, yC, zN), new Vector3(RW, RH, t), wallMat);
+            Box(roomRoot.transform, "W_E", new Vector3(cx + RW * 0.5f, yC, zS + RD * 0.5f), new Vector3(t, RH, RD), wallMat);
+            Box(roomRoot.transform, "W_W", new Vector3(cx - RW * 0.5f, yC, zS + RD * 0.5f), new Vector3(t, RH, RD), wallMat);
+            // 南壁（ドアの隙間 幅1.0）
+            float doorGap = 1.0f, seg = (RW - doorGap) * 0.5f;
+            Box(roomRoot.transform, "W_S_L", new Vector3(cx - (doorGap * 0.5f + seg * 0.5f), yC, zS), new Vector3(seg, RH, t), wallMat);
+            Box(roomRoot.transform, "W_S_R", new Vector3(cx + (doorGap * 0.5f + seg * 0.5f), yC, zS), new Vector3(seg, RH, t), wallMat);
+            Box(roomRoot.transform, "W_S_Top", new Vector3(cx, yB + RH - 0.3f, zS), new Vector3(doorGap, 0.6f, t), wallMat);
+
+            // 表札（ドア上部・部屋手前=南向き）
+            Nameplate(roomRoot.transform, $"個室\n{name}", new Vector3(cx, yB + RH - 0.15f, zS - 0.1f));
+
+            // 戸棚（北壁際）：調べると鍵保管者なら鍵入手
+            var cabMat = GetMat("RoomCabinet", new Color(0.4f, 0.3f, 0.22f));
+            var cab = Box(roomRoot.transform, "KeyCabinet", new Vector3(cx, yB + 0.5f, zN - 0.4f), new Vector3(1.0f, 1.0f, 0.5f), cabMat);
+            cab.AddComponent<KeyCabinet>().OwnerNumber = employeeNumber;
+        }
+
+        private static string EmployeeName(string number)
+        {
+            foreach (var e in PuzzleState.Employees) if (e.number == number) return e.name;
+            return number;
+        }
+
+        private static void Nameplate(Transform parent, string text, Vector3 localPos)
+        {
+            var go = new GameObject("Nameplate");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // 文字が南(-Z)を向く
+            go.AddComponent<RoomNameplate>().Label = text;  // TextMeshは実行時に生成
         }
 
         // ============================== 隠れ場所（ロッカー / ベッド下）==============================

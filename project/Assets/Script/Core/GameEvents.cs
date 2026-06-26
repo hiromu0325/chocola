@@ -60,10 +60,22 @@ namespace EscapeProto
         public static event Action<float> OnJumpScare;            // 強度0-1
         public static event Action<float> OnWhiteout;             // ホワイトアウト（死亡演出）
 
+        // ---- 謎解き（PC／鍵／配電盤）----
+        public static event Action OnPcAccessed;                  // 社内PCにログイン→部署ページ閲覧可
+        public static event Action OnKeyFound;                    // 2階個室で配電室の鍵を発見
+        public static event Action OnPanelUnlocked;               // 配電盤キーパッド解除
+        public static event Action OnRepairCodeAccepted;          // 復旧手順コード受理→長押し作業へ
+        public static event Action OnPowerRestored;               // 配電盤を復旧→電力回復（脱出可能）
+
         // ---- ゲーム進行 ----
         public static event Action<int> OnDollsChanged;           // 残り陶器人形
         public static event Action OnGameOver;
         public static event Action OnGameClear;
+
+        // ---- ゲームフロー（タイトル/ポーズ等）----
+        public static event Action<GameState> OnGameStateChanged;
+        /// <summary>「はじめから」/「つづきから」でゲーム開始（フェーズループ起動の合図）</summary>
+        public static event Action OnGameStarted;
 
         public static void RaisePhaseChanged(GamePhase p) => OnPhaseChanged?.Invoke(p);
         public static void RaiseNextSearcherAnnounced(SearcherType t) => OnNextSearcherAnnounced?.Invoke(t);
@@ -81,9 +93,16 @@ namespace EscapeProto
         public static void RaiseGimmickSolved(int s, int t) => OnGimmickSolved?.Invoke(s, t);
         public static void RaiseJumpScare(float i) => OnJumpScare?.Invoke(i);
         public static void RaiseWhiteout(float i) => OnWhiteout?.Invoke(i);
+        public static void RaisePcAccessed() => OnPcAccessed?.Invoke();
+        public static void RaiseKeyFound() => OnKeyFound?.Invoke();
+        public static void RaisePanelUnlocked() => OnPanelUnlocked?.Invoke();
+        public static void RaiseRepairCodeAccepted() => OnRepairCodeAccepted?.Invoke();
+        public static void RaisePowerRestored() => OnPowerRestored?.Invoke();
         public static void RaiseDollsChanged(int n) => OnDollsChanged?.Invoke(n);
         public static void RaiseGameOver() => OnGameOver?.Invoke();
         public static void RaiseGameClear() => OnGameClear?.Invoke();
+        public static void RaiseGameStateChanged(GameState s) => OnGameStateChanged?.Invoke(s);
+        public static void RaiseGameStarted() => OnGameStarted?.Invoke();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -94,7 +113,10 @@ namespace EscapeProto
             OnNoiseEmitted = null; OnPlayerCaught = null; OnSpecialDeath = null;
             OnRoomLightsChanged = null; OnFlashlightChanged = null; OnPerfumeUsed = null;
             OnGimmickSolved = null; OnJumpScare = null; OnWhiteout = null;
+            OnPcAccessed = null; OnKeyFound = null; OnPanelUnlocked = null;
+            OnRepairCodeAccepted = null; OnPowerRestored = null;
             OnDollsChanged = null; OnGameOver = null; OnGameClear = null;
+            OnGameStateChanged = null; OnGameStarted = null;
         }
 
         // ====== 探索者の名称・特徴・対策（モニター／手帳で共用）======

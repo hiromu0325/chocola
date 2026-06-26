@@ -49,7 +49,30 @@ namespace EscapeProto
         [SerializeField] private Renderer _statusRenderer;
 
         public bool IsSolved { get; private set; }
+        public string DisplayName => _displayName;
         public float Progress01 => Mathf.Clamp01(_progress / _requiredSeconds);
+
+        /// <summary>セーブ用：解除済みギミック名の列挙</summary>
+        public static IEnumerable<string> GetSolvedNames()
+        {
+            foreach (var g in All) if (g.IsSolved) yield return g._displayName;
+        }
+
+        /// <summary>ロード用：名前が一致するギミックを解除済みに復元</summary>
+        public static void ApplySolved(ICollection<string> names)
+        {
+            if (names == null) return;
+            foreach (var g in All)
+                if (!g.IsSolved && names.Contains(g._displayName)) g.MarkSolvedSilently();
+        }
+
+        private void MarkSolvedSilently()
+        {
+            IsSolved = true;
+            _progress = _requiredSeconds;
+            UpdateVisual();
+            GameEvents.RaiseGimmickSolved(SolvedCount, TotalCount);
+        }
 
         private float _progress;
         private float _lastHoldCallTime = -10f;

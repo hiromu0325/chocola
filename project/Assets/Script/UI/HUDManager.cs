@@ -123,8 +123,7 @@ namespace EscapeProto
                 }
             }
             int dolls = gm != null ? gm.Dolls : 0;
-            _topText.text = $"{phase}    人形:{new string('●', Mathf.Max(0, dolls))}    " +
-                            $"ギミック:{GimmickBase.SolvedCount}/{GimmickBase.TotalCount}";
+            _topText.text = $"{phase}    人形:{new string('●', Mathf.Max(0, dolls))}    {ObjectiveText()}";
 
             // 環境ステータス（電気/懐中電灯/香水）
             string lights = (RoomLightController.Instance == null || RoomLightController.Instance.LightsOn)
@@ -132,6 +131,16 @@ namespace EscapeProto
             string flash = (_player != null && _player.FlashlightOn) ? "<color=#FFE060>懐中電灯:点</color>" : "懐中電灯:消";
             string scent = (_player != null && _player.IsScentMasked) ? "<color=#80D0FF>消臭中</color>" : "";
             _stateText.text = $"{lights}   {flash}   {scent}";
+        }
+
+        private static string ObjectiveText()
+        {
+            var ps = PuzzleState.Instance;
+            if (ps == null) return "";
+            if (!ps.PcAccessed) return "<color=#FFD060>目標:社員情報を集めPCにログイン</color>";
+            if (!ps.HasPowerRoomKey) return "<color=#FFD060>目標:貸出記録の社員の個室(2階)で鍵を探す</color>";
+            if (!ps.PowerRestored) return "<color=#FFD060>目標:配電室を開け配電盤を復旧</color>";
+            return "<color=#7CFC8C>目標:脱出口へ向かえ</color>";
         }
 
         private void UpdatePrompt()
@@ -355,13 +364,19 @@ namespace EscapeProto
         private static string BuildMemoText()
         {
             return "■ 古びた手帳 ■\n\n" +
-                   "モニターに映る『特徴』を見て、\n下の対策と照らし合わせろ。\n\n" +
-                   $"{GameEvents.GetSearcherCounter(SearcherType.Sight)}\n\n" +
-                   $"{GameEvents.GetSearcherCounter(SearcherType.Sound)}\n\n" +
+                   "【脱出の手順】\n" +
+                   "① 社員証→名簿→アルバム→人事ファイルで\n　 社員番号と生年月日を割り出す\n" +
+                   "② 社内PCにログイン（ID=社員番号 / PW=生年月日）\n" +
+                   "③ PCで『部署ページ』(解除コード・型番)と\n　 『鍵の貸出記録』を確認\n" +
+                   "④ 貸出記録の社員の2階個室で配電室の鍵を探す\n" +
+                   "⑤ 鍵で配電室を解錠\n" +
+                   "⑥ 配電盤：解除コード→説明書の復旧コードを入力\n　 →長押しで時間をかけて復旧→脱出口が開く\n\n" +
+                   "── 探索者の対策（モニターの特徴と照合）──\n" +
+                   $"{GameEvents.GetSearcherCounter(SearcherType.Sight)}\n" +
+                   $"{GameEvents.GetSearcherCounter(SearcherType.Sound)}\n" +
                    $"{GameEvents.GetSearcherCounter(SearcherType.Smell)}\n\n" +
                    "── 笑い声が聞こえたら ──\n" +
-                   "金髪の人形が現れる。話しかけてきても\n決して答えるな。20秒、無視してやり過ごせ。\n" +
-                   "『目』を探して渡してもいけない。\n\n（Tabで閉じる）";
+                   "金髪の人形に決して答えるな。20秒無視せよ。\n『目』を渡してもいけない。\n\n（Tabで閉じる）";
         }
 
         private void EnsureEventSystem()

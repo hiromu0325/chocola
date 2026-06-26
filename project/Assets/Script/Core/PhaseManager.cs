@@ -81,7 +81,8 @@ namespace EscapeProto
             GameEvents.OnGameOver += StopLoop;
             GameEvents.OnGameClear += StopLoop;
             GameEvents.OnLaughterEventEnd += HandleEventEnd;
-            _loop = StartCoroutine(PhaseLoop());
+            GameEvents.OnGameStarted += BeginPhases;
+            // タイトルでゲーム開始を待つ。OnGameStarted でループ起動。
         }
 
         private void OnDestroy()
@@ -89,7 +90,16 @@ namespace EscapeProto
             GameEvents.OnGameOver -= StopLoop;
             GameEvents.OnGameClear -= StopLoop;
             GameEvents.OnLaughterEventEnd -= HandleEventEnd;
+            GameEvents.OnGameStarted -= BeginPhases;
             if (Instance == this) Instance = null;
+        }
+
+        /// <summary>ゲーム開始（はじめから/つづきから）でフェーズループを起動</summary>
+        private void BeginPhases()
+        {
+            _running = true;
+            if (_loop != null) StopCoroutine(_loop);
+            _loop = StartCoroutine(PhaseLoop());
         }
 
         private void StopLoop()

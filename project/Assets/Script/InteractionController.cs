@@ -49,15 +49,25 @@ namespace StarterAssets
 
         private void DetectInteractable()
         {
-            RaycastHit hit;
             IInteractable newInteractable = null;
+            Vector3 origin = _camera.transform.position;
+            Vector3 dir = _camera.transform.forward;
 
-            if (Physics.Raycast(_camera.transform.position, _camera.transform.forward, out hit, _interactDistance, _interactLayer))
+            // ① 中心レイ（精密）：当たったコライダー（または親）の IInteractable
+            if (Physics.Raycast(origin, dir, out RaycastHit hit, _interactDistance, _interactLayer,
+                    QueryTriggerInteraction.Collide))
             {
-                newInteractable = hit.collider.GetComponent<IInteractable>();
+                newInteractable = hit.collider.GetComponentInParent<IInteractable>();
             }
 
-            // インタラクト対象が変わった場合
+            // ② 外れた／非インタラクト物だった場合は少し太い球判定で補助（小物・狙いのズレに強く）
+            if (newInteractable == null &&
+                Physics.SphereCast(origin, 0.2f, dir, out RaycastHit shit, _interactDistance, _interactLayer,
+                    QueryTriggerInteraction.Collide))
+            {
+                newInteractable = shit.collider.GetComponentInParent<IInteractable>();
+            }
+
             if (newInteractable != _currentInteractable)
             {
                 _currentInteractable = newInteractable;
