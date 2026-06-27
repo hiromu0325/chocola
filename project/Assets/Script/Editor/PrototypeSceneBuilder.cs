@@ -218,20 +218,10 @@ namespace EscapeProto.EditorTools
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f; cc.radius = 0.3f; cc.center = new Vector3(0f, 0.93f, 0f);
 
+            // 入力は StarterAssetsInputs が直接デバイスを読む（PlayerInput不要）
             var inputs = player.AddComponent<StarterAssetsInputs>();
             inputs.cursorLocked = true; inputs.cursorInputForLook = true;
 
-#if ENABLE_INPUT_SYSTEM
-            var pi = player.AddComponent<PlayerInput>();
-            var actionsAsset = FindStarterAssetsActions();
-            if (actionsAsset != null)
-            {
-                pi.actions = actionsAsset;
-                pi.defaultActionMap = "Player";
-                pi.notificationBehavior = PlayerNotifications.SendMessages;
-            }
-            else Debug.LogError("[PrototypeSceneBuilder] StarterAssets.inputactions が見つかりません。Player の PlayerInput に手動割当を。");
-#endif
             var camRoot = new GameObject("PlayerCameraRoot");
             camRoot.transform.SetParent(player.transform, false);
             camRoot.transform.localPosition = new Vector3(0f, 1.55f, 0f);
@@ -246,6 +236,7 @@ namespace EscapeProto.EditorTools
             var fpc = player.AddComponent<FirstPersonController>();
             fpc.CinemachineCameraTarget = camRoot;
             fpc.MoveSpeed = 2.4f; fpc.SprintSpeed = 4.6f; fpc.RotationSpeed = 1.0f;
+            fpc.SpeedChangeRate = 30f;   // 出だしを機敏に（押した瞬間に歩き出す）
 
             player.AddComponent<PlayerStatus>();
 

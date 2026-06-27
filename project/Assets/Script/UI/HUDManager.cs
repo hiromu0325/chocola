@@ -78,14 +78,31 @@ namespace EscapeProto
         {
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
-            if (kb == null) return;
-            if (kb.tabKey.wasPressedThisFrame) ToggleMemo();
-            if (_gameEnded && kb.rKey.wasPressedThisFrame) GameManager.Instance?.RestartGame();
+            var gp = Gamepad.current;
+            if (kb == null && gp == null) return;
+            bool tab = kb != null && kb.tabKey.wasPressedThisFrame;
+            bool restart = kb != null && kb.rKey.wasPressedThisFrame;
+            if (gp != null)
+            {
+                if (gp.selectButton.wasPressedThisFrame) tab = true;       // 手帳
+                if (gp.startButton.wasPressedThisFrame) restart = true;    // 終了画面でリスタート
+            }
+            if (tab) ToggleMemo();
+            if (_gameEnded && restart) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
-                if (kb.digit1Key.wasPressedThisFrame) PickDialog(0);
-                else if (kb.digit2Key.wasPressedThisFrame) PickDialog(1);
-                else if (kb.digit3Key.wasPressedThisFrame) PickDialog(2);
+                bool one = kb != null && kb.digit1Key.wasPressedThisFrame;
+                bool two = kb != null && kb.digit2Key.wasPressedThisFrame;
+                bool three = kb != null && kb.digit3Key.wasPressedThisFrame;
+                if (gp != null)
+                {
+                    one |= gp.buttonSouth.wasPressedThisFrame;   // A
+                    two |= gp.buttonEast.wasPressedThisFrame;    // B
+                    three |= gp.buttonWest.wasPressedThisFrame;  // X
+                }
+                if (one) PickDialog(0);
+                else if (two) PickDialog(1);
+                else if (three) PickDialog(2);
             }
 #else
             if (Input.GetKeyDown(KeyCode.Tab)) ToggleMemo();

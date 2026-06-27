@@ -23,6 +23,7 @@ namespace EscapeProto
         private Text _saveInfoText, _pauseStatusText;
         private Slider _volumeSlider, _sensSlider;
         private Text _volumeValue, _sensValue;
+        private Text _invertXLabel, _invertYLabel;
 
         private bool _optionsOpen;
         private GameState _state = GameState.Title;
@@ -61,10 +62,23 @@ namespace EscapeProto
         {
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
-            return kb != null && kb.escapeKey.wasPressedThisFrame;
+            if (kb != null && kb.escapeKey.wasPressedThisFrame) return true;
+            var gp = Gamepad.current;
+            if (gp != null && (gp.startButton.wasPressedThisFrame || gp.buttonEast.wasPressedThisFrame)) return true;
+            return false;
 #else
             return Input.GetKeyDown(KeyCode.Escape);
 #endif
+        }
+
+        /// <summary>ゲームパッドでボタンを選べるよう、表示中パネルの先頭ボタンを選択状態にする</summary>
+        private void SelectFirst(GameObject panel)
+        {
+            if (panel == null) return;
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return;
+            var btn = panel.GetComponentInChildren<Button>(false);
+            es.SetSelectedGameObject(btn != null ? btn.gameObject : null);
         }
 
         // ============================== 表示制御 ==============================
@@ -88,6 +102,11 @@ namespace EscapeProto
                     : "セーブデータなし";
             }
             if (pause) _pauseStatusText.text = "";
+
+            // ゲームパッド操作用：表示中パネルの先頭ボタンを選択
+            if (_optionsOpen) SelectFirst(_optionsPanel);
+            else if (title) SelectFirst(_titlePanel);
+            else if (pause) SelectFirst(_pausePanel);
         }
 
         private void OpenOptions()
@@ -198,37 +217,64 @@ namespace EscapeProto
             _optionsPanel = Panel(parent, "OptionsPanel", new Color(0.03f, 0.03f, 0.05f, 0.97f));
 
             var title = MakeText(_optionsPanel.transform, "OptTitle", 56, TextAnchor.MiddleCenter);
-            SetRect(title.rectTransform, Center, Center, new Vector2(0, 240), new Vector2(1000, 110));
+            SetRect(title.rectTransform, Center, Center, new Vector2(0, 250), new Vector2(1000, 110));
             title.text = "オプション";
 
             // マスター音量
-            MakeLabel(_optionsPanel.transform, "音量", new Vector2(-360, 90));
-            _volumeSlider = MakeSlider(_optionsPanel.transform, new Vector2(60, 90), 0f, 1f,
+            MakeLabel(_optionsPanel.transform, "音量", new Vector2(-360, 150));
+            _volumeSlider = MakeSlider(_optionsPanel.transform, new Vector2(40, 150), 0f, 1f,
                 GameSettings.MasterVolume, v =>
                 {
                     GameSettings.MasterVolume = v; GameSettings.Apply(); UpdateOptionLabels();
                 });
             _volumeValue = MakeText(_optionsPanel.transform, "VolVal", 28, TextAnchor.MiddleLeft);
-            SetRect(_volumeValue.rectTransform, Center, Center, new Vector2(330, 90), new Vector2(120, 50));
+            SetRect(_volumeValue.rectTransform, Center, Center, new Vector2(330, 150), new Vector2(140, 50));
 
-            // マウス感度
-            MakeLabel(_optionsPanel.transform, "マウス感度", new Vector2(-360, 10));
-            _sensSlider = MakeSlider(_optionsPanel.transform, new Vector2(60, 10), 0.2f, 3f,
+            // マウス感度（細かい単位で調整可：スライダー＋[-][+]）
+            MakeLabel(_optionsPanel.transform, "マウス感度", new Vector2(-360, 70));
+            _sensSlider = MakeSlider(_optionsPanel.transform, new Vector2(40, 70), GameSettings.SensMin, GameSettings.SensMax,
                 GameSettings.Sensitivity, v =>
                 {
                     GameSettings.Sensitivity = v; GameSettings.Apply(); UpdateOptionLabels();
                 });
             _sensValue = MakeText(_optionsPanel.transform, "SensVal", 28, TextAnchor.MiddleLeft);
-            SetRect(_sensValue.rectTransform, Center, Center, new Vector2(330, 10), new Vector2(120, 50));
+            SetRect(_sensValue.rectTransform, Center, Center, new Vector2(322, 70), new Vector2(120, 50));
+            MakeButton(_optionsPanel.transform, "−", new Vector2(430, 70), new Vector2(56, 56), 34, () => AdjustSens(-0.005f));
+            MakeButton(_optionsPanel.transform, "＋", new Vector2(496, 70), new Vector2(56, 56), 34, () => AdjustSens(0.005f));
 
-            MakeButton(_optionsPanel.transform, "戻る", new Vector2(0, -150), CloseOptions);
+            // マウス反転（上下／左右を個別に切替）
+            _invertXLabel = MakeButton(_optionsPanel.transform, "", new Vector2(0, -20), new Vector2(560, 60), 30, ToggleInvertX)
+                .GetComponentInChildren<Text>();
+            _invertYLabel = MakeButton(_optionsPanel.transform, "", new Vector2(0, -90), new Vector2(560, 60), 30, ToggleInvertY)
+                .GetComponentInChildren<Text>();
+
+            MakeButton(_optionsPanel.transform, "戻る", new Vector2(0, -180), CloseOptions);
             UpdateOptionLabels();
+        }
+
+        private void AdjustSens(float delta)
+        {
+            GameSettings.Sensitivity = Mathf.Clamp(GameSettings.Sensitivity + delta, GameSettings.SensMin, GameSettings.SensMax);
+            _sensSlider.SetValueWithoutNotify(GameSettings.Sensitivity);
+            GameSettings.Apply();
+            UpdateOptionLabels();
+        }
+
+        private void ToggleInvertX()
+        {
+            GameSettings.InvertX = !GameSettings.InvertX; GameSettings.Apply(); UpdateOptionLabels();
+        }
+        private void ToggleInvertY()
+        {
+            GameSettings.InvertY = !GameSettings.InvertY; GameSettings.Apply(); UpdateOptionLabels();
         }
 
         private void UpdateOptionLabels()
         {
             if (_volumeValue != null) _volumeValue.text = $"{Mathf.RoundToInt(GameSettings.MasterVolume * 100)}";
-            if (_sensValue != null) _sensValue.text = $"{GameSettings.Sensitivity:0.0}";
+            if (_sensValue != null) _sensValue.text = $"{GameSettings.Sensitivity:0.000}";
+            if (_invertXLabel != null) _invertXLabel.text = $"左右反転: {(GameSettings.InvertX ? "<color=#80FFA0>ON</color>" : "OFF")}";
+            if (_invertYLabel != null) _invertYLabel.text = $"上下反転: {(GameSettings.InvertY ? "<color=#80FFA0>ON</color>" : "OFF")}";
         }
 
         // ============================== UGUIヘルパー ==============================
@@ -264,6 +310,31 @@ namespace EscapeProto
             if (onClick != null) btn.onClick.AddListener(() => onClick());
 
             var text = MakeText(go.transform, "Label", 32, TextAnchor.MiddleCenter);
+            SetRect(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            text.text = label;
+            return btn;
+        }
+
+        /// <summary>サイズ・フォント指定版のボタン</summary>
+        private Button MakeButton(Transform parent, string label, Vector2 pos, Vector2 size, int fontSize, Action onClick)
+        {
+            var go = new GameObject("Btn_" + label);
+            go.transform.SetParent(parent, false);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.18f, 0.16f, 0.2f, 0.95f);
+            SetRect(img.rectTransform, Center, Center, pos, size);
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            var colors = btn.colors;
+            colors.normalColor = new Color(1f, 1f, 1f, 1f);
+            colors.highlightedColor = new Color(0.8f, 0.55f, 0.55f, 1f);
+            colors.pressedColor = new Color(0.5f, 0.3f, 0.3f, 1f);
+            colors.selectedColor = colors.highlightedColor;
+            btn.colors = colors;
+            if (onClick != null) btn.onClick.AddListener(() => onClick());
+
+            var text = MakeText(go.transform, "Label", fontSize, TextAnchor.MiddleCenter);
             SetRect(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             text.text = label;
             return btn;

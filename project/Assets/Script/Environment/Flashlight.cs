@@ -38,6 +38,8 @@ namespace EscapeProto
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
             if (kb != null && kb.fKey.wasPressedThisFrame) pressed = true;
+            var gp = Gamepad.current;
+            if (gp != null && gp.buttonNorth.wasPressedThisFrame) pressed = true;  // Y / △
 #else
             if (Input.GetKeyDown(KeyCode.F)) pressed = true;
 #endif

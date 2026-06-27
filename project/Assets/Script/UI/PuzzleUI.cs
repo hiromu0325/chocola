@@ -143,6 +143,11 @@ namespace EscapeProto
                 SetRect(_bodyText.rectTransform, Center, Center, new Vector2(0, 248), new Vector2(1000, 150));
             else
                 SetRect(_bodyText.rectTransform, Center, Center, new Vector2(0, 40), new Vector2(1000, 520));
+
+            // ゲームパッド操作用：先頭ボタンを選択
+            if (keypad) SelectFirst(_keypadPad);
+            else if (selection) SelectFirst(_optionsPad);
+            else SelectFirst(_closeButton);
         }
 
         // ============================== 開閉 ==============================
@@ -280,10 +285,22 @@ namespace EscapeProto
         private bool WasEsc()
         {
 #if ENABLE_INPUT_SYSTEM
-            var kb = Keyboard.current; return kb != null && kb.escapeKey.wasPressedThisFrame;
+            var kb = Keyboard.current;
+            if (kb != null && kb.escapeKey.wasPressedThisFrame) return true;
+            var gp = Gamepad.current;
+            return gp != null && gp.buttonEast.wasPressedThisFrame;   // B / ○ で戻る
 #else
             return Input.GetKeyDown(KeyCode.Escape);
 #endif
+        }
+
+        /// <summary>ゲームパッド操作用：先頭ボタンを選択状態にする</summary>
+        private void SelectFirst(GameObject root)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return;
+            Button btn = root != null ? root.GetComponentInChildren<Button>(false) : null;
+            es.SetSelectedGameObject(btn != null ? btn.gameObject : null);
         }
         private bool WasInteract()
         {
@@ -296,7 +313,10 @@ namespace EscapeProto
         private bool IsInteractHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            var kb = Keyboard.current; return kb != null && kb.eKey.isPressed;
+            var kb = Keyboard.current;
+            if (kb != null && kb.eKey.isPressed) return true;
+            var gp = Gamepad.current;
+            return gp != null && (gp.buttonWest.isPressed || gp.rightTrigger.ReadValue() > 0.5f);
 #else
             return Input.GetKey(KeyCode.E);
 #endif

@@ -6,9 +6,6 @@ using UnityEngine.InputSystem;
 namespace StarterAssets
 {
 	[RequireComponent(typeof(CharacterController))]
-#if ENABLE_INPUT_SYSTEM
-	[RequireComponent(typeof(PlayerInput))]
-#endif
 	public class FirstPersonController : MonoBehaviour
 	{
 		[Header("Player")]
@@ -64,27 +61,14 @@ namespace StarterAssets
 		private float _jumpTimeoutDelta;
 		private float _fallTimeoutDelta;
 
-	
-#if ENABLE_INPUT_SYSTEM
-		private PlayerInput _playerInput;
-#endif
 		private CharacterController _controller;
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 
 		private const float _threshold = 0.01f;
 
-		private bool IsCurrentDeviceMouse
-		{
-			get
-			{
-				#if ENABLE_INPUT_SYSTEM
-				return _playerInput.currentControlScheme == "KeyboardMouse";
-				#else
-				return false;
-				#endif
-			}
-		}
+		// マウス由来の視点はdeltaTimeを掛けない（StarterAssetsInputsが判定）
+		private bool IsCurrentDeviceMouse => _input == null || _input.lookIsMouse;
 
 		private void Awake()
 		{
@@ -99,11 +83,6 @@ namespace StarterAssets
 		{
 			_controller = GetComponent<CharacterController>();
 			_input = GetComponent<StarterAssetsInputs>();
-#if ENABLE_INPUT_SYSTEM
-			_playerInput = GetComponent<PlayerInput>();
-#else
-			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
-#endif
 
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;

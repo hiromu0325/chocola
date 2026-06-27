@@ -1,13 +1,11 @@
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace StarterAssets
 {
     /// <summary>
     /// インタラクション制御
     /// Raycastで対象を検出し、ボタン入力でインタラクト実行
+    /// 入力は StarterAssetsInputs（キーボードE/ゲームパッドX）経由で取得
     /// </summary>
     public class InteractionController : MonoBehaviour
     {
@@ -16,29 +14,15 @@ namespace StarterAssets
         [SerializeField] private float _interactDistance = 3f;
         [SerializeField] private LayerMask _interactLayer;
 
-        [Header("Input")]
-        [SerializeField] private string _interactActionName = "Interact";
-
         private IInteractable _currentInteractable;
         private bool _interactInput;
-
-#if ENABLE_INPUT_SYSTEM
-        private PlayerInput _playerInput;
-        private InputAction _interactAction;
-#endif
+        private StarterAssetsInputs _inputs;
 
         private void Awake()
         {
             if (_camera == null)
                 _camera = Camera.main;
-
-#if ENABLE_INPUT_SYSTEM
-            _playerInput = GetComponent<PlayerInput>();
-            if (_playerInput != null)
-            {
-                _interactAction = _playerInput.actions[_interactActionName];
-            }
-#endif
+            _inputs = GetComponent<StarterAssetsInputs>();
         }
 
         private void Update()
@@ -77,14 +61,7 @@ namespace StarterAssets
 
         private void HandleInteractInput()
         {
-#if ENABLE_INPUT_SYSTEM
-            if (_interactAction != null)
-            {
-                _interactInput = _interactAction.IsPressed();
-            }
-#else
-            _interactInput = Input.GetKeyDown(KeyCode.E);
-#endif
+            _interactInput = _inputs != null && _inputs.interact;
 
             if (_interactInput && _currentInteractable != null && _currentInteractable.CanInteract)
             {
