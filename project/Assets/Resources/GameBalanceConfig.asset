@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c3941be267251243a05c6d436b72dc5, type: 3}
   m_Name: GameBalanceConfig
   m_EditorClassIdentifier: Assembly-CSharp::EscapeProto.GameBalanceConfig
-  explorationDuration: 300
-  warningDuration: 20
+  explorationDuration: 120
+  warningDuration: 10
   visitDuration: 45
   eventTriggerRatio: 1
   eventChance: 0.5
   gimmickSolveTimeMultiplier: 0.5
   gimmickRushMultiplier: 2
+  boardRepairDuration: 12
   playerMoveSpeed: 2.4
   playerSprintSpeed: 4.6
   searcherPatrolSpeed: 1.5
