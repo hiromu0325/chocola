@@ -43,6 +43,7 @@ namespace EscapeProto
             {
                 if (_keyVisual != null) _keyVisual.SetActive(false);
                 ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.9f);
+                Notebook.Add("key", "配電室の鍵", "2階の個室で入手。配電室の施錠ドアを開けられる。");
                 if (HUDManager.Instance != null)
                     HUDManager.Instance.ShowSubtitle("配電室の鍵を見つけた！配電室の扉を開けられる。", 4f);
             }

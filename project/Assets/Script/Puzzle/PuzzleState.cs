@@ -81,6 +81,10 @@ namespace EscapeProto
         public bool RepairCodeAccepted { get; private set; }
         public bool PowerRestored { get; private set; }
 
+        // 壁の金庫（ストーリー用・脱出不要）：3桁ダイヤル。各桁は相異なる（連番なし）
+        public int[] SafeCombo { get; private set; } = { 4, 7, 2 };
+        public bool SafeOpened { get; private set; }
+
         public string TargetDepartment => TargetEmployee != null ? TargetEmployee.department : "";
 
         private void Awake() { Instance = this; }
@@ -104,11 +108,28 @@ namespace EscapeProto
             KeyHolder = FindEmployee(RoomEmployeeNumbers[UnityEngine.Random.Range(0, RoomEmployeeNumbers.Length)]) ?? Employees[0];
             ActiveModel = Models[UnityEngine.Random.Range(0, Models.Length)];
             KeypadPassword = UnityEngine.Random.Range(0, 10000).ToString("D4");
+            SafeCombo = GenerateSafeCombo();
             PcAccessed = false;
             HasPowerRoomKey = false;
             PanelUnlocked = false;
             RepairCodeAccepted = false;
             PowerRestored = false;
+            SafeOpened = false;
+        }
+
+        /// <summary>相異なる3桁（0-9）をランダム生成＝隣接同番号が起きない</summary>
+        private static int[] GenerateSafeCombo()
+        {
+            var pool = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < 10; i++) pool.Add(i);
+            var combo = new int[3];
+            for (int i = 0; i < 3; i++)
+            {
+                int idx = UnityEngine.Random.Range(0, pool.Count);
+                combo[i] = pool[idx];
+                pool.RemoveAt(idx);
+            }
+            return combo;
         }
 
         public void LoadFrom(SaveData d)
@@ -122,6 +143,20 @@ namespace EscapeProto
             PanelUnlocked = d.panelUnlocked;
             RepairCodeAccepted = d.repairCodeAccepted;
             PowerRestored = d.powerRestored;
+            SafeCombo = ParseCombo(d.safeCombo) ?? SafeCombo;
+            SafeOpened = d.safeOpened;
+        }
+
+        private static int[] ParseCombo(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length != 3) return null;
+            var c = new int[3];
+            for (int i = 0; i < 3; i++)
+            {
+                if (!char.IsDigit(s[i])) return null;
+                c[i] = s[i] - '0';
+            }
+            return c;
         }
 
         public void WriteTo(SaveData d)
@@ -135,6 +170,27 @@ namespace EscapeProto
             d.panelUnlocked = PanelUnlocked;
             d.repairCodeAccepted = RepairCodeAccepted;
             d.powerRestored = PowerRestored;
+            d.safeCombo = SafeCombo != null ? $"{SafeCombo[0]}{SafeCombo[1]}{SafeCombo[2]}" : "";
+            d.safeOpened = SafeOpened;
+        }
+
+        /// <summary>ダイヤル数字 d が暗証の何桁目か（0/1/2）。該当しなければ -1。音の手がかり用</summary>
+        public int SafeDigitOrder(int d)
+        {
+            if (SafeCombo == null) return -1;
+            for (int i = 0; i < 3; i++) if (SafeCombo[i] == d) return i;
+            return -1;
+        }
+
+        /// <summary>入力3桁が暗証と一致すれば開錠</summary>
+        public bool TryOpenSafe(int[] entry)
+        {
+            if (SafeOpened) return true;
+            if (entry == null || entry.Length != 3 || SafeCombo == null) return false;
+            for (int i = 0; i < 3; i++) if (entry[i] != SafeCombo[i]) return false;
+            SafeOpened = true;
+            GameEvents.RaiseSafeOpened();
+            return true;
         }
 
         /// <summary>PCログイン：ID=社員番号, PW=生年月日</summary>

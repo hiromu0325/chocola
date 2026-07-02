@@ -78,7 +78,13 @@ namespace EscapeProto
         private void HandlePhase(GamePhase phase)
         {
             _silhouette.gameObject.SetActive(phase == GamePhase.Warning);
-            if (phase == GamePhase.Warning) _audio.PlayOneShot(ProceduralAudio.Alarm(), 0.9f);
+            if (phase == GamePhase.Warning)
+            {
+                _audio.PlayOneShot(ProceduralAudio.Alarm(), 0.9f);
+                Notebook.Add("searcher_" + _next,
+                    "探索者: " + GameEvents.GetSearcherName(_next),
+                    GameEvents.GetSearcherFeature(_next) + "\n" + GameEvents.GetSearcherCounter(_next));
+            }
         }
 
         private void Update()

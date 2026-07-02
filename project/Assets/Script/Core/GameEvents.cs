@@ -66,6 +66,7 @@ namespace EscapeProto
         public static event Action OnPanelUnlocked;               // 配電盤キーパッド解除
         public static event Action OnRepairCodeAccepted;          // 復旧手順コード受理→長押し作業へ
         public static event Action OnPowerRestored;               // 配電盤を復旧→電力回復（脱出可能）
+        public static event Action OnSafeOpened;                  // 壁の金庫を開錠（ストーリー開示）
 
         // ---- ゲーム進行 ----
         public static event Action<int> OnDollsChanged;           // 残り陶器人形
@@ -98,6 +99,7 @@ namespace EscapeProto
         public static void RaisePanelUnlocked() => OnPanelUnlocked?.Invoke();
         public static void RaiseRepairCodeAccepted() => OnRepairCodeAccepted?.Invoke();
         public static void RaisePowerRestored() => OnPowerRestored?.Invoke();
+        public static void RaiseSafeOpened() => OnSafeOpened?.Invoke();
         public static void RaiseDollsChanged(int n) => OnDollsChanged?.Invoke(n);
         public static void RaiseGameOver() => OnGameOver?.Invoke();
         public static void RaiseGameClear() => OnGameClear?.Invoke();
@@ -114,7 +116,7 @@ namespace EscapeProto
             OnRoomLightsChanged = null; OnFlashlightChanged = null; OnPerfumeUsed = null;
             OnGimmickSolved = null; OnJumpScare = null; OnWhiteout = null;
             OnPcAccessed = null; OnKeyFound = null; OnPanelUnlocked = null;
-            OnRepairCodeAccepted = null; OnPowerRestored = null;
+            OnRepairCodeAccepted = null; OnPowerRestored = null; OnSafeOpened = null;
             OnDollsChanged = null; OnGameOver = null; OnGameClear = null;
             OnGameStateChanged = null; OnGameStarted = null;
         }

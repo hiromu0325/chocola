@@ -72,6 +72,7 @@ namespace EscapeProto
             GameEvents.OnPanelUnlocked += HandlePuzzleProgress;
             GameEvents.OnRepairCodeAccepted += HandlePuzzleProgress;
             GameEvents.OnPowerRestored += HandlePuzzleProgress;
+            GameEvents.OnSafeOpened += HandlePuzzleProgress;
 
             GameSettings.LoadAndApply();
 
@@ -89,6 +90,7 @@ namespace EscapeProto
             GameEvents.OnPanelUnlocked -= HandlePuzzleProgress;
             GameEvents.OnRepairCodeAccepted -= HandlePuzzleProgress;
             GameEvents.OnPowerRestored -= HandlePuzzleProgress;
+            GameEvents.OnSafeOpened -= HandlePuzzleProgress;
             if (Instance == this) Instance = null;
         }
 
@@ -114,6 +116,7 @@ namespace EscapeProto
         {
             _dolls = _defaultDolls;
             GameEvents.RaiseDollsChanged(_dolls);
+            Notebook.Clear();
             if (PuzzleState.Instance != null) PuzzleState.Instance.NewGame();
             BeginPlay();
         }
@@ -129,6 +132,7 @@ namespace EscapeProto
             if (data.solvedGimmicks != null)
                 GimmickBase.ApplySolved(new HashSet<string>(data.solvedGimmicks));
             if (PuzzleState.Instance != null) PuzzleState.Instance.LoadFrom(data);
+            Notebook.LoadFrom(data.notes);
 
             BeginPlay();
         }
@@ -184,6 +188,7 @@ namespace EscapeProto
                 savedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm")
             };
             if (PuzzleState.Instance != null) PuzzleState.Instance.WriteTo(data);
+            data.notes = Notebook.ToList();
             return data;
         }
 

@@ -73,9 +73,19 @@ namespace EscapeProto
                 idx =>
                 {
                     if (idx == 0)
+                    {
                         PuzzleUI.Instance.ShowDocument($"{ps.TargetDepartment} 専用ページ", ps.BuildDeptPage());
+                        string model = ps.ActiveModel != null ? ps.ActiveModel.model : "??";
+                        Notebook.Add("pc_dept", "部署ページ（配電盤）",
+                            $"キーパッド解除コード: {ps.KeypadPassword}\n復旧は 型番 {model} の説明書を参照");
+                    }
                     else if (idx == 1)
+                    {
                         PuzzleUI.Instance.ShowDocument("配電室 鍵 貸出記録", ps.BuildKeyLendingRecord());
+                        if (ps.KeyHolder != null)
+                            Notebook.Add("pc_key", "鍵の貸出記録",
+                                $"配電室の鍵: {ps.KeyHolder.name}（{ps.KeyHolder.number}）が貸出中\n保管場所: 2階 本人の個室");
+                    }
                 });
         }
 

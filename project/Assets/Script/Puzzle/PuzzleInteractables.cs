@@ -34,6 +34,55 @@ namespace EscapeProto
             if (PuzzleUI.Instance.IsOpen || PuzzleUI.Instance.BlockReopen) return;
 
             PuzzleUI.Instance.ShowDocument(TitleFor(), BodyFor());
+            RecordNote();
+        }
+
+        /// <summary>読んだ資料の要点を手帳に追記</summary>
+        private void RecordNote()
+        {
+            var ps = PuzzleState.Instance;
+            switch (Type)
+            {
+                case DocumentType.EmployeeCard:
+                    if (ps.TargetEmployee != null)
+                        Notebook.Add("card", "社員証",
+                            $"社員番号: {ps.TargetEmployee.number}\n顔の特徴: {ps.TargetEmployee.feature}\n（氏名・生年月日は不明）");
+                    break;
+                case DocumentType.DepartmentRoster:
+                {
+                    string s = "社員番号の帯 → 部署\n";
+                    foreach (var row in PuzzleState.DeptTable) s += $"・{row}\n";
+                    Notebook.Add("roster", "社員名簿", s.TrimEnd());
+                    break;
+                }
+                case DocumentType.Album:
+                {
+                    var sb = new System.Text.StringBuilder("部署ごとの 顔の特徴 → 氏名\n");
+                    string cur = null;
+                    foreach (var e in PuzzleState.Employees)
+                    {
+                        if (e.department != cur) { cur = e.department; sb.Append($"\n[{cur}] "); }
+                        sb.Append($"{e.name}({e.feature}) ");
+                    }
+                    Notebook.Add("album", "アルバム", sb.ToString().TrimEnd());
+                    break;
+                }
+                case DocumentType.PersonnelFile:
+                {
+                    var sb = new System.Text.StringBuilder("氏名 → 生年月日（PWの手がかり）\n");
+                    foreach (var e in PuzzleState.Employees) sb.Append($"{e.name}:{e.birthdate}  ");
+                    Notebook.Add("hr", "人事ファイル", sb.ToString().TrimEnd());
+                    break;
+                }
+                case DocumentType.Manual:
+                {
+                    var m = FindModel(ManualModel);
+                    if (m != null)
+                        Notebook.Add("manual_" + m.model, $"説明書 {m.model}",
+                            $"型番 {m.model} の復旧手順コード: {Spaced(m.code)}");
+                    break;
+                }
+            }
         }
 
         private string TitleFor()

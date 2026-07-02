@@ -24,6 +24,13 @@ namespace EscapeProto
         public bool panelUnlocked;                          // 配電盤パネル解除済み
         public bool repairCodeAccepted;                     // 復旧手順コード受理済み
         public bool powerRestored;                          // 配電盤復旧済み
+
+        // ---- 壁の金庫（ストーリー用・脱出には不要）----
+        public string safeCombo;                            // ダイヤル3桁（ランダム固定）
+        public bool safeOpened;                             // 金庫を開錠済み
+
+        // ---- 手帳（見つけた情報の追記）----
+        public List<NotebookEntry> notes = new List<NotebookEntry>();
     }
 
     /// <summary>

@@ -112,6 +112,8 @@ namespace StarterAssets
 					}
 				}
 			}
+			// デフォルトで上下を反転（従来の向きの逆を既定とする）
+			lookVal.y = -lookVal.y;
 			if (invertLookX) lookVal.x = -lookVal.x;
 			if (invertLookY) lookVal.y = -lookVal.y;
 			look = lookVal;

@@ -77,6 +77,7 @@ namespace EscapeProto.EditorTools
             BuildPuzzleDocs();
             BuildPowerRoom();
             BuildSecondFloor();
+            BuildWallSafe();
             BuildHidingSpots();
             BuildLightSwitch();
             BuildDisplays();
@@ -307,6 +308,11 @@ namespace EscapeProto.EditorTools
             var puzzleUiGo = new GameObject("PuzzleUI");
             puzzleUiGo.transform.SetParent(root.transform, false);
             puzzleUiGo.AddComponent<PuzzleUI>();
+
+            // 壁金庫のダイヤルUI
+            var dialGo = new GameObject("SafeDialUI");
+            dialGo.transform.SetParent(root.transform, false);
+            dialGo.AddComponent<SafeDialUI>();
         }
 
         // ============================== 中央の大きい机 ==============================
@@ -451,6 +457,37 @@ namespace EscapeProto.EditorTools
                 di.Type = DocumentType.Manual;
                 di.ManualModel = models[i];
             }
+        }
+
+        // ============================== 壁金庫（襲撃中のみ・ストーリー用）==============================
+
+        private static void BuildWallSafe()
+        {
+            float hd = RoomD * 0.5f;
+            var root = new GameObject("WallSafe");
+            // 探索者が侵入してくる北の入口脇に、壁に埋め込む形で配置
+            Vector3 pos = new Vector3(-3f, 1.4f, hd - 0.18f);
+            root.transform.position = pos;
+
+            var bodyMat = GetMat("SafeBody", new Color(0.14f, 0.14f, 0.16f), 0.35f);
+            var trimMat = GetMat("SafeTrim", new Color(0.28f, 0.26f, 0.2f), 0.5f);
+            var dialMat = GetMat("SafeDial", new Color(0.55f, 0.45f, 0.15f), 0.7f);
+
+            // 埋め込み筐体（壁面から少しだけ手前に出る）
+            Box(root.transform, "SafeFrame", new Vector3(0f, 0f, -0.02f), new Vector3(0.9f, 0.9f, 0.28f), trimMat);
+            Box(root.transform, "SafeDoor", new Vector3(0f, 0f, -0.16f), new Vector3(0.74f, 0.74f, 0.06f), bodyMat);
+
+            // ダイヤル（円盤）＝状態インジケータ
+            var dial = Cylinder(root.transform, "Dial", new Vector3(0.05f, 0.05f, -0.22f), new Vector3(0.34f, 0.05f, 0.34f), dialMat);
+            dial.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // 盤面が手前(-Z)を向く
+
+            // ハンドル
+            Box(root.transform, "SafeHandle", new Vector3(-0.24f, -0.02f, -0.22f), new Vector3(0.06f, 0.28f, 0.06f), trimMat);
+
+            var safe = root.AddComponent<WallSafe>();
+            var so = new SerializedObject(safe);
+            so.FindProperty("_indicator").objectReferenceValue = dial.GetComponent<Renderer>();
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ============================== 2階：社員個室（鍵の保管場所）==============================

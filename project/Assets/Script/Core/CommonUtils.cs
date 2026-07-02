@@ -156,6 +156,46 @@ namespace EscapeProto
             return _unlock;
         }
 
+        private static AudioClip _dialTick, _dialBuzz;
+        private static readonly AudioClip[] _dialSpecial = new AudioClip[3];
+
+        /// <summary>ダイヤルを1目盛り回した時の通常の「カチッ」</summary>
+        public static AudioClip DialTick()
+        {
+            if (_dialTick != null) return _dialTick;
+            _dialTick = Generate("dialtick", 0.04f, (t, dur) =>
+                (Random.value * 2f - 1f) * Mathf.Exp(-120f * t) * 0.45f);
+            return _dialTick;
+        }
+
+        /// <summary>暗証桁の位置だけ鳴る特別音。order(0/1/2)で音程を上げ、順番を示す</summary>
+        public static AudioClip DialSpecial(int order)
+        {
+            order = Mathf.Clamp(order, 0, 2);
+            if (_dialSpecial[order] != null) return _dialSpecial[order];
+            float baseFreq = new[] { 440f, 620f, 880f }[order]; // 低→中→高＝1桁目→3桁目
+            _dialSpecial[order] = Generate($"dialsp{order}", 0.5f, (t, dur) =>
+            {
+                float env = Mathf.Exp(-4.5f * t / dur);
+                float s = Mathf.Sin(2f * Mathf.PI * baseFreq * t)
+                        + 0.4f * Mathf.Sin(2f * Mathf.PI * baseFreq * 2f * t);
+                return s * env * 0.32f;
+            });
+            return _dialSpecial[order];
+        }
+
+        /// <summary>不正解のブザー</summary>
+        public static AudioClip DialBuzz()
+        {
+            if (_dialBuzz != null) return _dialBuzz;
+            _dialBuzz = Generate("dialbuzz", 0.4f, (t, dur) =>
+            {
+                float sq = Mathf.Sign(Mathf.Sin(2f * Mathf.PI * 120f * t));
+                return sq * Mathf.Exp(-2.5f * t / dur) * 0.3f;
+            });
+            return _dialBuzz;
+        }
+
         private delegate float SampleFunc(float time, float duration);
 
         private static AudioClip Generate(string name, float duration, SampleFunc func)

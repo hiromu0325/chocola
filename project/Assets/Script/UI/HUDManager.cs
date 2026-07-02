@@ -119,6 +119,7 @@ namespace EscapeProto
         public void ToggleMemo()
         {
             _memoOpen = !_memoOpen;
+            if (_memoOpen) _memoText.text = BuildMemoText();
             _memoPanel.SetActive(_memoOpen);
         }
 
@@ -380,20 +381,25 @@ namespace EscapeProto
 
         private static string BuildMemoText()
         {
-            return "■ 古びた手帳 ■\n\n" +
-                   "【脱出の手順】\n" +
-                   "① 社員証→名簿→アルバム→人事ファイルで\n　 社員番号と生年月日を割り出す\n" +
-                   "② 社内PCにログイン（ID=社員番号 / PW=生年月日）\n" +
-                   "③ PCで『部署ページ』(解除コード・型番)と\n　 『鍵の貸出記録』を確認\n" +
-                   "④ 貸出記録の社員の2階個室で配電室の鍵を探す\n" +
-                   "⑤ 鍵で配電室を解錠\n" +
-                   "⑥ 配電盤：解除コード→説明書の復旧コードを入力\n　 →長押しで時間をかけて復旧→脱出口が開く\n\n" +
-                   "── 探索者の対策（モニターの特徴と照合）──\n" +
-                   $"{GameEvents.GetSearcherCounter(SearcherType.Sight)}\n" +
-                   $"{GameEvents.GetSearcherCounter(SearcherType.Sound)}\n" +
-                   $"{GameEvents.GetSearcherCounter(SearcherType.Smell)}\n\n" +
-                   "── 笑い声が聞こえたら ──\n" +
-                   "金髪の人形に決して答えるな。20秒無視せよ。\n『目』を渡してもいけない。\n\n（Tabで閉じる）";
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("■ 手帳 ■\n");
+            if (Notebook.Count == 0)
+            {
+                sb.AppendLine("まだ何も書かれていない。");
+                sb.AppendLine("資料を調べたり手がかりを見つけると、");
+                sb.AppendLine("ここに書き留められる。");
+            }
+            else
+            {
+                foreach (var e in Notebook.Entries)
+                {
+                    sb.AppendLine($"<color=#FFD79A>【{e.title}】</color>");
+                    sb.AppendLine(e.body);
+                    sb.AppendLine();
+                }
+            }
+            sb.Append("（Tabで閉じる）");
+            return sb.ToString();
         }
 
         private void EnsureEventSystem()
