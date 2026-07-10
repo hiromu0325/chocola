@@ -20,8 +20,9 @@ namespace EscapeProto
         public static HUDManager Instance { get; private set; }
 
         private Font _font;
-        private Text _topText, _stateText, _promptText, _memoText, _endText, _dialogText, _subtitle;
+        private Text _topText, _stateText, _promptText, _endText, _dialogText, _subtitle;
         private GameObject _memoPanel, _endPanel, _scarePanel, _dialogPanel;
+        private MemoBoard _memoBoard;
         private RawImage _scareFace;
         private Image _scareFlash, _whiteout;
         private RectTransform _progressFill;
@@ -88,6 +89,12 @@ namespace EscapeProto
                 if (gp.startButton.wasPressedThisFrame) restart = true;    // 終了画面でリスタート
             }
             if (tab) ToggleMemo();
+            // ページ送りは右クリックのみ（末尾まで行くとループ）。左クリックはキーワードのドラッグ用
+            if (_memoOpen && !_dialogPanel.activeSelf)
+            {
+                var mouse = Mouse.current;
+                if (mouse != null && mouse.rightButton.wasPressedThisFrame) _memoBoard.NextSpreadLooped();
+            }
             if (_gameEnded && restart) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
@@ -106,6 +113,8 @@ namespace EscapeProto
             }
 #else
             if (Input.GetKeyDown(KeyCode.Tab)) ToggleMemo();
+            if (_memoOpen && !_dialogPanel.activeSelf && Input.GetMouseButtonDown(1))
+                _memoBoard.NextSpreadLooped();
             if (_gameEnded && Input.GetKeyDown(KeyCode.R)) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
@@ -119,7 +128,7 @@ namespace EscapeProto
         public void ToggleMemo()
         {
             _memoOpen = !_memoOpen;
-            if (_memoOpen) _memoText.text = BuildMemoText();
+            if (_memoOpen) _memoBoard.RebuildAndShow();
             _memoPanel.SetActive(_memoOpen);
         }
 
@@ -128,18 +137,9 @@ namespace EscapeProto
         {
             var pm = PhaseManager.Instance;
             var gm = GameManager.Instance;
-            string phase = "";
-            if (pm != null)
-            {
-                if (pm.EventActive)
-                    phase = "<color=#E060FF>…笑い声がする</color>";
-                else switch (pm.CurrentPhase)
-                {
-                    case GamePhase.Exploration: phase = $"<color=#7CFC8C>探索</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
-                    case GamePhase.Warning: phase = $"<color=#FFC832>接近中</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
-                    case GamePhase.Visit: phase = $"<color=#FF4030>来訪中…机から離れるな</color> {MonitorDisplay.Fmt(pm.PhaseRemaining)}"; break;
-                }
-            }
+            // ※来訪の接近/滞在をUI文字で警告しない設計。
+            //   到達は古時計の鐘が告げ、誰が来るかはエントランスのモニター映像を目で見て判断する
+            string phase = (pm != null && pm.EventActive) ? "<color=#E060FF>…笑い声がする</color>" : "";
             int dolls = gm != null ? gm.Dolls : 0;
             _topText.text = $"{phase}    人形:{new string('●', Mathf.Max(0, dolls))}    {ObjectiveText()}";
 
@@ -338,13 +338,37 @@ namespace EscapeProto
             _progressFill.pivot = new Vector2(0, 0.5f);
             _progressRoot.SetActive(false);
 
-            // 手帳
-            _memoPanel = new GameObject("MemoPanel"); _memoPanel.transform.SetParent(canvasGo.transform, false);
+            // 手帳（見開き2ページ。左右クリックでページ送り）
+            // ※専用キャンバス（sortingOrder=60）に載せ、PuzzleUI（50）より前面に出す。
+            //   社内PCのテンキー等を開いたままTabで手帳を重ねて確認できる（数字入力はキーボードで可能）
+            var memoCanvasGo = new GameObject("MemoCanvas");
+            memoCanvasGo.transform.SetParent(transform, false);
+            var memoCanvas = memoCanvasGo.AddComponent<Canvas>();
+            memoCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            memoCanvas.sortingOrder = 60;
+            var memoScaler = memoCanvasGo.AddComponent<CanvasScaler>();
+            memoScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            memoScaler.referenceResolution = new Vector2(1920, 1080);
+            memoCanvasGo.AddComponent<GraphicRaycaster>();
+
+            _memoPanel = new GameObject("MemoPanel"); _memoPanel.transform.SetParent(memoCanvasGo.transform, false);
             var memoBg = _memoPanel.AddComponent<Image>(); memoBg.color = new Color(0.07f, 0.06f, 0.05f, 0.94f);
-            SetRect(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960, 700));
-            _memoText = MakeText(_memoPanel.transform, "MemoText", 25, TextAnchor.UpperLeft);
-            SetRect(_memoText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(880, 620));
-            _memoText.text = BuildMemoText();
+            SetRect(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1260, 720));
+
+            var memoTitle = MakeText(_memoPanel.transform, "MemoTitle", 30, TextAnchor.UpperCenter);
+            SetRect(memoTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -18), new Vector2(600, 44));
+            memoTitle.text = "■ 手帳 ■";
+            memoTitle.color = new Color(1f, 0.85f, 0.6f);
+
+            // 中央の綴じ線
+            var spineGo = new GameObject("Spine"); spineGo.transform.SetParent(_memoPanel.transform, false);
+            var spine = spineGo.AddComponent<Image>(); spine.color = new Color(0.35f, 0.3f, 0.24f, 0.9f);
+            SetRect(spine.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -8), new Vector2(3, 580));
+
+            // ページ描画・キーワードチップ・関係線は MemoBoard が担当
+            _memoBoard = _memoPanel.AddComponent<MemoBoard>();
+            _memoBoard.Init((RectTransform)_memoPanel.transform, _font);
+
             _memoPanel.SetActive(false);
 
             // 会話ダイアログ
@@ -377,29 +401,6 @@ namespace EscapeProto
             _endText = MakeText(_endPanel.transform, "EndText", 52, TextAnchor.MiddleCenter);
             SetRect(_endText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1300, 400));
             _endPanel.SetActive(false);
-        }
-
-        private static string BuildMemoText()
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("■ 手帳 ■\n");
-            if (Notebook.Count == 0)
-            {
-                sb.AppendLine("まだ何も書かれていない。");
-                sb.AppendLine("資料を調べたり手がかりを見つけると、");
-                sb.AppendLine("ここに書き留められる。");
-            }
-            else
-            {
-                foreach (var e in Notebook.Entries)
-                {
-                    sb.AppendLine($"<color=#FFD79A>【{e.title}】</color>");
-                    sb.AppendLine(e.body);
-                    sb.AppendLine();
-                }
-            }
-            sb.Append("（Tabで閉じる）");
-            return sb.ToString();
         }
 
         private void EnsureEventSystem()

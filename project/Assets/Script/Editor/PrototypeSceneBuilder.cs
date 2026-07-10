@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -32,24 +32,24 @@ namespace EscapeProto.EditorTools
         private const float RoomD = 12f;   // Z
         private const float WallH = 3.2f;
 
-        // 別部屋（イベント部屋）：東側にドアでつながる
-        private const float EvW = 7f;
-        private const float EvD = 6f;
+        // 別部屋（イベント部屋）：東側にドアでつながる（探索量を増やすためメイン部屋級に拡張）
+        private const float EvW = 12f;
+        private const float EvD = 10f;
         private static readonly Vector3 EvCenter = new Vector3(RoomW * 0.5f + EvW * 0.5f, 0f, 0f);
 
         // 襲撃者の部屋（西）：金庫あり。ドアは襲撃中のみ開く
-        private const float SrW = 6f;
-        private const float SrD = 6f;
+        private const float SrW = 12f;
+        private const float SrD = 10f;
         private static readonly Vector3 SrCenter = new Vector3(-(RoomW * 0.5f + SrW * 0.5f), 0f, 0f);
 
         // 用具室（北奥）：配電盤＋説明書
-        private const float UtW = 6f;
-        private const float UtD = 4f;
+        private const float UtW = 14f;
+        private const float UtD = 10f;
         private static readonly Vector3 UtCenter = new Vector3(0f, 0f, RoomD * 0.5f + UtD * 0.5f);
 
         // 社員の事務所（南裏）：PC・資料
-        private const float OfW = 8f;
-        private const float OfD = 4f;
+        private const float OfW = 14f;
+        private const float OfD = 10f;
         private static readonly Vector3 OfCenter = new Vector3(3f, 0f, -(RoomD * 0.5f + OfD * 0.5f));
 
         // 主要な出入口（南壁）：脱出ドアと事務所ドアの中心X
@@ -81,6 +81,131 @@ namespace EscapeProto.EditorTools
             return cfg;
         }
 
+        // ============================== レイアウト保存（手動配置の永続化・共有）==============================
+
+        private const string LayoutDir = RootDir + "/Layout";
+        private const string LayoutPath = LayoutDir + "/layout.json";
+
+        /// <summary>レイアウト保存の対象（名前＝ID。シーン内で一意であること）</summary>
+        private static readonly string[] MovableIds =
+        {
+            // 部屋・大構造
+            "Room", "EventRoom", "SearcherRoom", "UtilityRoom", "Office", "SecondFloor",
+            "CentralDesk", "Stairs",
+            // 什器
+            "Locker_Hall", "Locker_Searcher", "Bed",
+            "OfficeDesk_A", "OfficeDesk_B", "OfficeChair_A", "OfficeChair_B",
+            "OfficeShelf", "OfficeMonitor", "AlbumTable", "FileCabinet", "SocialPC",
+            "Bucket", "Broom",
+            // ギミック・演出
+            "ExitDoor", "SearcherRoomDoor", "UtilityRoomDoor",
+            "WallSafe", "DistributionBoard", "GrandfatherClock", "LightSwitch",
+            "DollEvent", "EventTriggerZone", "ResidentSearcher",
+            // 進行用ポイント
+            "RespawnPoint", "EntryPoint", "ExitPoint",
+            "Patrol_0", "Patrol_1", "Patrol_2", "Patrol_3",
+            // アイテム
+            "EyeItem_Hall", "EyeItem_Event", "Perfume",
+        };
+
+        [System.Serializable] private class LayoutItem { public string id; public Vector3 pos; public Vector3 rot; public Vector3 scale; }
+        [System.Serializable] private class LayoutData { public System.Collections.Generic.List<LayoutItem> items = new System.Collections.Generic.List<LayoutItem>(); }
+
+        /// <summary>ビルド後、保存対象すべてに LayoutAnchor を付ける（名前＝ID）</summary>
+        private static void AttachLayoutAnchors()
+        {
+            foreach (var id in MovableIds)
+            {
+                var go = GameObject.Find(id);
+                if (go == null) continue;
+                var a = go.GetComponent<LayoutAnchor>();
+                if (a == null) a = go.AddComponent<LayoutAnchor>();
+                a.Id = id;
+            }
+        }
+
+        /// <summary>
+        /// 現在のシーンの配置（LayoutAnchor付きオブジェクト）を layout.json に保存する。
+        /// エディタで配置を変えたらこれを実行するだけで、以後の再構築で配置が維持される。
+        /// </summary>
+        [MenuItem("Tools/EscapePrototype/Save Layout")]
+        public static void SaveLayout()
+        {
+            var anchors = Object.FindObjectsByType<LayoutAnchor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var data = new LayoutData();
+            foreach (var a in anchors)
+            {
+                if (string.IsNullOrEmpty(a.Id)) continue;
+                data.items.Add(new LayoutItem
+                {
+                    id = a.Id,
+                    pos = a.transform.position,
+                    rot = a.transform.eulerAngles,
+                    scale = a.transform.localScale,
+                });
+            }
+            data.items.Sort((x, y) => string.CompareOrdinal(x.id, y.id));
+
+            if (!AssetDatabase.IsValidFolder(LayoutDir))
+                AssetDatabase.CreateFolder(RootDir, "Layout");
+            System.IO.File.WriteAllText(LayoutPath, JsonUtility.ToJson(data, true));
+            AssetDatabase.ImportAsset(LayoutPath);
+            Debug.Log($"[PrototypeSceneBuilder] レイアウトを保存しました: {LayoutPath}（{data.items.Count}件）\n" +
+                      "以後の Build Prototype Scene でこの配置が自動適用されます。");
+        }
+
+        /// <summary>layout.json があれば、保存された配置を適用する（親→子の順）</summary>
+        private static void ApplyLayoutOverrides()
+        {
+            if (!System.IO.File.Exists(LayoutPath)) return;
+            var data = JsonUtility.FromJson<LayoutData>(System.IO.File.ReadAllText(LayoutPath));
+            if (data == null || data.items == null || data.items.Count == 0) return;
+
+            var anchors = Object.FindObjectsByType<LayoutAnchor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var map = new System.Collections.Generic.Dictionary<string, Transform>();
+            foreach (var a in anchors)
+                if (!string.IsNullOrEmpty(a.Id) && !map.ContainsKey(a.Id)) map[a.Id] = a.transform;
+
+            // 親が動くと子のワールド座標が変わるため、階層の浅い順に適用する
+            data.items.Sort((x, y) =>
+                Depth(map.TryGetValue(x.id, out var tx) ? tx : null)
+                    .CompareTo(Depth(map.TryGetValue(y.id, out var ty) ? ty : null)));
+
+            int applied = 0;
+            var missing = new System.Text.StringBuilder();
+            foreach (var item in data.items)
+            {
+                if (!map.TryGetValue(item.id, out var t)) { missing.Append(item.id).Append(' '); continue; }
+                t.position = item.pos;
+                t.eulerAngles = item.rot;
+                t.localScale = item.scale;
+                applied++;
+            }
+            Debug.Log($"[PrototypeSceneBuilder] layout.json の配置を適用: {applied}/{data.items.Count}件" +
+                      (missing.Length > 0 ? $"（未発見: {missing}）" : ""));
+        }
+
+        private static int Depth(Transform t)
+        {
+            int d = 0;
+            while (t != null) { d++; t = t.parent; }
+            return d;
+        }
+
+        /// <summary>
+        /// シーン内の全 StairColliderSync のコリジョンを再生成する。
+        /// 階段を移動した場合はコリジョンが子として追従するが、
+        /// 段数・寸法を変えた場合はこのメニューで作り直す。
+        /// </summary>
+        [MenuItem("Tools/EscapePrototype/Rebuild Stair Colliders")]
+        public static void RebuildStairColliders()
+        {
+            var syncs = Object.FindObjectsByType<StairColliderSync>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var s in syncs) s.Rebuild();
+            EditorSceneManager.MarkAllScenesDirty();
+            Debug.Log($"[PrototypeSceneBuilder] 階段コリジョンを再生成しました: {syncs.Length}件");
+        }
+
         [MenuItem("Tools/EscapePrototype/Build Prototype Scene")]
         public static void Build()
         {
@@ -110,6 +235,11 @@ namespace EscapeProto.EditorTools
             // 各部屋を自己完結した1つのルートにまとめ、ピボットを部屋中心に置き直して
             // 個別Prefab化する（後からHierarchyでドラッグしてレイアウトし直せる）。
             OrganizeAndPrefab();
+
+            // レイアウト保存対象にマーカーを付け、layout.json があれば手動配置を復元する
+            //（エディタで動かして Tools > EscapePrototype > Save Layout すれば再構築後も配置が残る）
+            AttachLayoutAnchors();
+            ApplyLayoutOverrides();
 
             string scenePath = RootDir + "/PrototypeScene.unity";
             EditorSceneManager.SaveScene(scene, scenePath);
@@ -157,14 +287,22 @@ namespace EscapeProto.EditorTools
             RenderSettings.fogDensity = 0.03f;
 
             // これらPointライトが「部屋の電気」。電気スイッチが自動収集する
+            // ※2階メザニン（床下面3.0）が1階全面を覆うため、1階ホールの照明はそれより下に置く。
+            // Pointライトはすべて電気スイッチ（RoomLightController）が自動収集して一括ON/OFFされる
             CreatePointLight("Light_Center", new Vector3(0f, 2.8f, 0f), new Color(1f, 0.9f, 0.7f), 1.1f, 12f);
-            CreatePointLight("Light_West", new Vector3(-5f, 2.5f, 3f), new Color(0.8f, 0.85f, 1f), 0.7f, 9f);
-            CreatePointLight("Light_Event", EvCenter + new Vector3(0f, 2.6f, 0f), new Color(0.9f, 0.85f, 0.8f), 0.7f, 8f);
-            // 襲撃者の部屋の赤（雰囲気・敵の在室を示す。Pointなので電気で消える）
-            CreatePointLight("Light_Searcher", SrCenter + new Vector3(0f, 2.6f, 0f), new Color(1f, 0.3f, 0.2f), 0.8f, 8f);
-            // 用具室・事務所
-            CreatePointLight("Light_Utility", UtCenter + new Vector3(0f, 2.6f, 0f), new Color(0.7f, 0.8f, 1f), 0.6f, 7f);
-            CreatePointLight("Light_Office", OfCenter + new Vector3(0f, 2.6f, 0f), new Color(1f, 0.9f, 0.75f), 0.7f, 8f);
+            CreatePointLight("Light_West", new Vector3(-5f, 2.8f, 3f), new Color(0.8f, 0.85f, 1f), 0.8f, 10f);
+            CreatePointLight("Light_East", new Vector3(5f, 2.8f, -3f), new Color(1f, 0.9f, 0.75f), 0.8f, 10f);
+
+            // 各部屋：拡張後の広さに合わせて2灯ずつ
+            CreatePointLight("Light_Event", EvCenter + new Vector3(2.5f, 2.6f, 2f), new Color(0.9f, 0.85f, 0.8f), 0.8f, 10f);
+            CreatePointLight("Light_Event2", EvCenter + new Vector3(-2.5f, 2.6f, -2f), new Color(0.9f, 0.85f, 0.8f), 0.8f, 10f);
+            // 襲撃者の部屋の赤（雰囲気・敵の在室を示す）
+            CreatePointLight("Light_Searcher", SrCenter + new Vector3(2.5f, 2.6f, 2f), new Color(1f, 0.3f, 0.2f), 0.9f, 10f);
+            CreatePointLight("Light_Searcher2", SrCenter + new Vector3(-2.5f, 2.6f, -2f), new Color(1f, 0.35f, 0.25f), 0.7f, 9f);
+            CreatePointLight("Light_Utility", UtCenter + new Vector3(3f, 2.6f, 2f), new Color(0.7f, 0.8f, 1f), 0.8f, 10f);
+            CreatePointLight("Light_Utility2", UtCenter + new Vector3(-3f, 2.6f, -2f), new Color(0.7f, 0.8f, 1f), 0.8f, 10f);
+            CreatePointLight("Light_Office", OfCenter + new Vector3(3f, 2.6f, 2f), new Color(1f, 0.9f, 0.75f), 0.8f, 10f);
+            CreatePointLight("Light_Office2", OfCenter + new Vector3(-3f, 2.6f, -2f), new Color(1f, 0.9f, 0.75f), 0.8f, 10f);
         }
 
         private static void CreatePointLight(string name, Vector3 pos, Color color, float intensity, float range)
@@ -179,8 +317,8 @@ namespace EscapeProto.EditorTools
         private static void BuildRoom()
         {
             var root = new GameObject("Room");
-            var floorMat = GetMat("Floor", new Color(0.16f, 0.15f, 0.14f));
-            var wallMat = GetMat("Wall", new Color(0.28f, 0.26f, 0.24f));
+            var floorMat = GetTexMat("Floor", "floor_wood.png", new Color(0.55f, 0.52f, 0.48f), 0.2f, new Vector2(8f, 6f));
+            var wallMat = GetTexMat("Wall", "wall_plaster.png", new Color(0.62f, 0.58f, 0.54f), 0.15f, new Vector2(4f, 1.5f));
 
             Box(root.transform, "Floor", new Vector3(0, -0.05f, 0), new Vector3(RoomW, 0.1f, RoomD), floorMat);
             // ※天井は撤去（2階メザニンの吹き抜けスペースを確保）
@@ -212,9 +350,23 @@ namespace EscapeProto.EditorTools
             // 視線切り用の柱
             Box(root.transform, "Pillar", new Vector3(3.5f, WallH * 0.5f, 1f), new Vector3(0.9f, WallH, 0.9f), wallMat);
 
-            // 脱出ドア（南壁 西寄り）
-            var doorMat = GetMat("ExitDoor", new Color(0.35f, 0.25f, 0.2f));
-            var door = Box(root.transform, "ExitDoor", new Vector3(ExitGapX, 1.25f, -hd), new Vector3(gap - 0.1f, 2.5f, 0.25f), doorMat);
+            // 脱出ドア（南壁 西寄り）：Blender製の扉モデル＋不可視コライダー
+            var door = new GameObject("ExitDoor");
+            door.transform.SetParent(root.transform, false);
+            door.transform.position = new Vector3(ExitGapX, 0f, -hd);
+            var doorModel = PlaceModel(door.transform, "Door", Vector3.zero);
+            if (doorModel != null)
+            {
+                RemapModelMaterials(doorModel,
+                    ("DoorWood", GetTexMat("ExitDoorWood", "wood_dark.png", new Color(0.75f, 0.6f, 0.5f), 0.25f)));
+            }
+            else
+            {
+                var doorMat = GetMat("ExitDoor", new Color(0.35f, 0.25f, 0.2f));
+                var b = Box(door.transform, "Panel", new Vector3(0f, 1.25f, 0f), new Vector3(gap - 0.1f, 2.5f, 0.25f), doorMat);
+                Object.DestroyImmediate(b.GetComponent<Collider>());
+            }
+            AddBoxCollider(door, new Vector3(0f, 1.25f, 0f), new Vector3(gap - 0.1f, 2.5f, 0.25f));
             door.AddComponent<ExitDoor>();
         }
 
@@ -243,8 +395,8 @@ namespace EscapeProto.EditorTools
         private static void BuildEventRoom()
         {
             var root = new GameObject("EventRoom");
-            var floorMat = GetMat("Floor", new Color(0.16f, 0.15f, 0.14f));
-            var wallMat = GetMat("EventWall", new Color(0.22f, 0.2f, 0.24f));
+            var floorMat = GetTexMat("Floor", "floor_wood.png", new Color(0.55f, 0.52f, 0.48f), 0.2f, new Vector2(8f, 6f));
+            var wallMat = GetTexMat("EventWall", "wall_plaster.png", new Color(0.5f, 0.46f, 0.52f), 0.15f, new Vector2(4f, 1.5f));
 
             float cx = EvCenter.x;
             float hw = EvW * 0.5f, hd = EvD * 0.5f;
@@ -288,6 +440,7 @@ namespace EscapeProto.EditorTools
             fpc.SpeedChangeRate = 30f;   // 出だしを機敏に（押した瞬間に歩き出す）
 
             player.AddComponent<PlayerStatus>();
+            player.AddComponent<CrouchController>();   // C/Ctrlしゃがみ・Z伏せ
 
             // 懐中電灯（カメラに追従させる）
             camRoot.gameObject.AddComponent<Flashlight>();
@@ -338,6 +491,11 @@ namespace EscapeProto.EditorTools
             var pmGo = new GameObject("PhaseManager");
             pmGo.transform.SetParent(root.transform, false);
             pmGo.AddComponent<PhaseManager>();
+
+            // NavMesh実行時ベイク（探索者のNavMeshAgent移動用。来訪開始ごとに再ベイク）
+            var navGo = new GameObject("NavMeshBootstrap");
+            navGo.transform.SetParent(root.transform, false);
+            navGo.AddComponent<NavMeshBootstrap>();
 
             var hudGo = new GameObject("HUD");
             hudGo.transform.SetParent(root.transform, false);
@@ -392,10 +550,7 @@ namespace EscapeProto.EditorTools
             rack.transform.position = deskPos + new Vector3(0f, 0.9f, 0.4f);
             rack.AddComponent<DollRack>();
 
-            // 手帳（机上 左）
-            var memoMat = GetMat("Memo", new Color(0.9f, 0.88f, 0.75f));
-            var memo = Box(root.transform, "MemoNote", deskPos + new Vector3(-1.1f, 0.92f, -0.2f), new Vector3(0.3f, 0.05f, 0.4f), memoMat);
-            memo.AddComponent<MemoNote>();
+            // ※手帳の実体オブジェクトは廃止（Tabでいつでも開けるUIに一本化）
 
             // 香水（机上 右）
             var perfMat = GetMat("Perfume", new Color(0.6f, 0.8f, 0.9f), 0.8f);
@@ -418,16 +573,16 @@ namespace EscapeProto.EditorTools
         private static void BuildPuzzleDocs()
         {
             var root = new GameObject("PuzzleDocs");
-            Vector3 desk = new Vector3(0f, 0f, -1.5f);
 
-            // 社員証（中央机の上・左寄り）
+            // 資料は中央机に集めず、社員の机に分散させて「探させる」
+            // 社員証（事務所・東側の社員机Bの上）
             var cardMat = GetMat("Card", new Color(0.85f, 0.85f, 0.9f), 0.6f);
-            var card = Box(root.transform, "EmployeeCard", desk + new Vector3(-0.6f, 0.92f, 0.25f), new Vector3(0.3f, 0.04f, 0.2f), cardMat);
+            var card = Box(root.transform, "EmployeeCard", new Vector3(5.3f, 0.86f, -6.8f), new Vector3(0.3f, 0.04f, 0.2f), cardMat);
             card.AddComponent<DocumentInteract>().Type = DocumentType.EmployeeCard;
 
-            // 社員名簿（番号→部署）（机の上・右寄り）
+            // 社員名簿（番号→部署）（事務所・西側の社員机Aの上）
             var rosterMat = GetMat("Roster", new Color(0.9f, 0.88f, 0.78f));
-            var roster = Box(root.transform, "DepartmentRoster", desk + new Vector3(0.55f, 0.92f, 0.25f), new Vector3(0.35f, 0.05f, 0.28f), rosterMat);
+            var roster = Box(root.transform, "DepartmentRoster", new Vector3(-0.1f, 0.86f, -7.15f), new Vector3(0.35f, 0.05f, 0.28f), rosterMat);
             roster.AddComponent<DocumentInteract>().Type = DocumentType.DepartmentRoster;
 
             // アルバム（事務所・西寄りの小机の上）：小机はBlender製ローポリ
@@ -465,14 +620,27 @@ namespace EscapeProto.EditorTools
             file.AddComponent<DocumentInteract>().Type = DocumentType.PersonnelFile;
 
             // 社内PCデスク（事務所・東寄り）：ID=社員番号 / PW=生年月日 でログイン
-            // モニターは机の手前・上面に置き、部屋側（+Z）から正面で触れるようにする
+            // モニターは机の上に置き、部屋側（+Z）から正面で触れるようにする
             var pcDeskMat = GetMat("PcDesk", new Color(0.35f, 0.3f, 0.26f));
             Box(root.transform, "PcDeskBody", new Vector3(5.5f, 0.4f, -8.9f), new Vector3(1.4f, 0.8f, 0.7f), pcDeskMat);
             Box(root.transform, "PcDeskTop", new Vector3(5.5f, 0.82f, -8.9f), new Vector3(1.5f, 0.08f, 0.8f), pcDeskMat);
-            var pcMat = GetMat("PcMonitor", new Color(0.1f, 0.12f, 0.16f), 0.5f);
-            Box(root.transform, "PcStand", new Vector3(5.5f, 0.98f, -8.95f), new Vector3(0.1f, 0.25f, 0.1f), pcMat);
-            // 画面は机の前縁（部屋側）に大きめに。プレイヤーは北側(+Z)から正対して触れる
-            var pc = Box(root.transform, "SocialPC", new Vector3(5.5f, 1.3f, -8.55f), new Vector3(0.8f, 0.55f, 0.1f), pcMat);
+            var pc = new GameObject("SocialPC");
+            pc.transform.SetParent(root.transform, false);
+            pc.transform.position = new Vector3(5.5f, 0.86f, -8.95f);
+            if (PlaceModel(pc.transform, "RetroPC", Vector3.zero) != null)
+            {
+                // CRT本体ぶんのインタラクト当たり（プレイヤーは北側+Zから触れる）
+                AddBoxCollider(pc, new Vector3(0f, 0.3f, 0.05f), new Vector3(0.8f, 0.6f, 0.5f));
+            }
+            else
+            {
+                var pcMat = GetMat("PcMonitor", new Color(0.1f, 0.12f, 0.16f), 0.5f);
+                var stand = Box(pc.transform, "PcStand", new Vector3(0f, 0.12f, 0f), new Vector3(0.1f, 0.25f, 0.1f), pcMat);
+                Object.DestroyImmediate(stand.GetComponent<Collider>());
+                var screen = Box(pc.transform, "Screen", new Vector3(0f, 0.44f, 0.4f), new Vector3(0.8f, 0.55f, 0.1f), pcMat);
+                Object.DestroyImmediate(screen.GetComponent<Collider>());
+                AddBoxCollider(pc, new Vector3(0f, 0.44f, 0.4f), new Vector3(0.8f, 0.55f, 0.1f));
+            }
             pc.AddComponent<PcDesk>();
         }
 
@@ -481,8 +649,8 @@ namespace EscapeProto.EditorTools
         private static void BuildSearcherRoom()
         {
             var root = new GameObject("SearcherRoom");
-            var floorMat = GetMat("Floor", new Color(0.16f, 0.15f, 0.14f));
-            var wallMat = GetMat("SearcherWall", new Color(0.24f, 0.18f, 0.18f));
+            var floorMat = GetTexMat("Floor", "floor_wood.png", new Color(0.55f, 0.52f, 0.48f), 0.2f, new Vector2(8f, 6f));
+            var wallMat = GetTexMat("SearcherWall", "wall_plaster.png", new Color(0.55f, 0.4f, 0.4f), 0.15f, new Vector2(4f, 1.5f));
 
             float cx = SrCenter.x;                 // -11
             float hw = SrW * 0.5f, hd = SrD * 0.5f;
@@ -494,14 +662,30 @@ namespace EscapeProto.EditorTools
             Box(root.transform, "SrWall_S", new Vector3(cx, WallH * 0.5f, -hd), new Vector3(SrW, WallH, 0.3f), wallMat);
 
             // ドア（襲撃中のみ床下へスライドして開く）
+            // 見た目はBlender製の扉（西壁の隙間に合わせ90°回転）。スライドはドアルートごと動かす
             var doorRoot = new GameObject("SearcherRoomDoor");
             doorRoot.transform.position = new Vector3(-RoomW * 0.5f, 0f, 0f);
             var srd = doorRoot.AddComponent<SearcherRoomDoor>();
-            var doorMat = GetMat("SearcherDoor", new Color(0.35f, 0.15f, 0.15f), 0.4f);
-            var door = Box(doorRoot.transform, "Door", new Vector3(0f, 1.25f, 0f), new Vector3(0.28f, 2.5f, 1.55f), doorMat);
+            var door = new GameObject("Door");
+            door.transform.SetParent(doorRoot.transform, false);
+            var srDoorModel = PlaceModel(door.transform, "Door", Vector3.zero, 90f);
+            if (srDoorModel != null)
+            {
+                RemapModelMaterials(srDoorModel,
+                    ("DoorWood", GetTexMat("SearcherDoorWood", "wood_dark.png", new Color(0.7f, 0.4f, 0.4f), 0.3f)));
+            }
+            else
+            {
+                var doorMat = GetMat("SearcherDoor", new Color(0.35f, 0.15f, 0.15f), 0.4f);
+                var b = Box(door.transform, "Panel", new Vector3(0f, 1.25f, 0f), new Vector3(0.28f, 2.5f, 1.55f), doorMat);
+                Object.DestroyImmediate(b.GetComponent<Collider>());
+            }
+            var srDoorCol = door.AddComponent<BoxCollider>();
+            srDoorCol.center = new Vector3(0f, 1.25f, 0f);
+            srDoorCol.size = new Vector3(0.28f, 2.5f, 1.55f);
             var srdSo = new SerializedObject(srd);
             srdSo.FindProperty("_door").objectReferenceValue = door.transform;
-            srdSo.FindProperty("_doorCollider").objectReferenceValue = door.GetComponent<Collider>();
+            srdSo.FindProperty("_doorCollider").objectReferenceValue = srDoorCol;
             srdSo.ApplyModifiedPropertiesWithoutUndo();
 
             // 常駐の襲撃者（来訪中は本物が外に出るため姿を消す）
@@ -520,8 +704,8 @@ namespace EscapeProto.EditorTools
         private static void BuildUtilityRoom()
         {
             var root = new GameObject("UtilityRoom");
-            var floorMat = GetMat("Floor", new Color(0.16f, 0.15f, 0.14f));
-            var wallMat = GetMat("PowerWall", new Color(0.2f, 0.22f, 0.26f));
+            var floorMat = GetTexMat("Floor", "floor_wood.png", new Color(0.55f, 0.52f, 0.48f), 0.2f, new Vector2(8f, 6f));
+            var wallMat = GetTexMat("PowerWall", "wall_plaster.png", new Color(0.45f, 0.5f, 0.58f), 0.15f, new Vector2(4f, 1.5f));
 
             float cz = UtCenter.z;                 // 8
             float hw = UtW * 0.5f, hd = UtD * 0.5f;
@@ -538,19 +722,48 @@ namespace EscapeProto.EditorTools
             var doorRoot = new GameObject("UtilityRoomDoor");
             doorRoot.transform.position = new Vector3(0f, 0f, RoomD * 0.5f);
             var kd = doorRoot.AddComponent<KeyedDoor>();
-            var doorMat = GetMat("SecDoor", new Color(0.3f, 0.32f, 0.38f), 0.5f);
-            var door = Box(doorRoot.transform, "Door", new Vector3(0f, 1.25f, 0f), new Vector3(gap - 0.05f, 2.5f, 0.2f), doorMat);
+            var door = new GameObject("Door");
+            door.transform.SetParent(doorRoot.transform, false);
+            var utDoorModel = PlaceModel(door.transform, "Door", Vector3.zero);
+            if (utDoorModel != null)
+            {
+                RemapModelMaterials(utDoorModel,
+                    ("DoorWood", GetTexMat("SecDoorSteel", "metal_aged.png", new Color(0.6f, 0.65f, 0.75f), 0.5f)));
+            }
+            else
+            {
+                var doorMat = GetMat("SecDoor", new Color(0.3f, 0.32f, 0.38f), 0.5f);
+                var b = Box(door.transform, "Panel", new Vector3(0f, 1.25f, 0f), new Vector3(gap - 0.05f, 2.5f, 0.2f), doorMat);
+                Object.DestroyImmediate(b.GetComponent<Collider>());
+            }
+            var utDoorCol = door.AddComponent<BoxCollider>();
+            utDoorCol.center = new Vector3(0f, 1.25f, 0f);
+            utDoorCol.size = new Vector3(gap - 0.05f, 2.5f, 0.2f);
             var lockMat = GetMat("SecLock", new Color(0.9f, 0.2f, 0.2f));
             var lockBox = Box(doorRoot.transform, "Lock", new Vector3(gap * 0.5f - 0.2f, 1.3f, -0.13f), new Vector3(0.12f, 0.18f, 0.06f), lockMat);
             var kdSo = new SerializedObject(kd);
             kdSo.FindProperty("_door").objectReferenceValue = door.transform;
-            kdSo.FindProperty("_doorCollider").objectReferenceValue = door.GetComponent<Collider>();
+            kdSo.FindProperty("_doorCollider").objectReferenceValue = utDoorCol;
             kdSo.FindProperty("_lockIndicator").objectReferenceValue = lockBox.GetComponent<Renderer>();
             kdSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // 配電盤（北壁の東寄り・正面＝南から触れる）
-            var boardMat = GetMat("Board", new Color(0.2f, 0.2f, 0.22f), 0.3f);
-            var board = Box(root.transform, "DistributionBoard", new Vector3(1.5f, 1.3f, zN - 0.35f), new Vector3(1.1f, 1.3f, 0.35f), boardMat);
+            // 配電盤（北壁の東寄り・正面＝南から触れる）：Blender製モデル＋不可視コライダー
+            var board = new GameObject("DistributionBoard");
+            board.transform.SetParent(root.transform, false);
+            board.transform.position = new Vector3(1.5f, 0.65f, zN - 0.35f);
+            var boardModel = PlaceModel(board.transform, "DistributionBoard", Vector3.zero, 180f);
+            if (boardModel != null)
+            {
+                RemapModelMaterials(boardModel,
+                    ("BoardBody", GetTexMat("BoardBodyTex", "metal_aged.png", new Color(0.55f, 0.55f, 0.6f), 0.4f)));
+            }
+            else
+            {
+                var boardMat = GetMat("Board", new Color(0.2f, 0.2f, 0.22f), 0.3f);
+                var b = Box(board.transform, "Body", new Vector3(0f, 0.65f, 0f), new Vector3(1.1f, 1.3f, 0.35f), boardMat);
+                Object.DestroyImmediate(b.GetComponent<Collider>());
+            }
+            AddBoxCollider(board, new Vector3(0f, 0.65f, 0f), new Vector3(1.1f, 1.3f, 0.35f));
             board.AddComponent<DistributionBoard>();
 
             // 説明書3種（北壁の西寄りの棚：部署ページが指定する型番を選ぶ）
@@ -578,8 +791,8 @@ namespace EscapeProto.EditorTools
         private static void BuildOffice()
         {
             var root = new GameObject("Office");
-            var floorMat = GetMat("Floor", new Color(0.16f, 0.15f, 0.14f));
-            var wallMat = GetMat("RoomWall", new Color(0.26f, 0.25f, 0.28f));
+            var floorMat = GetTexMat("Floor", "floor_wood.png", new Color(0.55f, 0.52f, 0.48f), 0.2f, new Vector2(8f, 6f));
+            var wallMat = GetTexMat("RoomWall", "wall_plaster.png", new Color(0.55f, 0.53f, 0.58f), 0.15f, new Vector2(4f, 1.5f));
 
             float cxO = OfCenter.x, czO = OfCenter.z;   // 3, -8
             float hw = OfW * 0.5f, hd = OfD * 0.5f;
@@ -649,99 +862,150 @@ namespace EscapeProto.EditorTools
             root.transform.position = new Vector3(SrCenter.x - SrW * 0.5f + 0.18f, 1.4f, 0f);
             root.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
 
-            var bodyMat = GetMat("SafeBody", new Color(0.14f, 0.14f, 0.16f), 0.35f);
-            var trimMat = GetMat("SafeTrim", new Color(0.28f, 0.26f, 0.2f), 0.5f);
-            var dialMat = GetMat("SafeDial", new Color(0.55f, 0.45f, 0.15f), 0.7f);
+            // 見た目：Blender製の金庫（正面が-Z局所を向くよう180°回転）。ダイヤルは独立メッシュ
+            Renderer indicator = null;
+            var safeModel = PlaceModel(root.transform, "WallSafe", new Vector3(0f, 0f, -0.02f), 180f);
+            if (safeModel != null)
+            {
+                RemapModelMaterials(safeModel,
+                    ("SafeBody", GetTexMat("SafeBodyTex", "metal_aged.png", new Color(0.5f, 0.5f, 0.55f), 0.4f)));
+                var dialTf = safeModel.transform.Find("WallSafeDial");
+                if (dialTf == null)
+                    foreach (var r in safeModel.GetComponentsInChildren<Renderer>())
+                        if (r.name.Contains("Dial")) { dialTf = r.transform; break; }
+                if (dialTf != null) indicator = dialTf.GetComponent<Renderer>();
+            }
+            else
+            {
+                var bodyMat = GetMat("SafeBody", new Color(0.14f, 0.14f, 0.16f), 0.35f);
+                var trimMat = GetMat("SafeTrim", new Color(0.28f, 0.26f, 0.2f), 0.5f);
+                var dialMat = GetMat("SafeDial", new Color(0.55f, 0.45f, 0.15f), 0.7f);
+                Box(root.transform, "SafeFrame", new Vector3(0f, 0f, -0.02f), new Vector3(0.9f, 0.9f, 0.28f), trimMat);
+                Box(root.transform, "SafeDoor", new Vector3(0f, 0f, -0.16f), new Vector3(0.74f, 0.74f, 0.06f), bodyMat);
+                var dial = Cylinder(root.transform, "Dial", new Vector3(0.05f, 0.05f, -0.22f), new Vector3(0.34f, 0.05f, 0.34f), dialMat);
+                dial.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                Box(root.transform, "SafeHandle", new Vector3(-0.24f, -0.02f, -0.22f), new Vector3(0.06f, 0.28f, 0.06f), trimMat);
+                indicator = dial.GetComponent<Renderer>();
+            }
 
-            // 埋め込み筐体（壁面から少しだけ手前に出る）
-            Box(root.transform, "SafeFrame", new Vector3(0f, 0f, -0.02f), new Vector3(0.9f, 0.9f, 0.28f), trimMat);
-            Box(root.transform, "SafeDoor", new Vector3(0f, 0f, -0.16f), new Vector3(0.74f, 0.74f, 0.06f), bodyMat);
-
-            // ダイヤル（円盤）＝状態インジケータ
-            var dial = Cylinder(root.transform, "Dial", new Vector3(0.05f, 0.05f, -0.22f), new Vector3(0.34f, 0.05f, 0.34f), dialMat);
-            dial.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // 盤面が手前(-Z)を向く
-
-            // ハンドル
-            Box(root.transform, "SafeHandle", new Vector3(-0.24f, -0.02f, -0.22f), new Vector3(0.06f, 0.28f, 0.06f), trimMat);
+            // インタラクト用コライダー（レイキャストがWallSafe本体を掴めるようルートへ）
+            AddBoxCollider(root, new Vector3(0f, 0f, -0.05f), new Vector3(0.9f, 0.9f, 0.35f));
 
             var safe = root.AddComponent<WallSafe>();
             var so = new SerializedObject(safe);
-            so.FindProperty("_indicator").objectReferenceValue = dial.GetComponent<Renderer>();
+            so.FindProperty("_indicator").objectReferenceValue = indicator;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ============================== 2階：社員個室（鍵の保管場所）==============================
 
-        private const float MezzY = 2.6f;   // 2階の床高さ
+        private const float MezzY = 3.2f;   // 2階の床高さ（＝1階天井。他の部屋の天井高 WallH と同じ）
 
         private static void BuildSecondFloor()
         {
             var root = new GameObject("SecondFloor");
             var stepMat = GetMat("Stairs", new Color(0.3f, 0.3f, 0.33f), 0.3f);
-            var floorMat = GetMat("MezzFloor", new Color(0.22f, 0.22f, 0.25f));
+            var floorMat = GetTexMat("MezzFloor", "floor_wood.png", new Color(0.5f, 0.5f, 0.55f), 0.2f, new Vector2(6f, 3f));
             var railMat = GetMat("Railing", new Color(0.35f, 0.3f, 0.25f));
+            var wallMat2F = GetTexMat("Wall", "wall_plaster.png", new Color(0.62f, 0.58f, 0.54f), 0.15f, new Vector2(4f, 1.5f));
 
-            // --- 階段（東壁沿いを北へ登る。1段0.26m×10段=2.6m。コンセプトアートの右手階段）---
+            // --- 階段（東壁際の南寄り。イベント部屋への開口 z[-0.8,0.8] を塞がない位置）---
+            // 見た目はBlender製の一体モデル（2.6m用をY方向に伸ばして天井高3.2mへ対応）
             var stairs = new GameObject("Stairs"); stairs.transform.SetParent(root.transform, false);
-            const int steps = 10; const float rise = 0.26f, depth = 0.4f, zStart = -2.2f;
-            const float stairX = 6f;   // 東壁との間にイベント部屋扉への通路(約1m)を残す
-            for (int i = 0; i < steps; i++)
+            const int steps = 10; const float depth = 0.4f, zStart = -5.4f;
+            float rise = MezzY / steps;      // 天井高から蹴上を算出（3.2m → 0.32m）
+            const float stairX = 6.95f;      // 東壁の内面(7.85)に幅1.8の階段を密着
+            var stairModel = PlaceModel(stairs.transform, "Staircase", new Vector3(stairX, 0f, zStart + steps * depth * 0.5f), 180f);
+            if (stairModel != null)
             {
-                float h = (i + 1) * rise;
-                Box(stairs.transform, $"Step_{i}", new Vector3(stairX, h * 0.5f, zStart + i * depth + 0.2f),
-                    new Vector3(1.8f, h, depth), stepMat);
+                stairModel.transform.localScale = new Vector3(1f, MezzY / 2.6f, 1f);   // モデルは高さ2.6m基準
+                RemapModelMaterials(stairModel,
+                    ("StairWood", GetTexMat("StairWoodTex", "wood_dark.png", new Color(0.7f, 0.65f, 0.6f), 0.25f)));
+                var sync = stairModel.AddComponent<StairColliderSync>();
+                // コライダーはスケール済みモデルの子＝ローカル値は2.6m基準のまま（親スケールで3.2mへ伸びる）
+                sync.Steps = steps; sync.Rise = 2.6f / steps; sync.Depth = depth; sync.Width = 1.8f;
+                sync.AscendPlusZ = false;   // モデルはローカル-Z方向へ上る（180°回転で世界+Zに上る）
+                sync.Rebuild();
+            }
+            else
+            {
+                for (int i = 0; i < steps; i++)
+                {
+                    float h = (i + 1) * rise;
+                    Box(stairs.transform, $"Step_{i}", new Vector3(stairX, h * 0.5f, zStart + i * depth + 0.2f),
+                        new Vector3(1.8f, h, depth), stepMat);
+                }
             }
 
-            // --- メザニン床（東半分の北側。x[-1,7], z[1.5,5.7]）---
-            Box(root.transform, "MezzFloor", new Vector3(3f, MezzY - 0.1f, 3.6f), new Vector3(8f, 0.2f, 4.2f), floorMat);
+            // --- メザニン床（1階ホール全面 16×12 を覆う。東端南寄りの階段吹き抜けだけ開口）---
+            // 吹き抜け: x[6.0, 8.0] × z[-5.6, -1.2]
+            Box(root.transform, "MezzFloor", new Vector3(-1f, MezzY - 0.1f, 0f), new Vector3(14f, 0.2f, 12f), floorMat);
+            Box(root.transform, "MezzFloor_E_N", new Vector3(7f, MezzY - 0.1f, 2.4f), new Vector3(2f, 0.2f, 7.2f), floorMat);
+            Box(root.transform, "MezzFloor_E_S", new Vector3(7f, MezzY - 0.1f, -5.8f), new Vector3(2f, 0.2f, 0.4f), floorMat);
 
-            // --- 手すり（落下防止。高さ1m）---
+            // --- 2階の外周壁（落下・視線を防ぐ）---
+            float wy = MezzY + 1.2f;
+            Box(root.transform, "MezzWall_N", new Vector3(0f, wy, RoomD * 0.5f), new Vector3(RoomW, 2.4f, 0.3f), wallMat2F);
+            Box(root.transform, "MezzWall_S", new Vector3(0f, wy, -RoomD * 0.5f), new Vector3(RoomW, 2.4f, 0.3f), wallMat2F);
+            Box(root.transform, "MezzWall_W", new Vector3(-RoomW * 0.5f, wy, 0f), new Vector3(0.3f, 2.4f, RoomD), wallMat2F);
+            Box(root.transform, "MezzWall_E", new Vector3(RoomW * 0.5f, wy, 0f), new Vector3(0.3f, 2.4f, RoomD), wallMat2F);
+
+            // --- 吹き抜けまわりの手すり（高さ1m）---
             float ry = MezzY + 0.5f;
-            // 南縁（階段の隙間 x[5.1,6.9] を除く）
-            Box(root.transform, "Rail_S_L", new Vector3(2.05f, ry, 1.5f), new Vector3(6.1f, 1f, 0.12f), railMat);
-            // 西縁・東縁
-            Box(root.transform, "Rail_W", new Vector3(-1f, ry, 3.6f), new Vector3(0.12f, 1f, 4.2f), railMat);
-            Box(root.transform, "Rail_E", new Vector3(7f, ry, 3.6f), new Vector3(0.12f, 1f, 4.2f), railMat);
+            Box(root.transform, "Rail_Hole_W", new Vector3(5.95f, ry, -3.4f), new Vector3(0.12f, 1f, 4.4f), railMat);
+            Box(root.transform, "Rail_Hole_N", new Vector3(7.0f, ry, -1.15f), new Vector3(2.0f, 1f, 0.12f), railMat);
 
             // 2階の明かり
-            CreatePointLight("Light_2F", new Vector3(3f, MezzY + 2.2f, 4f), new Color(0.8f, 0.82f, 0.9f), 0.7f, 10f);
+            CreatePointLight("Light_2F", new Vector3(0f, MezzY + 2.2f, 0f), new Color(0.8f, 0.82f, 0.9f), 0.8f, 14f);
+            CreatePointLight("Light_2F_N", new Vector3(-3f, MezzY + 2.2f, 4f), new Color(0.85f, 0.8f, 0.75f), 0.6f, 10f);
 
-            // --- 4つの個室（RoomEmployeeNumbers と対応）---
-            float[] cxs = { 0f, 2f, 4f, 6f };
+            // --- 4つの個室（北側2部屋・南側2部屋。階段のある東面には置かない）---
+            float[] cxs = { -5.0f, -1.0f, -5.0f, -1.0f };
+            bool[] north = { true, true, false, false };
             for (int i = 0; i < PuzzleState.RoomEmployeeNumbers.Length && i < cxs.Length; i++)
-                BuildPrivateRoom(root.transform, PuzzleState.RoomEmployeeNumbers[i], cxs[i]);
+                BuildPrivateRoom(root.transform, PuzzleState.RoomEmployeeNumbers[i], cxs[i], north[i]);
         }
 
-        private static void BuildPrivateRoom(Transform parent, string employeeNumber, float cx)
+        /// <summary>2階個室（3.6×3.4m）。north=trueなら北壁沿い（ドア南向き）、falseなら南壁沿い（ドア北向き）</summary>
+        private static void BuildPrivateRoom(Transform parent, string employeeNumber, float cx, bool north)
         {
             string name = EmployeeName(employeeNumber);
-            var wallMat = GetMat("RoomWall", new Color(0.26f, 0.25f, 0.28f));
+            var wallMat = GetTexMat("RoomWall", "wall_plaster.png", new Color(0.55f, 0.53f, 0.58f), 0.15f, new Vector2(4f, 1.5f));
             var roomRoot = new GameObject($"PrivateRoom_{employeeNumber}");
             roomRoot.transform.SetParent(parent, false);
 
-            const float RW = 2.0f, RD = 2.6f, RH = 2.4f, t = 0.12f;
-            float zS = 2.8f, zN = zS + RD;                 // 2.8 〜 5.4
-            float yB = MezzY, yC = yB + RH * 0.5f;          // 壁の中心高さ
+            const float RW = 3.6f, RD = 3.4f, RH = 2.4f, t = 0.12f;
+            float yB = MezzY, yC = yB + RH * 0.5f;
 
-            // 北・東・西壁
-            Box(roomRoot.transform, "W_N", new Vector3(cx, yC, zN), new Vector3(RW, RH, t), wallMat);
-            Box(roomRoot.transform, "W_E", new Vector3(cx + RW * 0.5f, yC, zS + RD * 0.5f), new Vector3(t, RH, RD), wallMat);
-            Box(roomRoot.transform, "W_W", new Vector3(cx - RW * 0.5f, yC, zS + RD * 0.5f), new Vector3(t, RH, RD), wallMat);
-            // 南壁（ドアの隙間 幅1.0）
-            float doorGap = 1.0f, seg = (RW - doorGap) * 0.5f;
-            Box(roomRoot.transform, "W_S_L", new Vector3(cx - (doorGap * 0.5f + seg * 0.5f), yC, zS), new Vector3(seg, RH, t), wallMat);
-            Box(roomRoot.transform, "W_S_R", new Vector3(cx + (doorGap * 0.5f + seg * 0.5f), yC, zS), new Vector3(seg, RH, t), wallMat);
-            Box(roomRoot.transform, "W_S_Top", new Vector3(cx, yB + RH - 0.3f, zS), new Vector3(doorGap, 0.6f, t), wallMat);
+            // 部屋のz範囲：北側は z[2.4, 5.8]、南側は z[-5.8, -2.4]
+            float zInner = north ? 2.4f : -2.4f;               // ドアのある側（廊下側）
+            float zOuter = north ? 5.8f : -5.8f;               // 奥（外周壁側）
+            float zMid = (zInner + zOuter) * 0.5f;
 
-            // 表札（ドア上部・部屋手前=南向き）
-            Nameplate(roomRoot.transform, $"個室\n{name}", new Vector3(cx, yB + RH - 0.15f, zS - 0.1f));
+            // 奥壁・東西壁
+            Box(roomRoot.transform, "W_Back", new Vector3(cx, yC, zOuter), new Vector3(RW, RH, t), wallMat);
+            Box(roomRoot.transform, "W_E", new Vector3(cx + RW * 0.5f, yC, zMid), new Vector3(t, RH, RD), wallMat);
+            Box(roomRoot.transform, "W_W", new Vector3(cx - RW * 0.5f, yC, zMid), new Vector3(t, RH, RD), wallMat);
+            // 廊下側の壁（ドアの隙間 幅1.2）
+            float doorGap = 1.2f, seg = (RW - doorGap) * 0.5f;
+            Box(roomRoot.transform, "W_D_L", new Vector3(cx - (doorGap * 0.5f + seg * 0.5f), yC, zInner), new Vector3(seg, RH, t), wallMat);
+            Box(roomRoot.transform, "W_D_R", new Vector3(cx + (doorGap * 0.5f + seg * 0.5f), yC, zInner), new Vector3(seg, RH, t), wallMat);
+            // ドア上の梁は薄く（開口高さ RH-0.3 = 2.1m。プレイヤー(1.8m)が通れる高さを確保）
+            Box(roomRoot.transform, "W_D_Top", new Vector3(cx, yB + RH - 0.15f, zInner), new Vector3(doorGap, 0.3f, t), wallMat);
 
-            // 戸棚（北壁際）：調べると鍵保管者なら鍵入手。見た目はBlender製ローポリ、
-            // インタラクト用コライダーはルートに付ける（レイキャストが KeyCabinet を掴めるように）
+            // 表札（ドア上部・廊下向き）
+            float plateZ = zInner + (north ? -0.1f : 0.1f);
+            var plate = new GameObject("Nameplate");
+            plate.transform.SetParent(roomRoot.transform, false);
+            plate.transform.localPosition = new Vector3(cx, yB + RH - 0.15f, plateZ);
+            plate.transform.localRotation = Quaternion.Euler(0f, north ? 180f : 0f, 0f);
+            plate.AddComponent<RoomNameplate>().Label = $"個室\n{name}";
+
+            // 戸棚（奥壁際）：調べると鍵保管者なら鍵入手。扉はドア側を向く
             var cab = new GameObject("KeyCabinet");
             cab.transform.SetParent(roomRoot.transform, false);
-            cab.transform.position = new Vector3(cx, yB, zN - 0.4f);
-            cab.transform.rotation = Quaternion.Euler(0f, 180f, 0f);   // 扉がドア側（南）を向く
+            cab.transform.position = new Vector3(cx, yB, zOuter + (north ? -0.4f : 0.4f));
+            cab.transform.rotation = Quaternion.Euler(0f, north ? 180f : 0f, 0f);
             if (PlaceModel(cab.transform, "Cabinet", Vector3.zero) == null)
             {
                 var cabMat = GetMat("RoomCabinet", new Color(0.4f, 0.3f, 0.22f));
@@ -750,6 +1014,18 @@ namespace EscapeProto.EditorTools
             }
             AddBoxCollider(cab, new Vector3(0f, 0.5f, 0f), new Vector3(1.0f, 1.0f, 0.5f));
             cab.AddComponent<KeyCabinet>().OwnerNumber = employeeNumber;
+
+            // 個室の照明（電気スイッチの一括ON/OFF対象に自動収集される）
+            CreatePointLight($"Light_Room_{employeeNumber}", new Vector3(cx, yB + 2.0f, zMid),
+                new Color(1f, 0.9f, 0.75f), 0.5f, 4.5f);
+
+            // 探索密度を上げる家具（ベッド＋サイドテーブル。装飾・当たりのみ）
+            CreateDecor(roomRoot.transform, "Bed", $"RoomBed_{employeeNumber}",
+                new Vector3(cx + 1.2f, yB, zMid), 0f,
+                new Vector3(0f, 0.35f, 0f), new Vector3(1.4f, 0.7f, 2.4f));
+            CreateDecor(roomRoot.transform, "SideTable", $"RoomTable_{employeeNumber}",
+                new Vector3(cx - 1.2f, yB, zOuter + (north ? -1.4f : 1.4f)), 0f,
+                new Vector3(0f, 0.45f, 0f), new Vector3(0.8f, 0.9f, 0.6f));
         }
 
         private static string EmployeeName(string number)
@@ -864,9 +1140,17 @@ namespace EscapeProto.EditorTools
 
         private static void BuildLightSwitch()
         {
-            var mat = GetMat("Switch", new Color(0.85f, 0.85f, 0.8f), 0.3f);
-            // 南壁の脱出ドア脇
-            var sw = Box(null, "LightSwitch", new Vector3(1.4f, 1.3f, -RoomD * 0.5f + 0.2f), new Vector3(0.2f, 0.3f, 0.08f), mat);
+            // 南壁の壁面（脱出ドアと事務所ドアの間の壁がある区間）。
+            // ※以前の x=1.4 は事務所ドアの開口部の中＝背後に壁が無く宙に浮いていた
+            var sw = new GameObject("LightSwitch");
+            sw.transform.position = new Vector3(0.5f, 1.3f, -RoomD * 0.5f + 0.18f);
+            if (PlaceModel(sw.transform, "LightSwitch", Vector3.zero) == null)
+            {
+                var mat = GetMat("Switch", new Color(0.85f, 0.85f, 0.8f), 0.3f);
+                var b = Box(sw.transform, "Plate", Vector3.zero, new Vector3(0.2f, 0.3f, 0.08f), mat);
+                Object.DestroyImmediate(b.GetComponent<Collider>());
+            }
+            AddBoxCollider(sw, Vector3.zero, new Vector3(0.2f, 0.3f, 0.1f));
             sw.AddComponent<RoomLightController>(); // ライトは未指定→Pointを自動収集
         }
 
@@ -874,10 +1158,22 @@ namespace EscapeProto.EditorTools
 
         private static void BuildDisplays()
         {
-            // 古時計（西壁際に立てる。隠れながらでも針が見える位置）
+            // 古時計（西壁際・襲撃者の入口 z[-0.8,0.8] を塞がない南寄りの位置）
             var clock = new GameObject("GrandfatherClock");
-            clock.transform.position = new Vector3(-RoomW * 0.5f + 0.5f, 0f, -0.5f);
-            clock.transform.rotation = Quaternion.Euler(0f, 90f, 0f); // 文字盤が部屋側(+X)を向く
+            clock.transform.position = new Vector3(-RoomW * 0.5f + 0.5f, 0f, -2.5f);
+            // 文字盤（ローカル-Z側）が部屋側(+X)を向く回転。
+            // ※以前の +90 はローカル-Z が壁側(-X)を向く誤りだった（スクリプト生成の針も壁向きだった）
+            clock.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+
+            // Blender製の筐体（文字盤中心1.85m）。「CabinetModel」があるとスクリプトは
+            // 実行時の筐体・文字盤生成をスキップし、針だけを重ねて生成する
+            var cabinetModel = PlaceModel(clock.transform, "ClockCabinet", Vector3.zero, 180f);
+            if (cabinetModel != null)
+            {
+                cabinetModel.name = "CabinetModel";
+                RemapModelMaterials(cabinetModel,
+                    ("ClockWood", GetTexMat("ClockWoodTex", "wood_dark.png", new Color(0.6f, 0.45f, 0.35f), 0.3f)));
+            }
             clock.AddComponent<GrandfatherClock>();
         }
 
@@ -1069,7 +1365,7 @@ namespace EscapeProto.EditorTools
 
             var sf = GameObject.Find("SecondFloor");
             Absorb(sf, "Light_2F");
-            Recenter(sf, new Vector3(3f, MezzY, 3.6f));
+            Recenter(sf, new Vector3(0f, MezzY, 0f));
 
             SaveRoomPrefabs(new[] { room, ev, sr, ut, of, sf });
         }
@@ -1146,7 +1442,11 @@ namespace EscapeProto.EditorTools
         /// </summary>
         private static GameObject PlaceModel(Transform parent, string modelName, Vector3 localPos, float yRot = 0f)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{RootDir}/Models/{modelName}.fbx");
+            // HQ版（アセットライブラリ由来のリトポ済みモデル）があれば優先。
+            // 無ければ自作ローポリ → それも無ければ呼び出し側でプリミティブにフォールバック
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{RootDir}/Models/HQ/{modelName}.fbx");
+            if (prefab == null)
+                prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{RootDir}/Models/{modelName}.fbx");
             if (prefab == null)
             {
                 Debug.LogWarning($"[PrototypeSceneBuilder] モデル未検出: {modelName}.fbx（プリミティブで代替）");
@@ -1164,6 +1464,43 @@ namespace EscapeProto.EditorTools
             var c = root.AddComponent<BoxCollider>();
             c.center = center;
             c.size = size;
+        }
+
+        private const string TexDir = RootDir + "/Textures";
+
+        /// <summary>
+        /// テクスチャ対応マテリアル。Assets/EscapePrototype/Textures/ に texFile があれば
+        /// BaseMapへ割当（tint色は乗算で残る）。無ければ従来どおり色のみのフォールバック。
+        /// </summary>
+        private static Material GetTexMat(string name, string texFile, Color tint,
+                                          float smoothness = 0.2f, Vector2? tiling = null)
+        {
+            var mat = GetMat(name, tint, smoothness);
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexDir}/{texFile}");
+            if (tex != null)
+            {
+                mat.mainTexture = tex;
+                if (tiling.HasValue) mat.mainTextureScale = tiling.Value;
+                EditorUtility.SetDirty(mat);
+            }
+            return mat;
+        }
+
+        /// <summary>FBXモデルの取り込みマテリアルを、名前一致でプロジェクト側マテリアルへ差し替える。</summary>
+        private static void RemapModelMaterials(GameObject model, params (string from, Material to)[] map)
+        {
+            if (model == null) return;
+            foreach (var r in model.GetComponentsInChildren<Renderer>())
+            {
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i] == null) continue;
+                    foreach (var (from, to) in map)
+                        if (mats[i].name.StartsWith(from)) mats[i] = to;
+                }
+                r.sharedMaterials = mats;
+            }
         }
     }
 }

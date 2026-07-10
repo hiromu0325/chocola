@@ -36,12 +36,14 @@ namespace EscapeProto
             GameEvents.OnLaughterEventStart += Begin;
             GameEvents.OnGameOver += ForceEnd;
             GameEvents.OnGameClear += ForceEnd;
+            GameEvents.OnVisitStart += ForceEndByVisit;
         }
         private void OnDisable()
         {
             GameEvents.OnLaughterEventStart -= Begin;
             GameEvents.OnGameOver -= ForceEnd;
             GameEvents.OnGameClear -= ForceEnd;
+            GameEvents.OnVisitStart -= ForceEndByVisit;
         }
 
         private void Start()
@@ -53,9 +55,25 @@ namespace EscapeProto
 
         private void Begin()
         {
+            // 襲撃（警告・来訪）中はイベントを開始しない。
+            // PhaseManager 側の EventActive を解除しないと探索の時計が止まったままになるため終了通知を返す
+            if (PhaseManager.Instance != null && PhaseManager.Instance.CurrentPhase != GamePhase.Exploration)
+            {
+                GameEvents.RaiseLaughterEventEnd();
+                return;
+            }
             _active = true; _hasSpoken = false; _resolved = false;
             _eyesHeld = 0; _eventTimer = _maxEventSeconds;
             SetBlondeClosed();
+        }
+
+        /// <summary>襲撃が始まったら進行中の人形イベントを静かに打ち切る（死亡なし）</summary>
+        private void ForceEndByVisit(SearcherType _)
+        {
+            if (!_active || _resolved) return;
+            _resolved = true; _active = false;
+            if (HUDManager.Instance != null) HUDManager.Instance.HideDialogue();
+            GameEvents.RaiseLaughterEventEnd();
         }
 
         private void ForceEnd()
@@ -95,6 +113,8 @@ namespace EscapeProto
         public void OnPlayerEntered()
         {
             if (!_active || _resolved || _hasSpoken) return;
+            // 保険：襲撃中は人形イベントの会話を発生させない
+            if (PhaseManager.Instance != null && PhaseManager.Instance.CurrentPhase == GamePhase.Visit) return;
             _hasSpoken = true;
             _ignoreTimer = _ignoreSeconds;
             if (HUDManager.Instance != null)

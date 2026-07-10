@@ -19,23 +19,26 @@ namespace EscapeProto
             var shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
 
-            // 筐体
-            var cabinet = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cabinet.name = "Cabinet";
-            cabinet.transform.SetParent(transform, false);
-            cabinet.transform.localPosition = new Vector3(0f, 1.1f, 0.02f);
-            cabinet.transform.localScale = new Vector3(0.7f, 2.2f, 0.3f);
-            cabinet.GetComponent<Renderer>().material = new Material(shader) { color = new Color(0.25f, 0.16f, 0.1f) };
+            // 筐体・文字盤：シーンに「CabinetModel」（Blender製の見た目）が置かれていれば
+            // 実行時生成をスキップする。針・ラベル・音は従来どおりスクリプトが生成する。
+            if (transform.Find("CabinetModel") == null)
+            {
+                var cabinet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cabinet.name = "Cabinet";
+                cabinet.transform.SetParent(transform, false);
+                cabinet.transform.localPosition = new Vector3(0f, 1.1f, 0.02f);
+                cabinet.transform.localScale = new Vector3(0.7f, 2.2f, 0.3f);
+                cabinet.GetComponent<Renderer>().material = new Material(shader) { color = new Color(0.25f, 0.16f, 0.1f) };
 
-            // 文字盤
-            var face = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            face.name = "Face";
-            face.transform.SetParent(transform, false);
-            face.transform.localPosition = new Vector3(0f, 1.85f, -0.14f);
-            face.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            face.transform.localScale = new Vector3(0.5f, 0.03f, 0.5f);
-            Object.Destroy(face.GetComponent<Collider>());
-            face.GetComponent<Renderer>().material = new Material(shader) { color = new Color(0.92f, 0.88f, 0.78f) };
+                var face = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                face.name = "Face";
+                face.transform.SetParent(transform, false);
+                face.transform.localPosition = new Vector3(0f, 1.85f, -0.14f);
+                face.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                face.transform.localScale = new Vector3(0.5f, 0.03f, 0.5f);
+                Object.Destroy(face.GetComponent<Collider>());
+                face.GetComponent<Renderer>().material = new Material(shader) { color = new Color(0.92f, 0.88f, 0.78f) };
+            }
 
             _longHand = MakeHand(shader, "LongHand", 0.22f, new Color(0.1f, 0.1f, 0.1f));
             _shortHand = MakeHand(shader, "ShortHand", 0.14f, new Color(0.2f, 0.2f, 0.2f));

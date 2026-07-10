@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace EscapeProto
 {
     /// <summary>
-    /// 探索者AI（NavMesh不要の操舵。CharacterControllerで壁ずり）
+    /// 探索者AI（NavMeshAgentによる移動。NavMeshが未構築の場合はCharacterController+手動操舵にフォールバック）
     ///
     /// [状態機械] Entering → Patrol ⇄ Investigate ⇄ Chase → Leaving
     ///
@@ -28,6 +29,8 @@ namespace EscapeProto
 
         [Header("捕獲")]
         [SerializeField] private float _catchRadius = 1.1f;
+        [Tooltip("この垂直差(m)を超えたら別フロア扱いにして捕まえない（2階の真下等）")]
+        [SerializeField] private float _catchMaxVerticalDiff = 1.5f;
 
         [Header("知覚")]
         [SerializeField] private float _sightRange = 12f;
@@ -45,6 +48,8 @@ namespace EscapeProto
         private State _state = State.Entering;
         private PlayerStatus _player;
         private CharacterController _cc;
+        private NavMeshAgent _agent;
+        private bool _useNavMesh;
         private AudioSource _audio;
         private Light _eyeLight;
 
@@ -59,6 +64,18 @@ namespace EscapeProto
 
         private void Awake()
         {
+            _agent = GetComponent<NavMeshAgent>();
+            if (_agent == null) _agent = gameObject.AddComponent<NavMeshAgent>();
+            _agent.radius = 0.3f;
+            _agent.height = 1.8f;
+            _agent.angularSpeed = _turnSpeed;
+            _agent.acceleration = 16f;
+            _agent.speed = _patrolSpeed;
+            _agent.autoBraking = false;
+            // NavMesh未構築の可能性があるため、ここでは無効化しておき、
+            // Start()でNavMesh上への配置に成功した場合のみ有効にする。
+            _agent.enabled = false;
+
             _cc = GetComponent<CharacterController>();
             if (_cc == null)
             {
@@ -77,11 +94,13 @@ namespace EscapeProto
         {
             GameEvents.OnNoiseEmitted += HandleNoise;
             GameEvents.OnVisitEnd += BeginLeave;
+            GameEvents.OnPerfumeUsed += HandlePerfumeUsed;
         }
         private void OnDisable()
         {
             GameEvents.OnNoiseEmitted -= HandleNoise;
             GameEvents.OnVisitEnd -= BeginLeave;
+            GameEvents.OnPerfumeUsed -= HandlePerfumeUsed;
         }
 
         private void Start()
@@ -95,12 +114,37 @@ namespace EscapeProto
                 _patrolSpeed = cfg.searcherPatrolSpeed;
                 _chaseSpeed = cfg.searcherChaseSpeed;
             }
+
+            TrySnapToNavMesh();
+        }
+
+        /// <summary>NavMeshへのスナップを試み、成功すればAgent移動、失敗すれば旧CharacterController移動にフォールバック</summary>
+        private void TrySnapToNavMesh()
+        {
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+            {
+                _agent.enabled = true;
+                if (_agent.Warp(hit.position))
+                {
+                    _useNavMesh = true;
+                    if (_cc != null) _cc.enabled = false;
+                    return;
+                }
+                _agent.enabled = false;
+            }
+            _useNavMesh = false;
+            if (_agent != null) _agent.enabled = false;
+            if (_cc != null) _cc.enabled = true;
         }
 
         private void Update()
         {
             if (_player == null) return;
             CheckFlashlightDeath();
+
+            // NavMeshが未構築だった場合（ベイクがまだ間に合っていない等）、
+            // 毎フレーム再試行してNavMesh移動へ復帰する。
+            if (!_useNavMesh) TrySnapToNavMesh();
 
             switch (_state)
             {
@@ -126,8 +170,16 @@ namespace EscapeProto
                 // プレイヤーの目の前に瞬間移動して顔を見せる
                 Vector3 front = _player.transform.position + _player.transform.forward * 1.0f;
                 front.y = _player.transform.position.y;
-                if (_cc != null) _cc.enabled = false;
-                transform.position = front;
+                if (_useNavMesh && _agent != null && _agent.enabled)
+                {
+                    _agent.ResetPath();
+                    _agent.Warp(front);
+                }
+                else
+                {
+                    if (_cc != null) _cc.enabled = false;
+                    transform.position = front;
+                }
                 transform.rotation = Quaternion.LookRotation(
                     (_player.transform.position - front).normalized);
                 GameEvents.RaiseSpecialDeath("flashlight");
@@ -140,7 +192,7 @@ namespace EscapeProto
             Vector3 t = PatrolPoints != null && PatrolPoints.Length > 0
                 ? PatrolPoints[0].position : transform.position;
             MoveTowards(t, _patrolSpeed);
-            if (HDist(t) < 0.6f) _state = State.Patrol;
+            if (HasReached(t, 0.6f)) _state = State.Patrol;
             CheckPerception();
         }
 
@@ -150,7 +202,7 @@ namespace EscapeProto
             {
                 Vector3 t = PatrolPoints[_patrolIndex % PatrolPoints.Length].position;
                 MoveTowards(t, _patrolSpeed);
-                if (HDist(t) < 0.6f) _patrolIndex++;
+                if (HasReached(t, 0.6f)) _patrolIndex++;
             }
             CheckPerception();
         }
@@ -159,7 +211,7 @@ namespace EscapeProto
         {
             MoveTowards(_investigatePos, _chaseSpeed * 0.85f);
             _investigateTimer -= Time.deltaTime;
-            if (HDist(_investigatePos) < 0.7f || _investigateTimer <= 0f) _state = State.Patrol;
+            if (HasReached(_investigatePos, 0.7f) || _investigateTimer <= 0f) _state = State.Patrol;
             CheckPerception();
             TryCatch();
         }
@@ -188,12 +240,31 @@ namespace EscapeProto
         private void TickLeaving()
         {
             MoveTowards(ExitPoint, _patrolSpeed * 1.4f);
-            if (HDist(ExitPoint) < 0.8f) Destroy(gameObject);
+            if (HasReached(ExitPoint, 0.8f)) Destroy(gameObject);
         }
 
         public void BeginLeave()
         {
             if (_state != State.Leaving) _state = State.Leaving;
+        }
+
+        /// <summary>香水使用：Chase中の探索者は即座に見失う（種類問わず）。
+        /// 音/嗅覚型は使用地点付近を調べに行く動きにする。</summary>
+        private void HandlePerfumeUsed(float duration)
+        {
+            if (_state != State.Chase) return;
+
+            _lostTimer = 0f;
+            if (Type == SearcherType.Sound || Type == SearcherType.Smell)
+            {
+                _investigatePos = _player.transform.position;
+                _investigateTimer = 4f;
+                _state = State.Investigate;
+            }
+            else
+            {
+                _state = State.Patrol;
+            }
         }
 
         // ============= Perception =============
@@ -259,14 +330,41 @@ namespace EscapeProto
         // ============= Movement / Catch =============
         private void MoveTowards(Vector3 target, float speed)
         {
-            Vector3 to = target - transform.position; to.y = 0f;
-            if (to.sqrMagnitude > 0.0001f)
-            {
-                Quaternion look = Quaternion.LookRotation(to.normalized);
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, look, _turnSpeed * Time.deltaTime);
-                Vector3 m = to.normalized * speed * Time.deltaTime; m.y = -2f * Time.deltaTime;
-                _cc.Move(m);
+            bool moving;
 
+            if (_useNavMesh && _agent != null && _agent.enabled && _agent.isOnNavMesh)
+            {
+                _agent.speed = speed;
+                _agent.SetDestination(target);
+                moving = _agent.velocity.sqrMagnitude > 0.01f;
+
+                // 回頭はAgentのRotationに任せず、見た目を進行方向へ向ける（updateRotation運用と同等の挙動）
+                if (moving)
+                {
+                    Vector3 flatVel = _agent.velocity; flatVel.y = 0f;
+                    if (flatVel.sqrMagnitude > 0.0001f)
+                    {
+                        Quaternion look = Quaternion.LookRotation(flatVel.normalized);
+                        transform.rotation = Quaternion.RotateTowards(transform.rotation, look, _turnSpeed * Time.deltaTime);
+                    }
+                }
+            }
+            else
+            {
+                // フォールバック：NavMesh未構築時の従来移動（CharacterController）
+                Vector3 to = target - transform.position; to.y = 0f;
+                moving = to.sqrMagnitude > 0.0001f;
+                if (moving)
+                {
+                    Quaternion look = Quaternion.LookRotation(to.normalized);
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, look, _turnSpeed * Time.deltaTime);
+                    Vector3 m = to.normalized * speed * Time.deltaTime; m.y = -2f * Time.deltaTime;
+                    if (_cc != null && _cc.enabled) _cc.Move(m);
+                }
+            }
+
+            if (moving)
+            {
                 _stepTimer -= Time.deltaTime * (speed / _patrolSpeed);
                 if (_stepTimer <= 0f)
                 {
@@ -282,9 +380,19 @@ namespace EscapeProto
                 _eyeLight.color = _state == State.Chase ? Color.red : GetTypeColor(Type);
         }
 
+        /// <summary>目的地に到達したか（NavMesh経路使用時はremainingDistance、フォールバック時は水平距離）</summary>
+        private bool HasReached(Vector3 target, float threshold)
+        {
+            if (_useNavMesh && _agent != null && _agent.enabled && _agent.isOnNavMesh)
+                return !_agent.pathPending && _agent.remainingDistance < threshold;
+            return HDist(target) < threshold;
+        }
+
         private void TryCatch()
         {
             if (GameManager.Instance != null && GameManager.Instance.IsGameEnded) return;
+            // 別フロア（2階の真下等）にいる場合は水平距離が近くても捕まえない
+            if (Mathf.Abs(transform.position.y - _player.transform.position.y) > _catchMaxVerticalDiff) return;
             if (HDist(_player.transform.position) < _catchRadius)
             {
                 GameEvents.RaisePlayerCaught();

@@ -39,10 +39,18 @@ namespace EscapeProto
         {
             DespawnImmediate();
             Vector3 pos = EntryPoint != null ? EntryPoint.position : transform.position;
-            var go = BuildVisual(type);
-            go.transform.position = pos;
 
-            var ctrl = go.AddComponent<SearcherController>();
+            // 不具合対策：BuildVisual内でプリミティブ生成やコンポーネント追加（Light等）が
+            // 行われる間、ルートのtransform.positionが未設定（＝ワールド原点）のままだと
+            // その一瞬だけ原点に敵の見た目が出現しうる。
+            // → ルートGameObjectを先に作って位置を確定させてから、
+            //   子オブジェクト（見た目）とSearcherControllerを組み立てる。
+            var root = new GameObject($"Searcher_{type}");
+            root.transform.position = pos;
+
+            BuildVisualInto(root, type);
+
+            var ctrl = root.AddComponent<SearcherController>();
             ctrl.Type = type;
             ctrl.PatrolPoints = PatrolPoints;
             ctrl.ExitPoint = (ExitPoint != null ? ExitPoint : EntryPoint != null ? EntryPoint : transform).position;
@@ -54,11 +62,21 @@ namespace EscapeProto
             if (_current != null) { Destroy(_current.gameObject); _current = null; }
         }
 
-        /// <summary>ロング黒髪・和装の探索者をプリミティブで構築</summary>
+        /// <summary>ロング黒髪・和装の探索者をプリミティブで構築（新規ルートを作って返す）。
+        /// 呼び出し側で位置を未設定のまま使う場合、生成の一瞬だけ原点(0,0,0)に
+        /// 出現しうる点に注意（ResidentSearcherのように既に位置確定済みの親へ
+        /// SetParentする用途を想定）。位置確定済みのルートに組み込みたい場合は
+        /// BuildVisualInto を使うこと。</summary>
         public static GameObject BuildVisual(SearcherType type)
         {
             var root = new GameObject($"Searcher_{type}");
+            BuildVisualInto(root, type);
+            return root;
+        }
 
+        /// <summary>既存のGameObject（位置設定済み）に見た目パーツを組み込む</summary>
+        public static void BuildVisualInto(GameObject root, SearcherType type)
+        {
             // 和服の胴（細い円柱）
             var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             body.name = "Body";
@@ -112,8 +130,6 @@ namespace EscapeProto
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = c; light.range = 6f; light.intensity = 1.8f;
-
-            return root;
         }
 
         private static Material SetColor(GameObject go, Color c)

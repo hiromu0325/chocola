@@ -48,11 +48,12 @@ namespace EscapeProto
         {
             Hide();
             var type = PhaseManager.Instance != null ? PhaseManager.Instance.NextSearcherType : SearcherType.Sight;
-            _visual = EnemySpawner.BuildVisual(type);
-            _visual.name = "ResidentVisual";
+            // 先に位置確定済みの子を作ってから見た目を組み込む（原点に一瞬出るのを防ぐ）
+            _visual = new GameObject("ResidentVisual");
             _visual.transform.SetParent(transform, false);
             _visual.transform.localPosition = Vector3.zero;
             _visual.transform.localRotation = Quaternion.identity;
+            EnemySpawner.BuildVisualInto(_visual, type);
         }
 
         private void Hide()

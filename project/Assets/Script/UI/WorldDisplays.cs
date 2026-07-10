@@ -13,10 +13,10 @@ namespace EscapeProto
     {
         private TextMesh _text;
         private Renderer _screen;
-        private Transform _silhouette;
-        private Renderer _silRenderer;
+        private Transform _visualRoot;      // 来訪者の実際の見た目（ミニチュア表示）
         private AudioSource _audio;
         private SearcherType _next;
+        private SearcherType _builtVisual = (SearcherType)(-1);
         private float _alarmTimer;
 
         private void Awake()
@@ -32,16 +32,13 @@ namespace EscapeProto
             _screen = screen.GetComponent<Renderer>();
             _screen.material = new Material(shader) { color = new Color(0.02f, 0.05f, 0.03f) };
 
-            // 接近シルエット（暗い人型。警告中に拡大）
-            var sil = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            sil.name = "Silhouette";
-            sil.transform.SetParent(transform, false);
-            sil.transform.localPosition = new Vector3(0.45f, 0f, -0.04f);
-            Object.Destroy(sil.GetComponent<Collider>());
-            _silhouette = sil.transform;
-            _silRenderer = sil.GetComponent<Renderer>();
-            _silRenderer.material = new Material(shader) { color = new Color(0.01f, 0.02f, 0.01f) };
-            sil.SetActive(false);
+            // 来訪者の実際の見た目（警告中にミニチュアで表示・接近につれて拡大）。
+            // プレイヤーは文字ではなくこの姿を見て、どの探索者が来るか判断する
+            var vr = new GameObject("VisitorVisual");
+            vr.transform.SetParent(transform, false);
+            vr.transform.localPosition = new Vector3(0.35f, -0.5f, -0.06f);
+            _visualRoot = vr.transform;
+            vr.SetActive(false);
 
             var textGo = new GameObject("MonitorText");
             textGo.transform.SetParent(transform, false);
@@ -77,14 +74,30 @@ namespace EscapeProto
 
         private void HandlePhase(GamePhase phase)
         {
-            _silhouette.gameObject.SetActive(phase == GamePhase.Warning);
+            _visualRoot.gameObject.SetActive(phase == GamePhase.Warning);
             if (phase == GamePhase.Warning)
             {
                 _audio.PlayOneShot(ProceduralAudio.Alarm(), 0.9f);
+                RebuildVisitorVisual();
                 Notebook.Add("searcher_" + _next,
                     "探索者: " + GameEvents.GetSearcherName(_next),
                     GameEvents.GetSearcherFeature(_next) + "\n" + GameEvents.GetSearcherCounter(_next));
             }
+        }
+
+        /// <summary>映像に映す来訪者の見た目を、実際の探索者と同じ構築処理で作る</summary>
+        private void RebuildVisitorVisual()
+        {
+            if (_builtVisual == _next) return;
+            for (int i = _visualRoot.childCount - 1; i >= 0; i--)
+                Destroy(_visualRoot.GetChild(i).gameObject);
+            var body = new GameObject("Visual");
+            body.transform.SetParent(_visualRoot, false);
+            EnemySpawner.BuildVisualInto(body, _next);
+            // ミニチュアなのでコライダーとライトは除去（電灯システムや当たりに影響させない）
+            foreach (var col in body.GetComponentsInChildren<Collider>()) Destroy(col);
+            foreach (var l in body.GetComponentsInChildren<Light>()) l.range = 0.6f;
+            _builtVisual = _next;
         }
 
         private void Update()
@@ -96,20 +109,20 @@ namespace EscapeProto
             {
                 case GamePhase.Exploration:
                     _text.color = new Color(0.4f, 1f, 0.5f);
-                    _text.text = $"== 監視カメラ ==\n来訪まで {Fmt(pm.TimeUntilVisit)}\n\n古時計の鐘で\n来訪が始まる";
+                    _text.text = "== 監視カメラ ==\n\n異常なし";
                     break;
 
                 case GamePhase.Warning:
                 {
-                    // シルエットが奥から手前へ（1分かけて到達）
+                    // 来訪者の姿が奥から手前へ近づいてくる（文字での特徴説明はしない。姿で判断）
                     float k = 1f - Mathf.Clamp01(pm.PhaseRemaining / 60f); // 0→1
-                    float scale = Mathf.Lerp(0.15f, 1.4f, k);
-                    _silhouette.localScale = new Vector3(scale * 0.5f, scale * 0.7f, scale * 0.5f);
-                    _silhouette.localPosition = new Vector3(0.45f, -0.5f + scale * 0.45f, -0.04f);
+                    float scale = Mathf.Lerp(0.12f, 0.5f, k);
+                    _visualRoot.localScale = Vector3.one * scale;
+                    _visualRoot.localPosition = new Vector3(Mathf.Lerp(0.55f, 0.2f, k), -0.5f, -0.06f);
 
                     bool on = Mathf.PingPong(Time.time * 3f, 1f) > 0.5f;
                     _text.color = on ? Color.red : new Color(0.5f, 0.05f, 0.05f);
-                    _text.text = $"!! 接近中 !!\n到達まで {Fmt(pm.PhaseRemaining)}\n\n【特徴】\n{GameEvents.GetSearcherFeature(_next)}";
+                    _text.text = "●REC";
 
                     _alarmTimer -= Time.deltaTime;
                     if (_alarmTimer <= 0f) { _audio.PlayOneShot(ProceduralAudio.Alarm(), 0.6f); _alarmTimer = 3f; }
@@ -118,7 +131,7 @@ namespace EscapeProto
 
                 case GamePhase.Visit:
                     _text.color = new Color(1f, 0.2f, 0.1f);
-                    _text.text = $"●REC 在室中\n\n退去まで {Fmt(pm.PhaseRemaining)}\n\n机から離れるな";
+                    _text.text = "●REC 在室中";
                     break;
             }
         }

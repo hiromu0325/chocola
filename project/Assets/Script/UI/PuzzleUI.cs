@@ -87,7 +87,7 @@ namespace EscapeProto
             _options = options; _onSelect = onSelect;
             _titleText.text = title;
             _bodyText.text = body;
-            _footerText.text = "ボタンをクリック、または数字キーで選択 / [Esc] 中止";
+            _footerText.text = "ボタンをクリック、または数字キーで選択 / [E]・[Esc] 中止";
             BuildSelectionButtons(options);
             ApplyModeLayout();
             Open();
@@ -122,7 +122,7 @@ namespace EscapeProto
             _keypadLength = length; _onSubmit = onSubmit; _keypadInput = "";
             _titleText.text = title;
             _bodyText.text = body;
-            _footerText.text = "テンキー（クリック）または数字キーで入力　[Esc]中止";
+            _footerText.text = "テンキー（クリック）または数字キーで入力　[E]・[Esc]中止";
             ApplyModeLayout();
             RefreshKeypadDisplay();
             Open();
@@ -239,6 +239,14 @@ namespace EscapeProto
 
                 case Mode.Selection:
                 {
+                    // E でも閉じられる（Escと同じ扱い＝キャンセル）
+                    if (!_waitReleaseToClose && WasInteract())
+                    {
+                        var cancel = _onSelect;
+                        Close();
+                        cancel?.Invoke(-1);
+                        return;
+                    }
                     int d = PressedDigit();
                     if (d >= 1 && _options != null && d <= _options.Length)
                     {
@@ -251,6 +259,12 @@ namespace EscapeProto
 
                 case Mode.Keypad:
                 {
+                    // E でも閉じられる（社内PCのログイン等を途中でやめられる）
+                    if (!_waitReleaseToClose && WasInteract())
+                    {
+                        Close();
+                        return;
+                    }
                     int d = PressedDigit();
                     if (d >= 0) KeypadAppend(d);
                     if (WasBackspace()) KeypadBackspace();

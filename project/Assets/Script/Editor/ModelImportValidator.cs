@@ -56,6 +56,35 @@ namespace EscapeProto.EditorTools
             Debug.Log("[ModelImportValidator] " + sb + "\nreport: " + outPath);
         }
 
+        /// <summary>レイアウト保存の動作テスト①：ユーザーの配置変更を再現して Save Layout する</summary>
+        public static void LayoutTest_MoveAndSave()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/EscapePrototype/PrototypeScene.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            var bed = GameObject.Find("Bed");
+            if (bed != null) bed.transform.position += new Vector3(-1.5f, 0f, -2.0f);
+            var desk = GameObject.Find("OfficeDesk_A");
+            if (desk != null) desk.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            PrototypeSceneBuilder.SaveLayout();
+            Debug.Log("[LayoutTest] Bed を (-1.5,0,-2) 移動・OfficeDesk_A を 90°回転して保存した");
+        }
+
+        /// <summary>レイアウト保存の動作テスト②：再構築後に配置が復元されたか検証する</summary>
+        public static void LayoutTest_Verify()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/EscapePrototype/PrototypeScene.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            var bed = GameObject.Find("Bed");
+            var desk = GameObject.Find("OfficeDesk_A");
+            string r = "{" +
+                (bed != null ? $"\"bedPos\":[{bed.transform.position.x:F2},{bed.transform.position.y:F2},{bed.transform.position.z:F2}]," : "\"bedPos\":null,") +
+                (desk != null ? $"\"deskRotY\":{desk.transform.eulerAngles.y:F1}" : "\"deskRotY\":null") + "}";
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "layout_test.json"), r);
+            Debug.Log("[LayoutTest] " + r);
+        }
+
         /// <summary>
         /// 差し替え後のシーンで、対象オブジェクトのスクリーンショットを撮る（バッチ用）。
         /// 一時カメラ＋ディレクショナルライトで撮影し、シーンは保存しない。
@@ -84,10 +113,15 @@ namespace EscapeProto.EditorTools
             RenderSettings.ambientLight = new Color(0.6f, 0.6f, 0.65f);
             string outDir = Path.GetTempPath();
             // 部屋の内側の開けた位置からカメラ座標を明示指定（壁へのめり込み防止）
-            Capture(cam, new Vector3(-0.9f, 1.9f, -6.4f), new Vector3(0.3f, 0.5f, -8.3f), outDir + "swap_office_w.png");
-            Capture(cam, new Vector3(3.2f, 1.9f, -6.4f), new Vector3(5.7f, 0.6f, -8.6f), outDir + "swap_office_e.png");
-            Capture(cam, new Vector3(0.8f, 1.4f, 8.4f), new Vector3(2.4f, 0.15f, 6.6f), outDir + "swap_bucket.png");
-            Capture(cam, new Vector3(-0.8f, 1.5f, 8.4f), new Vector3(-2.65f, 0.7f, 6.5f), outDir + "swap_broom.png");
+            Capture(cam, new Vector3(-4.5f, 1.6f, -3.6f), new Vector3(-4.5f, 1.25f, -6f), outDir + "gim_exitdoor.png");
+            Capture(cam, new Vector3(2.6f, 2.4f, -3.4f), new Vector3(6f, 1.2f, 0f), outDir + "gim_stairs.png");
+            Capture(cam, new Vector3(-11.4f, 1.5f, -1.6f), new Vector3(-13.8f, 1.4f, 0f), outDir + "gim_safe.png");
+            Capture(cam, new Vector3(-6.0f, 1.6f, 1.6f), new Vector3(-8f, 1.25f, 0f), outDir + "gim_searcherdoor.png");
+            Capture(cam, new Vector3(0.4f, 1.6f, 3.5f), new Vector3(0f, 1.25f, 6f), outDir + "gim_utilitydoor.png");
+            Capture(cam, new Vector3(1.1f, 1.7f, 7.5f), new Vector3(1.5f, 1.3f, 9.65f), outDir + "gim_board.png");
+            Capture(cam, new Vector3(-5.4f, 1.9f, -1.4f), new Vector3(-7.5f, 1.6f, -0.5f), outDir + "gim_clock.png");
+            Capture(cam, new Vector3(5.3f, 1.7f, -7.3f), new Vector3(5.5f, 1.2f, -8.95f), outDir + "gim_pc.png");
+            Capture(cam, new Vector3(-2.5f, 2.0f, -4.8f), new Vector3(1.5f, 0.8f, -1.5f), outDir + "gim_room_wide.png");
             Debug.Log("[ModelImportValidator] captures saved to " + outDir);
         }
 
