@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace EscapeProto
 {
+    /// <summary>手帳エントリの表示用変数（レイアウトDSLの {key} が参照する）</summary>
+    [Serializable]
+    public class NotebookVar
+    {
+        public string key;
+        public string value;
+    }
+
     /// <summary>手帳の1項目</summary>
     [Serializable]
     public class NotebookEntry
@@ -11,6 +19,15 @@ namespace EscapeProto
         public string id;
         public string title;
         public string body;
+        public List<NotebookVar> vars = new List<NotebookVar>();
+
+        public string GetVar(string key)
+        {
+            if (vars != null)
+                foreach (var v in vars)
+                    if (v != null && v.key == key) return v.value;
+            return null;
+        }
     }
 
     /// <summary>
@@ -26,18 +43,28 @@ namespace EscapeProto
         public static IReadOnlyList<NotebookEntry> Entries => _entries;
         public static int Count => _entries.Count;
 
-        /// <summary>情報を追記（同idは上書き更新）。新規に追記できたら true</summary>
-        public static bool Add(string id, string title, string body)
+        /// <summary>
+        /// 情報を追記（同idは上書き更新）。新規に追記できたら true。
+        /// vars はレイアウトDSL（MemoBoardLayout.txt）の {key} で参照できる表示用変数。
+        /// </summary>
+        public static bool Add(string id, string title, string body,
+            params (string key, string value)[] vars)
         {
+            var varList = new List<NotebookVar>();
+            if (vars != null)
+                foreach (var (key, value) in vars)
+                    varList.Add(new NotebookVar { key = key, value = value });
+
             if (_index.TryGetValue(id, out int i))
             {
                 _entries[i].title = title;
                 _entries[i].body = body;
+                _entries[i].vars = varList;
                 OnChanged?.Invoke();
                 return false;
             }
             _index[id] = _entries.Count;
-            _entries.Add(new NotebookEntry { id = id, title = title, body = body });
+            _entries.Add(new NotebookEntry { id = id, title = title, body = body, vars = varList });
             OnChanged?.Invoke();
             return true;
         }
@@ -56,7 +83,13 @@ namespace EscapeProto
             Clear();
             if (list == null) return;
             foreach (var e in list)
-                if (e != null && !string.IsNullOrEmpty(e.id)) Add(e.id, e.title, e.body);
+            {
+                if (e == null || string.IsNullOrEmpty(e.id)) continue;
+                Add(e.id, e.title, e.body);
+                // セーブに保存されていた表示用変数もそのまま引き継ぐ
+                if (e.vars != null && _index.TryGetValue(e.id, out int i))
+                    _entries[i].vars = new List<NotebookVar>(e.vars);
+            }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

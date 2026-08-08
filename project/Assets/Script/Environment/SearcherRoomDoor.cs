@@ -24,6 +24,8 @@ namespace EscapeProto
         {
             if (_door == null) _door = transform;
             _closedPos = _door.localPosition;
+            // 事前生成NavMesh運用時、閉扉中の経路をObstacleカービングで塞ぐ
+            NavMeshDoorBlocker.Attach(_doorCollider);
         }
 
         private void OnEnable()

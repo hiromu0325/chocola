@@ -46,7 +46,9 @@ namespace EscapeProto
                 case DocumentType.EmployeeCard:
                     if (ps.TargetEmployee != null)
                         Notebook.Add("card", "社員証",
-                            $"社員番号: {ps.TargetEmployee.number}\n顔の特徴: {ps.TargetEmployee.feature}\n（氏名・生年月日は不明）");
+                            $"社員番号: {ps.TargetEmployee.number}\n顔の特徴: {ps.TargetEmployee.feature}\n（氏名・生年月日は不明）",
+                            ("number", ps.TargetEmployee.number),
+                            ("feature", ps.TargetEmployee.feature));
                     break;
                 case DocumentType.DepartmentRoster:
                 {
@@ -79,7 +81,9 @@ namespace EscapeProto
                     var m = FindModel(ManualModel);
                     if (m != null)
                         Notebook.Add("manual_" + m.model, $"説明書 {m.model}",
-                            $"型番 {m.model} の復旧手順コード: {Spaced(m.code)}");
+                            $"型番 {m.model} の復旧手順コード: {Spaced(m.code)}",
+                            ("model", m.model),
+                            ("code", Spaced(m.code)));
                     break;
                 }
             }

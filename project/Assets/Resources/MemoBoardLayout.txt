@@ -1,0 +1,100 @@
+# ============================================================
+# 手帳レイアウト定義（MemoBoardLayout.txt）
+# 手帳に表示される文章を、1行ずつ・全文このファイルで指定できる。
+# 変更は次に手帳を開き直した（プレイを開始した）ときに反映される。
+#
+# 行頭 # はコメント。色指定に # を使うため、行の途中にコメントは書けない。
+#
+# ── 全体設定（[パターン] より前に書く）──
+#   wrap <半角文字数>          1行の折り返し文字数（既定 22）
+#   order <idパターン ...>     エントリの表示順。空白/カンマ区切り。
+#                              未指定のエントリは末尾に取得順で並ぶ
+#
+# ── エントリ別設定 ── [idパターン] のブロックで指定
+#   ・パターンは手帳エントリのid。末尾 * は前方一致、[*] は全エントリ
+#   ・上から順に照合され、最初に一致したブロックだけが適用される
+#
+#   line [#RRGGBB] <文章>      表示1行を完全指定（色は省略可、省略時 body-color）。
+#                              line だけ書くと空行。1つでも line があると
+#                              title/body の自動描画は行われず全文これで組む
+#   blank <行数>               エントリ後の空行数（0〜5、既定 1）
+#   hide                       このエントリを表示しない
+#   title <書式> / title-color / body-color
+#                              …… line を使わないエントリ用の自動描画設定
+#
+# ── 文章内で使える変数 ──
+#   全エントリ共通: {title} {id} {body}（{body}は元の本文まるごと・複数行可）
+#   card:      {number}社員番号 {feature}顔の特徴
+#   pc_dept:   {code}解除コード {model}型番
+#   pc_key:    {holder}借主氏名 {number}社員番号
+#   manual_*:  {model}型番 {code}復旧コード
+#   searcher_*: {name}名前 {feature}特徴 {counter}対策
+#   ※キーワード（チップ化・線繋ぎ）は表示された文字列から自動検出される
+# ============================================================
+
+wrap 22
+
+# 謎解きの手順どおりに並べる:
+# 人物特定(①〜④) → PC情報(⑤) → 説明書 → 鍵の在処(⑥⑦) → 探索者
+order card roster album hr pc_dept manual_* pc_key key searcher_*
+
+# ── ステップ①〜④: 社員証の主を特定する（黄系）──
+
+[card]
+line #FFE060 ①【社員証】
+line 社員番号{number} 顔の特徴{feature}
+line #A0A0A8 （氏名・生年月日は不明）
+
+[roster]
+line #FFD699 ②【社員名簿】番号→部署
+line {body}
+
+[album]
+line #FFD699 ③【アルバム】顔→氏名
+line {body}
+
+[hr]
+line #FFD699 ④【人事ファイル】
+line 氏名→生年月日（PWの手がかり）
+line {body}
+
+# ── ステップ⑤〜⑦: 配電盤の復旧（青系）──
+
+[pc_dept]
+line #8FD8FF ⑤【部署ページ（配電盤）】
+line #E8F6FF 解除コード{code}
+line #E8F6FF 説明書は 型番 {model} を参照
+
+[manual_*]
+line #9AD7FF ◆ 説明書 {model}
+line #E8F6FF 復旧手順コード{code}
+
+[pc_key]
+line #8FD8FF ⑥【鍵の貸出記録】
+line #E8F6FF 配電室の鍵{holder}（{number}）
+line #E8F6FF 保管場所: 2階 本人の個室
+
+[key]
+line #7FE8A0 ⑦【配電室の鍵】入手済み
+line #E4FFE9 配電室の施錠ドアを開けられる。
+
+# ── 探索者の情報（赤系・巻末にまとめる）──
+
+[searcher_*]
+line #FF9A9A ▼ 探索者: {name}
+line #FFE0E0 {feature}
+line #FFC0C0 {counter}
+
+# ── その他（新しく増えたidはこの見た目になる）──
+
+[*]
+title 【{title}】
+title-color #FFD699
+body-color #FFFFFF
+blank 1
+
+# --- 使い方の例 ---
+# 人事ファイルを隠す:      [hr] のブロックに hide を足す
+# 探索者メモを先頭にする:  order の先頭に searcher_* を移す
+# 注: 変数（{number}等）は資料を読んだ時に記録される。この更新より前の
+#     セーブデータでは変数が空のため、該当の資料をもう一度調べること。
