@@ -7,20 +7,24 @@ namespace EscapeProto
 {
     /// <summary>
     /// 手帳の見開き描画＋証拠つなぎボード。
-    /// ・手帳の本文から「キーワード」（氏名・社員番号・生年月日・部署・特徴・型番など）を
-    ///   検出し、当たり判定つきのチップとして描画する（ホバーで赤い枠）
-    /// ・チップからチップへドラッグすると赤い線で関係を結べる（再ドラッグで解除）
+    /// ・手帳の本文から「キーワード」を検出し、当たり判定つきのチップとして描画する
+    ///   （ホバーで赤い枠）。キーワードの括りは MemoKeywordConfig で指定できる
+    /// ・チップからチップへドラッグすると赤い線で関係を結べる（同じ組をもう一度で解除）。
+    ///   接続はチップの上（近傍）で離したときだけ成立する。
+    ///   チップは出現箇所ごとに区別される（＝別の資料に出た同じワード同士も結べる）
+    /// ・表示順・見出し書式・色は MemoLayout（Resources/MemoBoardLayout.txt）で制御する
     /// ・右クリックでページ送り（最後まで行くと先頭へループ）
     /// </summary>
     public class MemoBoard : MonoBehaviour
     {
         private const int LinesPerPage = 17;
-        private const int WrapChars = 22;
         private const int FontSize = 25;
         private const float LineH = 33f;
         private const float PageW = 560f;
+        /// <summary>チップ外で離したとき接続を成立させる最大距離（ボード座標）</summary>
+        private const float SnapRadius = 55f;
 
-        private struct MemoLine { public string text; public bool title; }
+        private struct MemoLine { public string text; public Color color; public string entryId; }
 
         private Font _font;
         private RectTransform _board;        // 手帳パネル全体（線の座標基準）
@@ -29,17 +33,25 @@ namespace EscapeProto
 
         private readonly List<List<MemoLine>> _pages = new List<List<MemoLine>>();
         private int _spread;
-        // エンティティID → 代表チップ（同一人物の氏名/番号/生年月日/特徴は同じエンティティ）
+        // ノードID（エントリid:ワード:出現順） → チップ。出現箇所ごとに独立したノードなので
+        // 「アルバムの佐藤」と「人事ファイルの佐藤」のような同一ワード同士も結べる
         private readonly Dictionary<string, MemoKeywordChip> _chips = new Dictionary<string, MemoKeywordChip>();
         private readonly List<MemoKeywordChip> _allChips = new List<MemoKeywordChip>();
+        // ノードIDの出現順カウンタ（見開きの描画ごとにリセット）
+        private readonly Dictionary<string, int> _chipOccurrence = new Dictionary<string, int>();
 
-        // 結ばれた関係（セッション中保持）
+        // 結ばれた関係（ノードIDのペア。セッション中保持）
         private static readonly HashSet<string> Connections = new HashSet<string>();
         private static string PairKey(string a, string b) =>
             string.CompareOrdinal(a, b) <= 0 ? a + "\n" + b : b + "\n" + a;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Connections.Clear();
+        private static void ResetStatics()
+        {
+            Connections.Clear();
+            _keywordCache = null;
+            _entityMap = null;
+        }
 
         private MemoKeywordChip _dragFrom;
         private RectTransform _dragLine;
@@ -106,20 +118,41 @@ namespace EscapeProto
         private void BuildPages()
         {
             _pages.Clear();
+            var layout = MemoLayout.Get();
             var lines = new List<MemoLine>();
             if (Notebook.Count == 0)
             {
-                lines.Add(new MemoLine { text = "まだ何も書かれていない。" });
-                lines.Add(new MemoLine { text = "資料を調べたり手がかりを見つけると、" });
-                lines.Add(new MemoLine { text = "ここに書き留められる。" });
+                lines.Add(new MemoLine { text = "まだ何も書かれていない。", color = Color.white });
+                lines.Add(new MemoLine { text = "資料を調べたり手がかりを見つけると、", color = Color.white });
+                lines.Add(new MemoLine { text = "ここに書き留められる。", color = Color.white });
             }
             else
             {
-                foreach (var e in Notebook.Entries)
+                foreach (var e in layout.SortEntries(Notebook.Entries))
                 {
-                    lines.Add(new MemoLine { text = $"【{e.title}】", title = true });
-                    foreach (var raw in e.body.Split('\n')) Wrap(lines, raw);
-                    lines.Add(new MemoLine { text = "" });
+                    var rule = layout.RuleFor(e.id);
+                    if (rule.hide) continue;
+                    if (rule.lines.Count > 0)
+                    {
+                        // line 命令あり：全文をテンプレートで組む（1行ずつ文章と色を完全指定）
+                        foreach (var def in rule.lines)
+                        {
+                            Color c = def.hasColor ? def.color : rule.bodyColor;
+                            string expanded = MemoLayout.Rule.Expand(def.template, e);
+                            // {body} 等で複数行に展開された場合はそれぞれ折り返して積む
+                            foreach (var raw in expanded.Split('\n'))
+                                Wrap(lines, raw, layout.WrapChars, c, e.id);
+                        }
+                    }
+                    else
+                    {
+                        // line 命令なし：従来どおり 見出し＋本文 の自動描画
+                        lines.Add(new MemoLine { text = rule.FormatTitle(e), color = rule.titleColor, entryId = e.id });
+                        foreach (var raw in e.body.Split('\n'))
+                            Wrap(lines, raw, layout.WrapChars, rule.bodyColor, e.id);
+                    }
+                    for (int b = 0; b < rule.blankAfter; b++)
+                        lines.Add(new MemoLine { text = "", color = Color.white });
                 }
             }
             for (int i = 0; i < lines.Count; i += LinesPerPage)
@@ -130,11 +163,20 @@ namespace EscapeProto
             if (_pages.Count == 0) _pages.Add(new List<MemoLine>());
         }
 
-        private static void Wrap(List<MemoLine> acc, string line)
+        private static void Wrap(List<MemoLine> acc, string line, int wrapChars, Color color, string entryId)
         {
-            if (line.Length <= WrapChars) { acc.Add(new MemoLine { text = line }); return; }
-            for (int p = 0; p < line.Length; p += WrapChars)
-                acc.Add(new MemoLine { text = line.Substring(p, Mathf.Min(WrapChars, line.Length - p)) });
+            if (line.Length <= wrapChars)
+            {
+                acc.Add(new MemoLine { text = line, color = color, entryId = entryId });
+                return;
+            }
+            for (int p = 0; p < line.Length; p += wrapChars)
+                acc.Add(new MemoLine
+                {
+                    text = line.Substring(p, Mathf.Min(wrapChars, line.Length - p)),
+                    color = color,
+                    entryId = entryId
+                });
         }
 
         // ============================== 見開き描画 ==============================
@@ -142,7 +184,7 @@ namespace EscapeProto
         private void RenderSpread()
         {
             ClearChildren(_leftPage); ClearChildren(_rightPage); ClearChildren(_lineLayer);
-            _chips.Clear(); _allChips.Clear();
+            _chips.Clear(); _allChips.Clear(); _chipOccurrence.Clear();
             _dragFrom = null; _dragLine = null;
 
             int li = _spread * 2, ri = li + 1;
@@ -151,7 +193,7 @@ namespace EscapeProto
 
             int shownTo = Mathf.Min(ri + 1, _pages.Count);
             _pageLabel.text = $"— {li + 1}〜{shownTo} / {_pages.Count} ページ —　右クリック:ページ送り(ループ)　" +
-                              "ドラッグで結ぶ(離すと最寄りに接続／同じ組をもう一度で解除)　[Tab]閉じる";
+                              "ドラッグで結ぶ(ワードの上で離す／同じ組をもう一度で解除)　[Tab]閉じる";
             RedrawConnections();
         }
 
@@ -171,10 +213,9 @@ namespace EscapeProto
                 {
                     float w = EstimateWidth(text);
                     if (isKeyword)
-                        MakeChip(page, text, new Vector2(x, y), w);
+                        MakeChip(page, text, new Vector2(x, y), w, line.entryId);
                     else
-                        MakeText(page, text, new Vector2(x, y), w,
-                            line.title ? new Color(1f, 0.84f, 0.6f) : Color.white);
+                        MakeText(page, text, new Vector2(x, y), w, line.color);
                     x += w;
                 }
                 y -= LineH;
@@ -199,7 +240,7 @@ namespace EscapeProto
             return t;
         }
 
-        private void MakeChip(RectTransform parent, string keyword, Vector2 pos, float w)
+        private void MakeChip(RectTransform parent, string keyword, Vector2 pos, float w, string entryId)
         {
             var go = new GameObject("Chip_" + keyword);
             go.transform.SetParent(parent, false);
@@ -226,9 +267,16 @@ namespace EscapeProto
             MakeEdge(frt, new Vector2(1f, 0.5f), new Vector2(2f, 0f), false);
             frame.SetActive(false);
 
+            // ノードID＝「どのエントリの、どのワードの、何回目の出現か」。
+            // エントリ基準なのでページの組み替えや資料の追加でズレない
+            string occKey = entryId + ":" + keyword;
+            _chipOccurrence.TryGetValue(occKey, out int occ);
+            _chipOccurrence[occKey] = occ + 1;
+            string nodeId = occKey + ":" + occ;
+
             var chip = go.AddComponent<MemoKeywordChip>();
-            chip.Setup(this, keyword, EntityOf(keyword), frame);
-            if (!_chips.ContainsKey(chip.EntityId)) _chips[chip.EntityId] = chip;   // エンティティの初出を代表にする
+            chip.Setup(this, keyword, EntityOf(keyword), nodeId, frame);
+            _chips[nodeId] = chip;
             _allChips.Add(chip);
         }
 
@@ -259,35 +307,68 @@ namespace EscapeProto
         private static Dictionary<string, string> _entityMap;   // キーワード → エンティティID
 
         /// <summary>
-        /// キーワード表を構築。同一人物に属する情報（氏名・社員番号・生年月日・容姿の特徴）は
-        /// すべて同じエンティティとして扱う。型番と復旧コードも同一装置として同一視。
-        /// 部署は複数人にまたがるため独立エンティティ。
+        /// キーワード表を構築。括りは MemoKeywordConfig（Resources）で指定できる。
+        /// 既定：同一人物の情報（氏名・社員番号・生年月日・特徴）は同じ括り、
+        /// 型番と復旧コードは同一装置、部署は複数人にまたがるため独立の括り。
+        /// 手動指定（customGroups / extraKeywords）は自動の括りより優先される。
         /// </summary>
         private static List<string> CollectKeywords()
         {
             if (_keywordCache != null) return _keywordCache;
             _entityMap = new Dictionary<string, string>();
+            var cfg = MemoKeywordConfig.Instance;   // 無ければ既定動作
 
             void Map(string kw, string entity)
             {
                 if (!string.IsNullOrEmpty(kw) && !_entityMap.ContainsKey(kw)) _entityMap[kw] = entity;
             }
 
-            foreach (var e in PuzzleState.Employees)
+            // 手動指定の括りを最優先で登録
+            if (cfg != null && cfg.customGroups != null)
             {
-                string ent = "emp:" + e.number;
-                Map(e.name, ent);
-                Map(e.number, ent);
-                Map(e.birthdate, ent);
-                Map(e.feature, ent);
-                Map(e.department, "dept:" + e.department);
+                foreach (var g in cfg.customGroups)
+                {
+                    if (g == null || g.keywords == null || g.keywords.Length == 0) continue;
+                    string ent = "custom:" + (string.IsNullOrEmpty(g.groupId) ? g.keywords[0] : g.groupId);
+                    foreach (var kw in g.keywords) Map(kw, ent);
+                }
             }
-            foreach (var m in PuzzleState.Models)
+            if (cfg != null && cfg.extraKeywords != null)
+                foreach (var kw in cfg.extraKeywords) Map(kw, "kw:" + kw);
+
+            bool autoEmp = cfg == null || cfg.autoEmployeeKeywords;
+            bool groupEmp = cfg == null || cfg.groupEmployeeFields;
+            bool dept = cfg == null || cfg.departmentKeywords;
+            bool autoMdl = cfg == null || cfg.autoModelKeywords;
+            bool groupMdl = cfg == null || cfg.groupModelWithCode;
+
+            if (autoEmp)
             {
-                string ent = "mdl:" + m.model;
-                Map(m.model, ent);
-                Map(m.code, ent);
+                foreach (var e in PuzzleState.Employees)
+                {
+                    string ent = "emp:" + e.number;
+                    Map(e.name, groupEmp ? ent : "kw:" + e.name);
+                    Map(e.number, groupEmp ? ent : "kw:" + e.number);
+                    Map(e.birthdate, groupEmp ? ent : "kw:" + e.birthdate);
+                    Map(e.feature, groupEmp ? ent : "kw:" + e.feature);
+                    if (dept) Map(e.department, "dept:" + e.department);
+                }
             }
+            if (autoMdl)
+            {
+                foreach (var m in PuzzleState.Models)
+                {
+                    string ent = "mdl:" + m.model;
+                    Map(m.model, groupMdl ? ent : "kw:" + m.model);
+                    Map(m.code, groupMdl ? ent : "kw:" + m.code);
+                }
+            }
+
+            // キーワード化を止める語
+            if (cfg != null && cfg.excludedWords != null)
+                foreach (var w in cfg.excludedWords)
+                    if (!string.IsNullOrEmpty(w)) _entityMap.Remove(w);
+
             _keywordCache = new List<string>(_entityMap.Keys);
             // 長い語を先に照合（「1234」より「12345」を優先）
             _keywordCache.Sort((a, b) => b.Length.CompareTo(a.Length));
@@ -346,30 +427,43 @@ namespace EscapeProto
             if (_dragLine != null) { Destroy(_dragLine.gameObject); _dragLine = null; }
             if (_dragFrom == null) return;
 
-            // ドロップ先のチップ。無ければ／同一エンティティなら、離した位置に最も近い
-            // 「別エンティティの」チップへ必ず接続する（＝繋がらないは発生しない）
+            // ドロップ先のチップ。チップの上で離していなければ、ごく近く（SnapRadius内）の
+            // チップにだけスナップする。それ以外はキャンセル（意図しないワードと繋がらない）
             var target = dropTarget != null ? dropTarget.GetComponentInParent<MemoKeywordChip>() : null;
-            if (target == null || target.EntityId == _dragFrom.EntityId)
-                target = NearestOtherChip(screenPos, cam, _dragFrom.EntityId);
+            if (target == null)
+                target = NearestOtherChip(screenPos, cam, _dragFrom, SnapRadius);
 
-            if (target != null)
+            if (target != null && CanLink(_dragFrom, target))
             {
-                string key = PairKey(_dragFrom.EntityId, target.EntityId);
+                string key = PairKey(_dragFrom.NodeId, target.NodeId);
                 if (!Connections.Add(key)) Connections.Remove(key);   // 同じ組をもう一度結ぶと解除
                 RedrawConnections();
             }
             _dragFrom = null;
         }
 
-        /// <summary>離した位置に最も近い、指定エンティティ以外のチップを返す</summary>
-        private MemoKeywordChip NearestOtherChip(Vector2 screenPos, Camera cam, string excludeEntity)
+        /// <summary>
+        /// 2つのチップを結べるか。まったく同じ出現箇所（同一ノード）同士だけ不可。
+        /// 別の資料に出た同じワード同士や、同じ括り（同一人物の情報）同士も結べる。
+        /// MemoKeywordConfig.blockSameGroupLinks がONのときだけ括り内の接続を禁止する。
+        /// </summary>
+        private static bool CanLink(MemoKeywordChip a, MemoKeywordChip b)
+        {
+            if (a == null || b == null || a.NodeId == b.NodeId) return false;
+            var cfg = MemoKeywordConfig.Instance;
+            if (cfg != null && cfg.blockSameGroupLinks && a.EntityId == b.EntityId) return false;
+            return true;
+        }
+
+        /// <summary>離した位置から maxDist 以内で最も近い、結線可能なチップを返す</summary>
+        private MemoKeywordChip NearestOtherChip(Vector2 screenPos, Camera cam, MemoKeywordChip from, float maxDist)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_board, screenPos, cam, out var local);
             MemoKeywordChip best = null;
-            float bestSq = float.MaxValue;
+            float bestSq = maxDist * maxDist;
             foreach (var chip in _allChips)
             {
-                if (chip == null || chip.EntityId == excludeEntity) continue;
+                if (chip == null || !CanLink(from, chip)) continue;
                 float sq = (ChipCenterLocal(chip) - local).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = chip; }
             }
@@ -424,12 +518,14 @@ namespace EscapeProto
         public string Keyword { get; private set; }
         /// <summary>所属エンティティ（同一人物の氏名/番号/生年月日/特徴は同じIDになる）</summary>
         public string EntityId { get; private set; }
+        /// <summary>出現箇所ごとの一意ID（エントリid:ワード:出現順）。線の端点になる</summary>
+        public string NodeId { get; private set; }
         private MemoBoard _board;
         private GameObject _frame;
 
-        public void Setup(MemoBoard board, string keyword, string entityId, GameObject frame)
+        public void Setup(MemoBoard board, string keyword, string entityId, string nodeId, GameObject frame)
         {
-            _board = board; Keyword = keyword; EntityId = entityId; _frame = frame;
+            _board = board; Keyword = keyword; EntityId = entityId; NodeId = nodeId; _frame = frame;
         }
 
         public void OnPointerEnter(PointerEventData e) => _frame.SetActive(true);

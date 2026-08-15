@@ -81,7 +81,10 @@ namespace EscapeProto
                 RebuildVisitorVisual();
                 Notebook.Add("searcher_" + _next,
                     "探索者: " + GameEvents.GetSearcherName(_next),
-                    GameEvents.GetSearcherFeature(_next) + "\n" + GameEvents.GetSearcherCounter(_next));
+                    GameEvents.GetSearcherFeature(_next) + "\n" + GameEvents.GetSearcherCounter(_next),
+                    ("name", GameEvents.GetSearcherName(_next)),
+                    ("feature", GameEvents.GetSearcherFeature(_next)),
+                    ("counter", GameEvents.GetSearcherCounter(_next)));
             }
         }
 

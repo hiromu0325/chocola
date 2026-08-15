@@ -54,6 +54,9 @@ namespace EscapeProto
         private Light _eyeLight;
 
         private int _patrolIndex;
+        private Vector3 _lastDestination;
+        private float _lastRepathTime;
+        private bool _hasDestination;
         private Vector3 _investigatePos;
         private float _investigateTimer;
         private float _lostTimer;
@@ -72,6 +75,8 @@ namespace EscapeProto
             _agent.acceleration = 16f;
             _agent.speed = _patrolSpeed;
             _agent.autoBraking = false;
+            // 回頭はMoveTowards内で手動制御するため、Agentの自動回転と二重にならないよう無効化
+            _agent.updateRotation = false;
             // NavMesh未構築の可能性があるため、ここでは無効化しておき、
             // Start()でNavMesh上への配置に成功した場合のみ有効にする。
             _agent.enabled = false;
@@ -174,6 +179,7 @@ namespace EscapeProto
                 {
                     _agent.ResetPath();
                     _agent.Warp(front);
+                    _hasDestination = false;   // ワープ後は経路を引き直す
                 }
                 else
                 {
@@ -335,7 +341,16 @@ namespace EscapeProto
             if (_useNavMesh && _agent != null && _agent.enabled && _agent.isOnNavMesh)
             {
                 _agent.speed = speed;
-                _agent.SetDestination(target);
+                // 毎フレームSetDestinationすると経路再計算が走り続けるため、
+                // 目的地が0.5m以上動いたときだけ、最短0.2秒間隔で再設定する
+                bool targetMoved = (target - _lastDestination).sqrMagnitude > 0.25f;
+                if (!_hasDestination || (targetMoved && Time.time - _lastRepathTime >= 0.2f))
+                {
+                    _agent.SetDestination(target);
+                    _lastDestination = target;
+                    _lastRepathTime = Time.time;
+                    _hasDestination = true;
+                }
                 moving = _agent.velocity.sqrMagnitude > 0.01f;
 
                 // 回頭はAgentのRotationに任せず、見た目を進行方向へ向ける（updateRotation運用と同等の挙動）

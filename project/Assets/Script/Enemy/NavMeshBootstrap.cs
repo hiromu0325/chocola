@@ -6,21 +6,29 @@ namespace EscapeProto
 {
     /// <summary>
     /// パッケージ（com.unity.ai.navigation の NavMeshSurface）を使わずに、
-    /// コアの UnityEngine.AI だけでシーン全体の NavMesh を実行時ビルドする。
+    /// コアの UnityEngine.AI だけでシーン全体の NavMesh を用意する。
     ///
-    /// ・Start() で一度ベイクする（ゲーム開始直後、通常のドア閉状態で焼く）
-    /// ・GameEvents.OnVisitStart のたびに再ベイクする
-    ///   → 襲撃者部屋のドア（SearcherRoomDoor）は来訪開始時に開き、コライダーが
-    ///     無効化される。来訪開始"後"に焼き直すことで、開いたドアを通れる経路が
-    ///     NavMesh に含まれるようになる。来訪終了後の帰宅（Leaving）もこの
-    ///     「ドアが開いた状態」のメッシュのまま歩けるので、そのまま維持でよい
-    ///     （次の来訪開始時にまた焼き直される）。
+    /// [事前生成モード]（推奨。_prebakedNavMesh が設定されている場合）
+    /// ・Tools > EscapePrototype > NavMesh を事前生成 で焼いたデータを Start() で登録するだけ。
+    ///   実行時ベイクは一切行わない。
+    /// ・事前生成はドアを除外して焼いてあり、閉扉中は NavMeshDoorBlocker の
+    ///   NavMeshObstacle カービングが通行を塞ぐ（開閉に自動追従）。
+    /// ・NavMeshBakeExclude を付けたオブジェクトはベイクから除外される
+    ///   （小物がメッシュを分断して敵が通れない問題への対処）。
+    ///
+    /// [実行時ベイクモード]（フォールバック。事前生成データ未設定の場合）
+    /// ・Start() で一度ベイクし、GameEvents.OnVisitStart のたびに再ベイクする
+    ///   → 開いたドアを通れる経路がNavMeshに含まれるようになる。
     /// ・トリガーコライダー（IsTrigger）は NavMeshBuilder.CollectSources が
     ///   PhysicsColliders モードで自然に除外する。
     /// </summary>
     public class NavMeshBootstrap : MonoBehaviour
     {
         public static NavMeshBootstrap Instance { get; private set; }
+
+        [Header("事前生成NavMesh（未設定なら実行時ベイク）")]
+        [Tooltip("Tools > EscapePrototype > NavMesh を事前生成 で作成したデータ")]
+        [SerializeField] private NavMeshData _prebakedNavMesh;
 
         [Header("ベイク範囲（ワールド原点中心）")]
         [SerializeField] private Vector3 _boundsCenter = new Vector3(0f, 0f, 0f);
@@ -33,6 +41,9 @@ namespace EscapeProto
 
         /// <summary>現在NavMeshが有効か（SearcherController側のフォールバック判定に使用）</summary>
         public bool IsReady => _hasBaked;
+
+        /// <summary>事前生成データで動作中か（ドア封鎖のNavMeshDoorBlockerが参照）</summary>
+        public bool UsesPrebaked => _prebakedNavMesh != null;
 
         private void Awake()
         {
@@ -52,11 +63,20 @@ namespace EscapeProto
 
         private void Start()
         {
+            if (_prebakedNavMesh != null)
+            {
+                // 事前生成モード：登録するだけ。ドアの通行はNavMeshDoorBlockerが制御する
+                _navMeshInstance = NavMesh.AddNavMeshData(_prebakedNavMesh);
+                _hasBaked = true;
+                return;
+            }
             Bake();
         }
 
         private void HandleVisitStart(SearcherType _)
         {
+            if (UsesPrebaked) return;   // 事前生成モードでは焼き直し不要（ドアはObstacleで開閉）
+
             // ドアが開いた直後（コライダー無効化済み）に焼き直す。
             // SearcherRoomDoor.HandleVisitStart も同じ OnVisitStart 購読なので、
             // 購読順に依存しないよう1フレーム後に焼く。
@@ -76,8 +96,13 @@ namespace EscapeProto
 
             var bounds = new Bounds(_boundsCenter, _boundsSize);
             _sources.Clear();
+            // NavMeshBakeExclude が付いたオブジェクト（と子）はベイクから除外する
+            var markups = new List<NavMeshBuildMarkup>();
+            foreach (var ex in FindObjectsByType<NavMeshBakeExclude>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                markups.Add(new NavMeshBuildMarkup { root = ex.transform, ignoreFromBuild = true });
             NavMeshBuilder.CollectSources(bounds, ~0, NavMeshCollectGeometry.PhysicsColliders,
-                0, new List<NavMeshBuildMarkup>(), _sources);
+                0, markups, _sources);
 
             if (_navMeshData == null)
             {
