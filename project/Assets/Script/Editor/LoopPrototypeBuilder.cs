@@ -1108,7 +1108,26 @@ namespace EscapeProto
             brain.transform.localScale = new Vector3(0.3f, 0.26f, 0.34f);
             brain.GetComponent<Renderer>().sharedMaterial = GetMat("LP_BrainModel", new Color(0.8f, 0.6f, 0.6f), 0.4f);
             Object.DestroyImmediate(brain.GetComponent<Collider>());
-            Deco(table.transform, "HeadGear", new Vector3(0.55f, 0.98f, 0.1f), new Vector3(0.4f, 0.18f, 0.4f), dark);
+            // ヘルメット型スキャン装置（読める。進行必須ではない）
+            var helmet = Findable(table.transform, "helmet", "ヘルメット型スキャン装置", new Vector3(0.55f, 0.98f, 0.1f), dark,
+                new Vector3(0.4f, 0.18f, 0.4f),
+                "ヘルメット型スキャン装置",
+                "頭にすっぽり被せる、黒い半球のヘルメット。\n" +
+                "内側には無数の電極。顎の固定ベルトが付いている。\n\n" +
+                "装置のラベル:\n" +
+                "「装着中は強い不快感を伴います。\n" +
+                "　被験者が耐えられない場合は直ちに中断すること」\n\n" +
+                "ベルトの内側に、爪で引っ掻いたような跡。\n" +
+                "……誰かが、外そうとした跡だ。");
+            var dome = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            dome.name = "Dome"; dome.transform.SetParent(helmet.transform, false);
+            dome.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+            dome.transform.localScale = new Vector3(0.36f, 0.3f, 0.4f);
+            dome.GetComponent<Renderer>().sharedMaterial = GetMat("LP_ScanHelmet", new Color(0.1f, 0.1f, 0.12f), 0.6f);
+            Object.DestroyImmediate(dome.GetComponent<Collider>());
+            foreach (float sx in new[] { -0.17f, 0.17f })
+                Deco(helmet.transform, "Strap", new Vector3(sx, -0.06f, 0f), new Vector3(0.02f, 0.1f, 0.06f),
+                    GetMat("LP_HelmetStrap", new Color(0.35f, 0.3f, 0.25f), 0.2f));
 
             // 西壁の施錠キャビネット
             for (int i = 0; i < 3; i++)
@@ -1133,6 +1152,13 @@ namespace EscapeProto
                 "対象: 遷延性意識障害（いわゆる植物状態）\n" +
                 "方針: 損傷した脳の記憶・人格野を\n" +
                 "　　　外部より補完し、意識の再構成を促す\n\n" +
+                "《スキャン手順 抜粋》\n" +
+                "・脳情報はヘルメット型スキャン装置で取得する\n" +
+                "・覚醒下・睡眠下ともに強い不快感を伴い、\n" +
+                "　被験者が耐えられず10%も取得できない\n" +
+                "・機能低下薬の投与下で10%の取得に成功。\n" +
+                "　ただし復帰時に健忘・意識混濁のリスクがある。\n" +
+                "　取得データの確実性は高い\n\n" +
                 "──リナシータ。イタリア語で「再誕」。\n" +
                 "この響きを、私は知っている。\n" +
                 "祈るように口にしたことが、ある。");
@@ -1487,7 +1513,10 @@ namespace EscapeProto
                 "　　 システム内で保持され続ける。\n" +
                 "3-3. 復電時は 記憶野 → 言語野 → 自己認識野 の\n" +
                 "　　 順に給電すること。順序を誤ると\n" +
-                "　　 人格モデルが不安定化する。\n\n" +
+                "　　 人格モデルが不安定化する。\n" +
+                "4-2. 機能低下薬は規定量を超えて投与しないこと。\n" +
+                "　　 全量投与では脳幹の生命維持以外の全機能が\n" +
+                "　　 停止し、復帰は見込めない（植物状態）。\n\n" +
                 "……「提供体」。\n" +
                 "健常な、成人。それは、どこから？");
 
@@ -1908,8 +1937,10 @@ namespace EscapeProto
                 "1. 提供体の脳情報を採取し、BRAIN DATAとして登録\n" +
                 "2. 対象者（患者）の欠損領域へ写像・補完\n" +
                 "3. 対象者の人格が再構成されるまで反復\n\n" +
-                "備考: 提供体の脳情報は生体からの直接採取に限る。\n" +
-                "──直接、採取。\n" +
+                "備考: 完全な補完には提供体の脳情報を100%取得\n" +
+                "する必要がある。100%取得は機能低下薬の全量投与下\n" +
+                "でのみ可能（4-2 参照。復帰は見込めない）。\n\n" +
+                "──全量投与。復帰は、見込めない。\n" +
                 "登録は、3件だった。");
             Findable(console.transform, "gaplog", "照合ログ", new Vector3(0.3f, 0.76f, 0.1f),
                 GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f),
@@ -1936,7 +1967,10 @@ namespace EscapeProto
                 "病棟の廊下。アパートのドア。\n" +
                 "黒い影には、顔が無かったんじゃない。\n" +
                 "あれは、「私から見た私」だったんだ。\n\n" +
-                "私が、3人を殺した。\n" +
+                "私が、3人に薬を打った。全量を。\n" +
+                "ヘルメットを被せ、100%のスキャンを回した。\n" +
+                "3人は死んでいない。──娘と同じ場所で、\n" +
+                "娘と同じように、二度と目覚めずに眠っている。\n" +
                 "娘を助けるための「提供体」に、するために。");
 
             return new[] { "devlog", "gaplog", "restored" };
@@ -2161,7 +2195,8 @@ namespace EscapeProto
                 "主任のメッセージ",
                 "《再生メッセージ》　小川 暁\n\n" +
                 "「二宮さん。ここまで来たなら、もう思い出しましたね。\n" +
-                "　あなたは3人を手にかけ、脳情報を登録した。\n" +
+                "　あなたは3人に薬を使い、脳を丸ごと写し取って登録した。\n" +
+                "　3人は今も、病棟で眠っています。\n" +
                 "　私はそれに気づきながら、告発しなかった。\n" +
                 "　……私にも、救えなかった息子がいたからです。\n\n" +
                 "　3人分でも、娘さんは戻らなかった。\n" +
