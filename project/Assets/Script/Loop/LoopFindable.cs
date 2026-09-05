@@ -19,6 +19,10 @@ namespace EscapeProto
         [TextArea] public string NoteBody;
         [Tooltip("見つけると光る（発見済みの目印）")]
         public Renderer Highlight;
+        [Tooltip("trueなら拾うとオブジェクトが消える（手帳・懐中電灯などの道具）")]
+        public bool DisappearOnPickup;
+        [Tooltip("拾得トーストに添える操作ヒント（例: F: 点灯）")]
+        public string PickupHint;
 
         public bool Found { get; private set; }
 
@@ -29,14 +33,35 @@ namespace EscapeProto
         private void Start()
         {
             // セーブ復帰やリスポーン時に発見済み状態を復元
-            if (LoopProgress.IsFound(RoomId, Id)) MarkFound(silent: true);
+            RefreshFound();
         }
+
+        /// <summary>進行データから発見済み状態を復元（つづきから再開時にも呼ばれる）</summary>
+        public void RefreshFound()
+        {
+            if (!Found && LoopProgress.IsFound(RoomId, Id)) MarkFound(silent: true);
+        }
+
+        /// <summary>
+        /// 手帳が無くて読めない資料か。
+        /// 書き留める手段が無いうちは資料を読ませない（＝先に手帳を拾わせる導線）。
+        /// 道具（DisappearOnPickup）と、記録の無いものは対象外。
+        /// </summary>
+        private bool BlockedByNoNotebook =>
+            !DisappearOnPickup && !string.IsNullOrEmpty(NoteTitle) && !LoopProgress.NotebookOwned;
 
         public void OnInteract()
         {
             bool isNew = Time.time - _lastCallTime > 0.25f;
             _lastCallTime = Time.time;
             if (!isNew) return;
+
+            if (BlockedByNoNotebook)
+            {
+                ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.5f);
+                ToastUI.Show("書き留めるものがない……手帳を探そう");
+                return;
+            }
 
             if (!Found) MarkFound(silent: false);
 
@@ -49,19 +74,35 @@ namespace EscapeProto
         private void MarkFound(bool silent)
         {
             Found = true;
-            if (Highlight != null && Highlight.sharedMaterial != null)
-                Highlight.transform.localScale = Highlight.transform.localScale;   // 見た目の変化は任意
 
+            // 資料は手帳へ綴じる（OnInteract側で手帳所持を保証済み。
+            // silent=セーブ復帰時は既に綴じられているので通知だけ出さない）
+            bool filed = false;
             if (!string.IsNullOrEmpty(NoteTitle))
-                Notebook.Add($"{RoomId}_{Id}", NoteTitle, NoteBody);
+                filed = Notebook.Add($"{RoomId}_{Id}", NoteTitle, NoteBody);
 
             if (!silent)
+            {
                 ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.7f);
 
+                if (DisappearOnPickup)
+                    ToastUI.Show($"『{DisplayName}』を手に入れた" +
+                                 (string.IsNullOrEmpty(PickupHint) ? "" : $"　[{PickupHint}]"));
+                else if (filed)
+                    ToastUI.Show($"『{NoteTitle}』を手帳に綴じた");
+            }
+
             LoopProgress.NotifyFound(RoomId, Id);
+
+            // 道具は拾うと消える（発見状態はLoopProgress側に残るので復元しても消えたまま）
+            if (DisappearOnPickup) gameObject.SetActive(false);
         }
 
-        public string GetPrompt() => Found ? $"[E] {DisplayName}（記録済み）" : $"[E] {DisplayName}を調べる";
+        public string GetPrompt()
+        {
+            if (BlockedByNoNotebook) return $"{DisplayName}（書き留めるものがない）";
+            return Found ? $"[E] {DisplayName}（記録済み）" : $"[E] {DisplayName}を調べる";
+        }
         public float GetProgress01() => -1f;
     }
 }

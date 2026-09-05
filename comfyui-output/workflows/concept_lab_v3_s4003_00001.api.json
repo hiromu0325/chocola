@@ -1,0 +1,101 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "pornmasterKrea2_turboV1FP8.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "Huihui-Qwen3-VL-4B-Instruct-abliterated-fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "深夜、無人のモダンなオープンオフィスの内観。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明が並ぶ。淡い木目の天板と紺色の金属フレームの長い共有デスクが2列並び、黒いメッシュのオフィスチェアが並ぶ。左手前には波打つ銀色の金属板で覆われたバーカウンターと黒い脚のハイスツール、その上に灰色の球体ペンダントランプが5つ吊り下がり暖色に光る。床は濃い茶灰色のカーペット。奥の壁は木目パネルで、上端の間接照明が暖かく照らす。その木目壁に掲示板があり、証明写真がちょうど4枚だけ横一列に貼られている。左から1枚目と3枚目は白衣の研究員の普通の顔写真、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。右奥の角にはガラス張りの小さな会議室と観葉植物。壁は青灰色。誰もいないのに今まで人がいた気配。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。"
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": ""
+    }
+  },
+  "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1152,
+      "height": 768,
+      "batch_size": 1
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "6",
+        0
+      ],
+      "seed": 4003,
+      "steps": 8,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "7",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ],
+      "filename_prefix": "concept_lab_v3_s4003"
+    }
+  }
+}

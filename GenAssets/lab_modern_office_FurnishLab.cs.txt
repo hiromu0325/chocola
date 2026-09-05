@@ -1,0 +1,277 @@
+        /// <summary>
+        /// 研究所オフィス：モダンなオープンオフィス。
+        /// 白い格子天井＋ライン照明／淡い木目の共有デスク×紺フレーム／黒メッシュチェア／
+        /// 波板メタルのバーカウンター＋球体ペンダント／ダークカーペット／木目アクセント壁／ガラス会議室。
+        /// 研究員5人分の席（1〜3が手前の長机、4〜5が奥の長机）。研究概要は研究員3の席、
+        /// 研究メンバー表は北側の木目壁に掛かる。
+        /// </summary>
+        private static string[] FurnishLab(Transform t, float hw, float hd, float h)
+        {
+            var oak = GetMat("LP_LabOak", new Color(0.80f, 0.68f, 0.50f), 0.35f);
+            var navy = GetMat("LP_LabNavy", new Color(0.16f, 0.19f, 0.26f), 0.4f);
+            var black = GetMat("LP_LabBlack", new Color(0.06f, 0.06f, 0.07f), 0.3f);
+            var mesh = GetMat("LP_LabMesh", new Color(0.13f, 0.13f, 0.15f), 0.15f);
+            var chrome = MetalMat("LP_LabChrome", new Color(0.82f, 0.83f, 0.85f), 0.9f, 1f);
+            var walnut = GetMat("LP_LabWalnut", new Color(0.52f, 0.36f, 0.22f), 0.3f);
+            var cabinet = GetMat("LP_LabCabinet", new Color(0.72f, 0.73f, 0.74f), 0.25f);
+            var paper = GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f);
+            var board = GetMat("LP_Board", new Color(0.9f, 0.89f, 0.86f), 0.1f);
+            var glass = GlassMat("LP_LabGlass", new Color(0.75f, 0.85f, 0.9f, 0.18f));
+            var plant = GetMat("LP_LabPlant", new Color(0.18f, 0.42f, 0.2f), 0.2f);
+            var pot = GetMat("LP_LabPot", new Color(0.3f, 0.3f, 0.32f), 0.2f);
+            var panelLight = EmissiveMat("LP_LabPanelLight", new Color(0.95f, 0.95f, 0.93f), new Color(1f, 0.98f, 0.92f) * 2.2f);
+            var lineLight = EmissiveMat("LP_LabLineLight", new Color(0.97f, 0.97f, 0.97f), new Color(1f, 0.97f, 0.9f) * 3.0f);
+            var globe = EmissiveMat("LP_LabGlobe", new Color(0.35f, 0.32f, 0.3f), new Color(1f, 0.78f, 0.5f) * 1.6f);
+            var woodStrip = EmissiveMat("LP_LabWoodStrip", new Color(1f, 0.85f, 0.6f), new Color(1f, 0.8f, 0.5f) * 2.5f);
+
+            // ---------- 天井：格子＋埋め込みパネル灯 ----------
+            var ceilRoot = new GameObject("CeilingGrid"); ceilRoot.transform.SetParent(t, false);
+            const float cell = 0.6f;
+            var grid = GetMat("LP_LabGridLine", new Color(0.55f, 0.55f, 0.57f), 0.3f);
+            int nx = Mathf.FloorToInt(hw * 2f / cell), nz = Mathf.FloorToInt(hd * 2f / cell);
+            for (int i = 0; i <= nx; i++)
+                Deco(ceilRoot.transform, "GridZ", new Vector3(-hw + i * cell, h - 0.012f, 0f), new Vector3(0.025f, 0.024f, hd * 2f), grid);
+            for (int j = 0; j <= nz; j++)
+                Deco(ceilRoot.transform, "GridX", new Vector3(0f, h - 0.012f, -hd + j * cell), new Vector3(hw * 2f, 0.024f, 0.025f), grid);
+            for (int i = 0; i < nx; i++)
+                for (int j = 0; j < nz; j++)
+                    if ((i % 3 == 1) && (j % 4 == 2))
+                        Deco(ceilRoot.transform, "PanelLight",
+                            new Vector3(-hw + (i + 0.5f) * cell, h - 0.008f, -hd + (j + 0.5f) * cell),
+                            new Vector3(cell - 0.05f, 0.012f, cell - 0.05f), panelLight);
+
+            // ---------- 共有デスク（長机2台・紺フレーム・淡い木目天板） ----------
+            Transform BenchDesk(string name, float x, float length)
+            {
+                var d = new GameObject(name); d.transform.SetParent(t, false);
+                d.transform.localPosition = new Vector3(x, 0f, 0f);
+                Box(d.transform, "Top", new Vector3(0f, 0.72f, 0f), new Vector3(1.4f, 0.05f, length), oak);
+                Box(d.transform, "Rail", new Vector3(0f, 0.30f, 0f), new Vector3(0.10f, 0.08f, length - 0.3f), navy);
+                foreach (float z in new[] { -length * 0.5f + 0.15f, length * 0.5f - 0.15f })
+                {
+                    Box(d.transform, "Leg", new Vector3(-0.6f, 0.36f, z), new Vector3(0.09f, 0.72f, 0.09f), navy);
+                    Box(d.transform, "Leg", new Vector3(0.6f, 0.36f, z), new Vector3(0.09f, 0.72f, 0.09f), navy);
+                    Box(d.transform, "Beam", new Vector3(0f, 0.68f, z), new Vector3(1.3f, 0.06f, 0.09f), navy);
+                }
+                return d.transform;
+            }
+
+            var deskA = BenchDesk("BenchDesk_A", 2.6f, 7.0f);   // 手前（西側に研究員1〜3）
+            var deskB = BenchDesk("BenchDesk_B", 5.6f, 5.0f);   // 奥（西側に研究員4〜5）
+
+            // 研究員の席：Aの西側3席、Bの西側2席（東向きに座る）
+            var seatZ = new[] { -2.2f, 0f, 2.2f, -1.2f, 1.2f };
+            for (int i = 0; i < seatZ.Length; i++)
+            {
+                var desk = i < 3 ? deskA : deskB;
+                float deskX = i < 3 ? 2.6f : 5.6f;
+                float z = seatZ[i];
+                OfficeChair(t, $"Chair_R{i + 1}", new Vector3(deskX - 1.25f, 0f, z), 90f, black, mesh);
+                // 席の名札（天板の上・西端寄り。西向きに読む）
+                TextPlate(desk, $"研究員 {i + 1}", new Vector3(-0.45f, 0.78f, z), 90f,
+                    new Color(0.2f, 0.2f, 0.25f), 0.02f);
+                // 席の前に書類を散らす
+                Deco(desk, "Papers", new Vector3(-0.2f, 0.755f, z + 0.15f), new Vector3(0.3f, 0.01f, 0.22f), paper);
+                if (i == 2)
+                    Findable(desk, "summary", "研究概要", new Vector3(0.05f, 0.76f, z), paper,
+                        new Vector3(0.4f, 0.02f, 0.3f),
+                        "研究概要",
+                        "《小川脳神経総合研究所 研究概要》\n\n" +
+                        "目的: 損傷した記憶領域をAIで補完し、\n" +
+                        "　　　人格の連続性を維持する\n\n" +
+                        "手順:\n" +
+                        "　1. 被験体の記憶を回廊構造として写像\n" +
+                        "　2. 欠損区画にAI生成の記憶を移植\n" +
+                        "　3. 覚醒後、齟齬の有無を観察\n\n" +
+                        "※第4項以降は破棄されている");
+            }
+            // 空席の椅子（東側）で「大人数のオフィス」感を出す
+            foreach (float z in new[] { -2.2f, 0f, 2.2f }) OfficeChair(t, "Chair_Empty", new Vector3(2.6f + 1.25f, 0f, z), -90f, black, mesh);
+            foreach (float z in new[] { -1.6f, 1.6f }) OfficeChair(t, "Chair_Empty", new Vector3(5.6f + 1.25f, 0f, z), -90f, black, mesh);
+
+            // ---------- ライン照明（デスク上空を縦に走る白いバー） ----------
+            var lights = new GameObject("Lights"); lights.transform.SetParent(t, false);
+            foreach (float x in new[] { -1.4f, 2.6f, 5.6f })
+            {
+                Deco(lights.transform, "LineLight", new Vector3(x, 2.5f, 0f), new Vector3(0.12f, 0.05f, 6.5f), lineLight);
+                foreach (float z in new[] { -2.4f, 2.4f })
+                {
+                    Deco(lights.transform, "Wire", new Vector3(x, (2.5f + h) * 0.5f, z), new Vector3(0.01f, h - 2.5f, 0.01f), black);
+                    var lg = new GameObject("LineLightSrc"); lg.transform.SetParent(lights.transform, false);
+                    lg.transform.localPosition = new Vector3(x, 2.35f, z * 0.6f);
+                    var l = lg.AddComponent<Light>();
+                    l.type = LightType.Point; l.color = new Color(1f, 0.97f, 0.9f);
+                    l.intensity = 1.5f; l.range = 7f;
+                }
+            }
+
+            // ---------- バーカウンター（波板メタル）＋スツール＋球体ペンダント ----------
+            var bar = new GameObject("BarCounter"); bar.transform.SetParent(t, false);
+            bar.transform.localPosition = new Vector3(-4.6f, 0f, 0f);
+            const float barL = 5.0f, barH = 1.05f;
+            Box(bar.transform, "Top", new Vector3(0f, barH - 0.03f, 0f), new Vector3(1.0f, 0.06f, barL + 0.1f), oak);
+            Box(bar.transform, "Core", new Vector3(0f, barH * 0.5f, 0f), new Vector3(0.84f, barH - 0.06f, barL - 0.05f), cabinet);
+            // 波板：細い縦ストリップを交互に出し入れして凹凸を出す
+            int strips = Mathf.RoundToInt(barL / 0.1f);
+            for (int i = 0; i < strips; i++)
+            {
+                float z = -barL * 0.5f + (i + 0.5f) * 0.1f;
+                float bump = (i % 2 == 0) ? 0.02f : -0.02f;
+                Deco(bar.transform, "Corrugation", new Vector3(0.44f + bump, (barH - 0.06f) * 0.5f, z), new Vector3(0.06f, barH - 0.08f, 0.1f), chrome);
+                Deco(bar.transform, "Corrugation", new Vector3(-0.44f - bump, (barH - 0.06f) * 0.5f, z), new Vector3(0.06f, barH - 0.08f, 0.1f), chrome);
+            }
+            for (int i = 0; i < 9; i++)
+            {
+                float x = -0.45f + i * 0.11f;
+                float bump = (i % 2 == 0) ? 0.02f : -0.02f;
+                Deco(bar.transform, "Corrugation", new Vector3(x, (barH - 0.06f) * 0.5f, barL * 0.5f + bump), new Vector3(0.1f, barH - 0.08f, 0.06f), chrome);
+                Deco(bar.transform, "Corrugation", new Vector3(x, (barH - 0.06f) * 0.5f, -barL * 0.5f - bump), new Vector3(0.1f, barH - 0.08f, 0.06f), chrome);
+            }
+            // スツール（東側に4脚）
+            foreach (float z in new[] { -1.8f, -0.6f, 0.6f, 1.8f })
+                BarStool(t, "Stool", new Vector3(-4.6f + 0.95f, 0f, z), oak, black);
+            // 球体ペンダント5灯
+            for (int i = 0; i < 5; i++)
+            {
+                float z = -2.0f + i * 1.0f;
+                var g = new GameObject("GlobePendant"); g.transform.SetParent(bar.transform, false);
+                g.transform.localPosition = new Vector3(0f, 2.15f, z);
+                var sph = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                sph.name = "Globe"; sph.transform.SetParent(g.transform, false);
+                sph.transform.localScale = Vector3.one * 0.34f;
+                sph.GetComponent<Renderer>().sharedMaterial = globe;
+                Object.DestroyImmediate(sph.GetComponent<Collider>());
+                Deco(g.transform, "Wire", new Vector3(0f, (h - 2.15f) * 0.5f + 0.17f, 0f), new Vector3(0.008f, h - 2.15f - 0.17f, 0.008f), black);
+                if (i % 2 == 0)
+                {
+                    var l = g.AddComponent<Light>();
+                    l.type = LightType.Point; l.color = new Color(1f, 0.8f, 0.55f);
+                    l.intensity = 0.9f; l.range = 4.5f;
+                }
+            }
+
+            // ---------- 北壁：木目アクセント壁＋間接照明＋ローキャビネット ----------
+            var back = new GameObject("BackWall"); back.transform.SetParent(t, false);
+            float wallZ = hd - 0.12f;
+            // 扉開口（幅1.1）を避けて左右に木目パネル
+            foreach (float sgn in new[] { -1f, 1f })
+            {
+                float len = hw - 0.7f;
+                float cx = sgn * (0.7f + len * 0.5f);
+                Deco(back.transform, "WoodPanel", new Vector3(cx, 1.55f, wallZ), new Vector3(len, 2.5f, 0.06f), walnut);
+                // 上端の間接照明（ソフィット＋光る帯）
+                Deco(back.transform, "Soffit", new Vector3(cx, 2.86f, wallZ - 0.16f), new Vector3(len, 0.08f, 0.36f), cabinet);
+                Deco(back.transform, "WoodStrip", new Vector3(cx, 2.80f, wallZ - 0.06f), new Vector3(len - 0.2f, 0.03f, 0.05f), woodStrip);
+                var wl = new GameObject("WoodWash"); wl.transform.SetParent(back.transform, false);
+                wl.transform.localPosition = new Vector3(cx, 2.7f, wallZ - 0.4f);
+                wl.transform.localRotation = Quaternion.Euler(60f, 0f, 0f);
+                var l = wl.AddComponent<Light>();
+                l.type = LightType.Spot; l.color = new Color(1f, 0.8f, 0.55f);
+                l.intensity = 2.2f; l.range = 5f; l.spotAngle = 110f;
+            }
+            // 左側の壁際にローキャビネット
+            Box(back.transform, "Cabinet", new Vector3(-4.2f, 0.45f, wallZ - 0.32f), new Vector3(5.6f, 0.9f, 0.45f), cabinet);
+            for (int i = 0; i < 6; i++)
+                Deco(back.transform, "CabinetSeam", new Vector3(-6.75f + i * 0.93f, 0.45f, wallZ - 0.555f), new Vector3(0.01f, 0.86f, 0.01f), navy);
+
+            // 研究メンバー表（左の木目壁に掛ける。写真4枚のうち2枚は黒く潰れている）
+            var mbPos = new Vector3(-3.6f, 1.75f, wallZ - 0.08f);
+            var plate = Findable(back.transform, "members", "研究メンバー表", mbPos, board,
+                new Vector3(2.2f, 1.2f, 0.06f),
+                "研究メンバー表",
+                "《研究メンバー》\n\n" +
+                "　所長　小川 誠一（写真あり）\n" +
+                "　主任　［判読不能］\n" +
+                "　研究員　三嶋 律（写真あり）\n" +
+                "　研究員　［判読不能］\n\n" +
+                "2人分の顔写真は薬品で溶かされたように\n黒く滲んでいる。");
+            var photo = GetMat("LP_Photo", new Color(0.75f, 0.74f, 0.7f), 0.1f);
+            var blacked = GetMat("LP_PhotoBlacked", new Color(0.08f, 0.07f, 0.07f), 0.05f);
+            for (int i = 0; i < 4; i++)
+                Deco(plate.transform, $"Photo_{i}", new Vector3(-0.75f + i * 0.5f, 0.18f, -0.04f),
+                    new Vector3(0.34f, 0.4f, 0.02f), (i == 1 || i == 3) ? blacked : photo);
+            TextPlate(plate.transform, "研 究 メ ン バ ー", new Vector3(0f, -0.42f, -0.04f), 180f,
+                new Color(0.2f, 0.2f, 0.25f), 0.03f);
+
+            // ---------- 北東角：ガラス張りの小会議室 ----------
+            var meet = new GameObject("GlassRoom"); meet.transform.SetParent(t, false);
+            float gx0 = hw - 3.4f, gz0 = hd - 3.4f;   // 会議室の南西角
+            float wLen = hd - gz0;                     // 西面の長さ
+            // 南面（x: gx0..hw）はガラス一枚。西面は出入口（幅1.1）を南寄りに空け、残りをガラス
+            Deco(meet.transform, "GlassS", new Vector3((gx0 + hw) * 0.5f, h * 0.5f, gz0), new Vector3(hw - gx0, h - 0.02f, 0.03f), glass);
+            Deco(meet.transform, "GlassW", new Vector3(gx0, h * 0.5f, gz0 + 1.1f + (wLen - 1.1f) * 0.5f), new Vector3(0.03f, h - 0.02f, wLen - 1.1f), glass);
+            Deco(meet.transform, "FrameS", new Vector3((gx0 + hw) * 0.5f, 0.03f, gz0), new Vector3(hw - gx0, 0.06f, 0.05f), black);
+            Deco(meet.transform, "FrameW", new Vector3(gx0, 0.03f, gz0 + 1.1f + (wLen - 1.1f) * 0.5f), new Vector3(0.05f, 0.06f, wLen - 1.1f), black);
+            Deco(meet.transform, "FrameTopS", new Vector3((gx0 + hw) * 0.5f, h - 0.03f, gz0), new Vector3(hw - gx0, 0.06f, 0.05f), black);
+            Deco(meet.transform, "FrameTopW", new Vector3(gx0, h - 0.03f, (gz0 + hd) * 0.5f), new Vector3(0.05f, 0.06f, wLen), black);
+            Deco(meet.transform, "Mullion", new Vector3(gx0, h * 0.5f, gz0), new Vector3(0.05f, h, 0.05f), black);
+            Deco(meet.transform, "Mullion", new Vector3(gx0, h * 0.5f, gz0 + 1.1f), new Vector3(0.05f, h, 0.05f), black);
+            // 中：小さなテーブルと椅子2脚、観葉植物
+            var mt = new GameObject("MeetTable"); mt.transform.SetParent(meet.transform, false);
+            mt.transform.localPosition = new Vector3((gx0 + hw) * 0.5f, 0f, (gz0 + hd) * 0.5f);
+            Box(mt.transform, "Top", new Vector3(0f, 0.72f, 0f), new Vector3(1.1f, 0.05f, 1.1f), oak);
+            Box(mt.transform, "Post", new Vector3(0f, 0.35f, 0f), new Vector3(0.08f, 0.7f, 0.08f), navy);
+            OfficeChair(meet.transform, "MeetChair", mt.transform.localPosition + new Vector3(-0.8f, 0f, 0f), 90f, black, mesh);
+            OfficeChair(meet.transform, "MeetChair", mt.transform.localPosition + new Vector3(0.8f, 0f, 0f), -90f, black, mesh);
+            var pl = new GameObject("Plant"); pl.transform.SetParent(meet.transform, false);
+            pl.transform.localPosition = new Vector3(hw - 0.5f, 0f, hd - 0.5f);
+            Box(pl.transform, "Pot", new Vector3(0f, 0.2f, 0f), new Vector3(0.36f, 0.4f, 0.36f), pot);
+            foreach (var off in new[] { new Vector3(0f, 0.9f, 0f), new Vector3(0.18f, 0.7f, 0.1f), new Vector3(-0.15f, 0.75f, -0.12f), new Vector3(0.05f, 1.15f, -0.05f) })
+            {
+                var leaf = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                leaf.name = "Leaf"; leaf.transform.SetParent(pl.transform, false);
+                leaf.transform.localPosition = off; leaf.transform.localScale = new Vector3(0.45f, 0.35f, 0.45f);
+                leaf.GetComponent<Renderer>().sharedMaterial = plant;
+                Object.DestroyImmediate(leaf.GetComponent<Collider>());
+            }
+            var ml = new GameObject("MeetLight"); ml.transform.SetParent(meet.transform, false);
+            ml.transform.localPosition = new Vector3((gx0 + hw) * 0.5f, h - 0.3f, (gz0 + hd) * 0.5f);
+            var mlight = ml.AddComponent<Light>();
+            mlight.type = LightType.Point; mlight.color = new Color(1f, 0.85f, 0.65f);
+            mlight.intensity = 1.2f; mlight.range = 4.5f;
+
+            return new[] { "summary", "members" };
+        }
+
+        /// <summary>黒メッシュのオフィスチェア（キャスター付き）。yaw=90で東を向く</summary>
+        private static void OfficeChair(Transform parent, string name, Vector3 pos, float yaw, Material black, Material mesh)
+        {
+            var c = new GameObject(name); c.transform.SetParent(parent, false);
+            c.transform.localPosition = pos;
+            c.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            Box(c.transform, "Seat", new Vector3(0f, 0.46f, 0f), new Vector3(0.5f, 0.07f, 0.5f), black);
+            Box(c.transform, "Back", new Vector3(0f, 0.78f, -0.24f), new Vector3(0.48f, 0.6f, 0.05f), mesh);
+            Deco(c.transform, "Arm", new Vector3(-0.27f, 0.62f, -0.02f), new Vector3(0.05f, 0.04f, 0.3f), black);
+            Deco(c.transform, "Arm", new Vector3(0.27f, 0.62f, -0.02f), new Vector3(0.05f, 0.04f, 0.3f), black);
+            Deco(c.transform, "Post", new Vector3(0f, 0.25f, 0f), new Vector3(0.05f, 0.4f, 0.05f), black);
+            for (int i = 0; i < 5; i++)
+            {
+                float a = i * Mathf.PI * 2f / 5f;
+                Deco(c.transform, "Caster", new Vector3(Mathf.Cos(a) * 0.26f, 0.03f, Mathf.Sin(a) * 0.26f), new Vector3(0.07f, 0.06f, 0.07f), black);
+                var legGo = Deco(c.transform, "Leg", new Vector3(Mathf.Cos(a) * 0.13f, 0.06f, Mathf.Sin(a) * 0.13f), new Vector3(0.28f, 0.03f, 0.04f), black);
+                legGo.transform.localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f);
+            }
+        }
+
+        /// <summary>バースツール（木の座面・黒い脚）</summary>
+        private static void BarStool(Transform parent, string name, Vector3 pos, Material seat, Material black)
+        {
+            var s = new GameObject(name); s.transform.SetParent(parent, false);
+            s.transform.localPosition = pos;
+            var top = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            top.name = "Seat"; top.transform.SetParent(s.transform, false);
+            top.transform.localPosition = new Vector3(0f, 0.72f, 0f);
+            top.transform.localScale = new Vector3(0.36f, 0.02f, 0.36f);
+            top.GetComponent<Renderer>().sharedMaterial = seat;
+            Object.DestroyImmediate(top.GetComponent<Collider>());
+            // 当たり判定用の透明な胴体（プレイヤーがすり抜けないように）
+            var body = Box(s.transform, "Body", new Vector3(0f, 0.36f, 0f), new Vector3(0.3f, 0.7f, 0.3f), black);
+            body.GetComponent<Renderer>().enabled = false;
+            foreach (var d in new[] { new Vector2(-1, -1), new Vector2(1, -1), new Vector2(-1, 1), new Vector2(1, 1) })
+                Deco(s.transform, "Leg", new Vector3(d.x * 0.13f, 0.36f, d.y * 0.13f), new Vector3(0.025f, 0.72f, 0.025f), black);
+            Deco(s.transform, "Ring", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.02f, 0.3f), black);
+            Deco(s.transform, "BackRest", new Vector3(0f, 0.95f, -0.15f), new Vector3(0.32f, 0.04f, 0.03f), black);
+            Deco(s.transform, "BackPost", new Vector3(-0.14f, 0.83f, -0.15f), new Vector3(0.02f, 0.24f, 0.02f), black);
+            Deco(s.transform, "BackPost", new Vector3(0.14f, 0.83f, -0.15f), new Vector3(0.02f, 0.24f, 0.02f), black);
+        }
+

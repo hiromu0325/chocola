@@ -20,7 +20,7 @@ namespace EscapeProto
     /// </summary>
     public class LoopSearcher : MonoBehaviour
     {
-        private enum State { Roam, InspectDoor, ChaseCorridor, InRoom, Retreat }
+        private enum State { Roam, InspectDoor, ChaseCorridor, InRoom, Retreat, Entering, Leaving }
 
         private const float RoamSpeed = 1.7f;
         private const float ChaseSpeed = 3.2f;
@@ -28,6 +28,12 @@ namespace EscapeProto
         private const float SightRange = 11f;
         /// <summary>プレイヤーが部屋に入ってから襲撃者が追って入室するまでの猶予</summary>
         private const float EnterRoomDelay = 6f;
+        /// <summary>入場演出：扉が開いてから踏み出しきるまでの秒数（この間は追ってこない）</summary>
+        private const float EnterMotionSeconds = 2.6f;
+        /// <summary>入場演出で扉から室内へ踏み込む距離</summary>
+        private const float EnterStrideDistance = 1.6f;
+        /// <summary>退場演出：扉をくぐって消えるまでの秒数</summary>
+        private const float LeaveMotionSeconds = 1.4f;
 
         private CharacterController _cc;
         private Renderer[] _renderers;
@@ -43,6 +49,13 @@ namespace EscapeProto
         /// <summary>襲撃者が居る空間（null=回廊、それ以外=部屋Id）</summary>
         private string _space;
         private bool _frozen;
+        private float _retreatTimer;     // 退場が長引いたら強制消滅させる保険
+        private State _prevLoggedState;  // 調査ログ用（状態遷移の記録）
+        // 入退場演出（扉から踏み出す／扉へ引っ込む）
+        private float _motionTimer;
+        private float _stepTimer;
+        private Vector3 _enterFrom, _enterTo, _enterDir;
+        private bool _leaveThenVanish;   // 退場演出のあと消滅する（ブレイカー復旧時）
 
         private static float C => (LoopCorridorLayout.InnerHalf + LoopCorridorLayout.OuterHalf) * 0.5f;
 
@@ -57,8 +70,16 @@ namespace EscapeProto
             s._cc = cc;
             s._dir = Random.value < 0.5f ? 1 : -1;
             s._decideTimer = Random.Range(5f, 10f);
+            AttackDebugLog.Log("searcher", $"スポーン pos={pos.ToString("F1")}");
             return s;
         }
+
+        /// <summary>退場（消滅歩行）中か（ウォッチドッグはこれを残骸と数えない）</summary>
+        public bool IsRetreating => _state == State.Retreat;
+
+        /// <summary>調査ログ用の1行要約</summary>
+        public string DebugBrief() =>
+            $"{_state}{(_frozen ? "/凍結" : "")} space={_space ?? "廊下"} pos={transform.position.ToString("F0")}";
 
         private void Awake()
         {
@@ -69,8 +90,22 @@ namespace EscapeProto
         /// <summary>ブレイカー復旧：最寄りの扉へ向かい退場する</summary>
         public void Retreat()
         {
-            if (_space != null) { Destroy(gameObject); return; }   // 部屋の中なら即消える
+            if (_space != null)
+            {
+                // 同じ部屋にプレイヤーが居るなら、消える前に扉へ引き返す姿を見せる
+                if (_space == LoopRooms.CurrentRoomId && _state != State.Leaving)
+                {
+                    BeginLeaving();
+                    _leaveThenVanish = true;
+                    return;
+                }
+                AttackDebugLog.Log("searcher", "退場指示: 部屋の中のため即消滅 " + DebugBrief());
+                Destroy(gameObject);
+                return;
+            }
+            AttackDebugLog.Log("searcher", "退場指示: 扉へ歩き出す " + DebugBrief());
             _state = State.Retreat;
+            _retreatTimer = 0f;
         }
 
         private void Update()
@@ -82,21 +117,51 @@ namespace EscapeProto
             if (sameSpace == _frozen) SetFrozen(!sameSpace);
             if (!sameSpace)
             {
+                // 退場中に空間が分かれたら、もう姿は見えていないのでそのまま消える。
+                // （凍結したまま入室待ちに入ると「退場中なのに部屋へ入り直して
+                //   壁に張り付いたまま残る」＝襲撃が終わらない不具合になる）
+                if (_state == State.Retreat)
+                {
+                    AttackDebugLog.Log("searcher", "退場中に空間分離 → 即消滅 " + DebugBrief());
+                    Destroy(gameObject);
+                    return;
+                }
+                // 演出中に見られなくなったら、演出を見せる意味がないので即座に決着させる
+                if (_state == State.Leaving) { FinishLeaving(); return; }
+                if (_state == State.Entering) { _state = State.InRoom; }
                 // 部屋に入っていた襲撃者は、プレイヤーが出たら回廊へ戻る
-                if (_space != null) ReturnToCorridor();
+                if (_space != null) FinishLeaving();
                 else TickWaitToEnterRoom();   // 回廊で待機しつつ、入室の機を伺う
                 return;
             }
 
-            // 安全網：床から落ちたら退場扱い（角のすり抜け等の保険）
-            if (transform.position.y < -3f) { Destroy(gameObject); return; }
+            // 調査ログ：状態が変わったら記録する
+            if (_state != _prevLoggedState)
+            {
+                AttackDebugLog.Log("searcher", $"状態 {_prevLoggedState}→{_state} " + DebugBrief());
+                _prevLoggedState = _state;
+            }
 
-            // 安全網：警報が鳴っていない（＝復旧済み）のに残っていたら退場する
+            // 安全網：床から落ちたら退場扱い（角のすり抜け等の保険）
+            if (transform.position.y < -3f)
+            {
+                AttackDebugLog.Log("searcher", "床から落下 → 消滅 " + DebugBrief());
+                Destroy(gameObject);
+                return;
+            }
+
+            // 安全網：警報も徘徊フェーズも無いのに残っていたら退場する
             if (_state != State.Retreat &&
-                (BreakerSystem.Instance == null || BreakerSystem.Instance.DownRoomId == null))
+                (BreakerSystem.Instance == null ||
+                 (BreakerSystem.Instance.DownRoomId == null && !BreakerSystem.Instance.HuntActive)))
             {
                 _orphanTimer += Time.deltaTime;
-                if (_orphanTimer > 2f) { Retreat(); return; }
+                if (_orphanTimer > 2f)
+                {
+                    AttackDebugLog.Log("searcher", "孤児セーフティネット発動（警報も徘徊も無い）→ 退場");
+                    Retreat();
+                    return;
+                }
             }
             else _orphanTimer = 0f;
 
@@ -107,6 +172,8 @@ namespace EscapeProto
                 case State.InspectDoor: TickInspect(player); break;
                 case State.ChaseCorridor: TickChase(player); break;
                 case State.InRoom: TickInRoom(player); break;
+                case State.Entering: TickEntering(); break;
+                case State.Leaving: TickLeaving(); break;
                 case State.Retreat: TickRetreat(); break;
             }
         }
@@ -137,18 +204,88 @@ namespace EscapeProto
             var room = LoopRooms.Get(playerRoom);
             if (room == null) return;
             Vector3 spawn = room.EntrySpawn != null ? room.EntrySpawn.position : room.transform.position;
+            AttackDebugLog.Log("searcher", $"プレイヤーの部屋（{playerRoom}）へ入室開始 " + DebugBrief());
             _space = playerRoom;
             _inspectRoom = room;
-            _state = State.InRoom;
             _enterRoomTimer = 0f;
             SetFrozen(false);
-            Teleport(spawn);
-            ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), spawn, 0.5f);   // 扉が開く気配
+
+            // ---- 入場演出 ----
+            // いきなり部屋の中に現れて追ってくると避けようがないので、
+            // 扉の位置から室内へゆっくり踏み出す時間を挟む（この間は追跡しない）。
+            // 扉→部屋の奥へ向かうベクトルを進入方向とする
+            Vector3 inward = room.transform.position - spawn;
+            inward.y = 0f;
+            _enterFrom = spawn;
+            _enterDir = inward.sqrMagnitude > 0.01f ? inward.normalized : room.transform.forward;
+            _enterTo = _enterFrom + _enterDir * EnterStrideDistance;
+            _motionTimer = 0f;
+            _state = State.Entering;
+
+            Teleport(_enterFrom);
+            transform.rotation = Quaternion.LookRotation(_enterDir);
+            ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), spawn, 0.6f);   // 扉が開く音
         }
 
-        /// <summary>部屋からプレイヤーが出た：回廊の扉前へ戻る</summary>
-        private void ReturnToCorridor()
+        /// <summary>
+        /// 入場演出：扉の前で一拍おいてから、ゆっくり室内へ踏み出す。
+        /// 演出中は追跡しないので、プレイヤーは逃げる/隠れる猶予を得られる。
+        /// </summary>
+        private void TickEntering()
         {
+            _motionTimer += Time.deltaTime;
+            float k = Mathf.Clamp01(_motionTimer / EnterMotionSeconds);
+
+            // 前半は扉の影で立ち止まり、後半でゆっくり踏み出す
+            float stride = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.35f, 1f, k));
+            Vector3 target = Vector3.Lerp(_enterFrom, _enterTo, stride);
+            if (_cc != null && _cc.enabled)
+            {
+                Vector3 delta = target - transform.position;
+                delta.y = 0f;
+                _cc.Move(delta + Vector3.down * 4f * Time.deltaTime);
+            }
+
+            // 踏み出しに合わせて低く軋む足音（気配で位置を知らせる）
+            _stepTimer -= Time.deltaTime;
+            if (stride > 0f && _stepTimer <= 0f)
+            {
+                _stepTimer = 0.75f;
+                ProceduralAudio.PlayAt(ProceduralAudio.Footstep(), transform.position, 0.55f);
+            }
+
+            if (_motionTimer >= EnterMotionSeconds)
+            {
+                AttackDebugLog.Log("searcher", "入場演出おわり → 追跡開始 " + DebugBrief());
+                _state = State.InRoom;
+            }
+        }
+
+        /// <summary>退場演出：扉へ向き直り、くぐって消える</summary>
+        private void TickLeaving()
+        {
+            _motionTimer += Time.deltaTime;
+            float k = Mathf.Clamp01(_motionTimer / LeaveMotionSeconds);
+            Vector3 target = Vector3.Lerp(_enterFrom, _enterTo, Mathf.SmoothStep(0f, 1f, k));
+            if (_cc != null && _cc.enabled)
+            {
+                Vector3 delta = target - transform.position;
+                delta.y = 0f;
+                _cc.Move(delta + Vector3.down * 4f * Time.deltaTime);
+            }
+            if (_motionTimer >= LeaveMotionSeconds) FinishLeaving();
+        }
+
+        /// <summary>退場演出の完了：回廊へ実際に戻す（プレイヤーが先に出た場合もここへ来る）</summary>
+        private void FinishLeaving()
+        {
+            // ブレイカー復旧による退場なら、扉をくぐった時点で姿を消す
+            if (_leaveThenVanish)
+            {
+                AttackDebugLog.Log("searcher", "退場演出おわり → 消滅 " + DebugBrief());
+                Destroy(gameObject);
+                return;
+            }
             var room = LoopRooms.Get(_space);
             _space = null;
             _state = State.Roam;
@@ -158,6 +295,31 @@ namespace EscapeProto
                 SetFrozen(LoopRooms.CurrentRoomId != null);
                 Teleport(LoopCorridorLayout.DoorFrontPosition(room.Side, room.Slot));
             }
+            AttackDebugLog.Log("searcher", "退場演出おわり → 回廊へ " + DebugBrief());
+        }
+
+        /// <summary>部屋からプレイヤーが出た：回廊の扉前へ戻る</summary>
+        /// <summary>
+        /// 部屋から立ち去り始める（プレイヤーが見ている前で扉へ引っ込む演出）。
+        /// 姿が見えない状況では演出を挟まずそのまま回廊へ戻す。
+        /// </summary>
+        private void BeginLeaving()
+        {
+            var room = LoopRooms.Get(_space);
+            if (room == null || _space != LoopRooms.CurrentRoomId) { FinishLeaving(); return; }
+
+            Vector3 door = room.EntrySpawn != null ? room.EntrySpawn.position : room.transform.position;
+            Vector3 outward = door - room.transform.position;
+            outward.y = 0f;
+            _enterFrom = transform.position;
+            _enterTo = door + (outward.sqrMagnitude > 0.01f ? outward.normalized : Vector3.zero) * 0.6f;
+            _enterTo.y = _enterFrom.y;
+            _motionTimer = 0f;
+            _state = State.Leaving;
+            Vector3 look = _enterTo - _enterFrom;
+            look.y = 0f;
+            if (look.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(look);
+            AttackDebugLog.Log("searcher", "退場演出開始（扉へ引っ込む） " + DebugBrief());
         }
 
         // ============= 回廊での行動 =============
@@ -210,6 +372,7 @@ namespace EscapeProto
 
         private void Catch()
         {
+            AttackDebugLog.Log("searcher", "プレイヤー捕獲 " + DebugBrief());
             GameEvents.RaisePlayerCaught();   // 既存の死亡→人形破壊→リスポーンフロー
             Destroy(gameObject);
         }
@@ -218,7 +381,19 @@ namespace EscapeProto
 
         private void TickRetreat()
         {
-            if (MoveTowards(NearestDoorPosition(), ChaseSpeed) < 0.5f) Destroy(gameObject);
+            // 保険：退場歩行が長引いたら（引っかかり等）その場で消える
+            _retreatTimer += Time.deltaTime;
+            if (_retreatTimer > 12f)
+            {
+                AttackDebugLog.Log("searcher", "退場が12秒を超過 → 強制消滅 " + DebugBrief());
+                Destroy(gameObject);
+                return;
+            }
+            if (MoveTowards(NearestDoorPosition(), ChaseSpeed) < 0.5f)
+            {
+                AttackDebugLog.Log("searcher", "退場完了（扉に到達して消滅）");
+                Destroy(gameObject);
+            }
         }
 
         // ============= 移動ヘルパー =============

@@ -29,6 +29,12 @@ namespace EscapeProto
         public string safeCombo;                            // ダイヤル3桁（ランダム固定）
         public bool safeOpened;                             // 金庫を開錠済み
 
+        // ---- ループ回廊（ストーリープロトタイプ）----
+        public int loopStage;                               // 部屋の解放段階
+        public List<string> loopFound = new List<string>(); // 発見済み資料キー（room/id）
+        public List<string> loopVisited = new List<string>(); // 初入室タイトルを表示済みの部屋
+        public bool loopIntroPlayed;                        // 起床カットシーン再生済み
+
         // ---- 手帳（見つけた情報の追記）----
         public List<NotebookEntry> notes = new List<NotebookEntry>();
     }

@@ -51,7 +51,12 @@ namespace EscapeProto
             if (!Locked) return "[E] 廊下へ出る";
             var room = LoopRooms.Get(RoomId);
             if (room != null && !LoopProgress.IsRoomComplete(room))
+            {
+                // 手帳を持たないうちは、まずそれが目的だと分かるようにする
+                if (RoomId == LoopProgress.StartRoomId && !LoopProgress.NotebookOwned)
+                    return "鍵がかかっている…（手帳を持って行こう）";
                 return "鍵がかかっている…（まだ調べていないものがある）";
+            }
             return "扉が開かない…（ブレイカーを上げる）";
         }
 

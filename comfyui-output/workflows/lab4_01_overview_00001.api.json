@@ -1,0 +1,101 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "redcraft2KREA2RedMix_2Krea2Edition.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "Huihui-Qwen3-VL-4B-Instruct-abliterated-fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。入口から見た全景。手前左に波打つ銀色の金属板のバーカウンターとハイスツール、その上に灰色の球体ペンダント。右に共有デスクが2列奥まで続き、机上のモニターが脳波の波形を映す。奥の壁は木目パネルと間接照明、その横にガラスホワイトボードの脳の図。右奥にガラス張りの観察室と観葉植物。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。"
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": ""
+    }
+  },
+  "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1152,
+      "height": 768,
+      "batch_size": 1
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "6",
+        0
+      ],
+      "seed": 6001,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "7",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ],
+      "filename_prefix": "lab4_01_overview"
+    }
+  }
+}

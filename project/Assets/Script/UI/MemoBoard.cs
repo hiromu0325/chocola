@@ -33,6 +33,76 @@ namespace EscapeProto
 
         private readonly List<List<MemoLine>> _pages = new List<List<MemoLine>>();
         private int _spread;
+
+        // ---- タブ（章ごとの資料 ＋ 証拠メモ）----
+        // 0=序(チュートリアル) 1=1章 2=2章 3=3章 4=終章 5=証拠メモ
+        private const int EvidenceTab = 5;
+        private int _tab = 0;
+        private readonly Button[] _tabs = new Button[6];
+        private static readonly string[] TabNames = { "序", "1章", "2章", "3章", "終章", "メモ" };
+        private static readonly string[] ChapterTitles =
+        {
+            "序　── 目覚め ──",
+            "1章　佐伯恒一　── 本人を本人たらしめるものは何か ──",
+            "2章　水野美奈　── 善意はどこまで許されるのか ──",
+            "3章　黒田恒一　── 正しいことと救うことは同じではない ──",
+            "終章　RENASCITA",
+        };
+
+        /// <summary>部屋Id → 章（0..4）。未知の部屋は -1</summary>
+        private static readonly Dictionary<string, int> RoomChapter = new Dictionary<string, int>
+        {
+            { "dim", 0 }, { "train", 0 }, { "lab", 0 },
+            { "study", 1 }, { "analysis", 1 }, { "saeki_home", 1 },
+            { "ward", 2 }, { "core_ante", 2 }, { "mizuno_apart", 2 },
+            { "data_room", 3 }, { "system_room", 3 }, { "kuroda_home", 3 },
+            { "core_main", 4 }, { "son_room", 4 },
+        };
+        /// <summary>章内での部屋の並び（起・転・結の順）</summary>
+        private static readonly string[] RoomOrder =
+        {
+            "dim", "train", "lab", "study", "analysis", "saeki_home", "ward", "core_ante", "mizuno_apart",
+            "data_room", "system_room", "kuroda_home", "core_main", "son_room",
+        };
+        /// <summary>残響Id → それを見た部屋</summary>
+        private static readonly Dictionary<string, string> EchoRoom = new Dictionary<string, string>
+        {
+            { "study_secret", "study" }, { "argue_saeki", "saeki_home" }, { "saeki_wife", "saeki_home" },
+            { "talk_me", "ward" }, { "mizuno_uncle", "mizuno_apart" }, { "talk_mizuno", "mizuno_apart" },
+            { "argue_kuroda", "data_room" }, { "kuroda_family", "kuroda_home" },
+        };
+
+        /// <summary>手帳エントリId → 属する部屋Id（章分けと見出しに使う）。証拠メモは null</summary>
+        private static string RoomOfEntry(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (id.StartsWith("echo_"))
+                return EchoRoom.TryGetValue(id.Substring(5), out var er) ? er : "dim";
+            if (id.StartsWith("attack_"))
+                return RoomChapter.ContainsKey(id.Substring(7)) ? id.Substring(7) : "dim";
+            if (id.StartsWith("unlock_"))
+            {
+                // unlock_<stage>: 解放された部屋の"前"の部屋の記録として、直前の部屋に置く
+                if (int.TryParse(id.Substring(7), out int stage) && stage - 1 >= 0 && stage - 1 < RoomOrder.Length)
+                    return RoomOrder[stage - 1];
+                return "dim";
+            }
+            foreach (var r in RoomOrder)
+                if (id.StartsWith(r + "_")) return r;
+            return null;
+        }
+
+        private static int ChapterOf(string id)
+        {
+            var room = RoomOfEntry(id);
+            return room != null && RoomChapter.TryGetValue(room, out int ch) ? ch : -1;
+        }
+
+        private static string RoomDisplayName(string roomId)
+        {
+            var r = LoopRooms.Get(roomId);
+            return r != null ? r.DisplayName : roomId;
+        }
         // ノードID（エントリid:ワード:出現順） → チップ。出現箇所ごとに独立したノードなので
         // 「アルバムの佐藤」と「人事ファイルの佐藤」のような同一ワード同士も結べる
         private readonly Dictionary<string, MemoKeywordChip> _chips = new Dictionary<string, MemoKeywordChip>();
@@ -72,6 +142,15 @@ namespace EscapeProto
             _lineLayer.anchorMin = Vector2.zero; _lineLayer.anchorMax = Vector2.one;
             _lineLayer.offsetMin = Vector2.zero; _lineLayer.offsetMax = Vector2.zero;
 
+            // タブ（左上）。章ごとの資料と証拠メモを切り替える
+            for (int i = 0; i < _tabs.Length; i++)
+            {
+                int tab = i;
+                _tabs[i] = MakeTab("Tab_" + TabNames[i], TabNames[i], new Vector2(-592f + i * 118f, 336f),
+                    () => SetTab(tab));
+            }
+            UpdateTabVisual();
+
             var labelGo = new GameObject("PageLabel");
             labelGo.transform.SetParent(_board, false);
             _pageLabel = labelGo.AddComponent<Text>();
@@ -81,6 +160,80 @@ namespace EscapeProto
             var lr = _pageLabel.rectTransform;
             lr.anchorMin = new Vector2(0.5f, 0f); lr.anchorMax = new Vector2(0.5f, 0f);
             lr.anchoredPosition = new Vector2(0f, 14f); lr.sizeDelta = new Vector2(1200f, 36f);
+        }
+
+        private Button MakeTab(string name, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_board, false);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.25f, 0.23f, 0.2f, 0.9f);
+            var rt = img.rectTransform;
+            SetRect(rt, pos, new Vector2(112f, 40f));
+            var btn = go.AddComponent<Button>();
+            btn.onClick.AddListener(onClick);
+            var txtGo = new GameObject("Label");
+            txtGo.transform.SetParent(go.transform, false);
+            var txt = txtGo.AddComponent<Text>();
+            txt.font = _font;
+            txt.fontSize = 22;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.text = label;
+            txt.color = Color.white;
+            var trt = txt.rectTransform;
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+            return btn;
+        }
+
+        private void SetTab(int tab)
+        {
+            if (_tab == tab) return;
+            _tab = tab;
+            _spread = 0;
+            UpdateTabVisual();
+            RebuildAndShow();
+        }
+
+        /// <summary>今いる部屋の章を開く（手帳を開いた瞬間に呼ぶ）</summary>
+        public void JumpToCurrentChapter()
+        {
+            var room = LoopRooms.CurrentRoomId;
+            if (room != null && RoomChapter.TryGetValue(room, out int ch) && ch != _tab)
+            {
+                _tab = ch;
+                _spread = 0;
+                UpdateTabVisual();
+            }
+        }
+
+        private void UpdateTabVisual()
+        {
+            for (int i = 0; i < _tabs.Length; i++)
+            {
+                if (_tabs[i] == null) continue;
+                bool active = _tab == i;
+                bool hasEntries = false, flagged = false;
+                foreach (var e in Notebook.Entries)
+                {
+                    int ch = ChapterOf(e.id);
+                    bool inTab = i == EvidenceTab ? ch < 0 : ch == i;
+                    if (!inTab) continue;
+                    hasEntries = true;
+                    if (Notebook.IsFlagged(e.id)) flagged = true;
+                }
+                var img = _tabs[i].GetComponent<Image>();
+                img.color = active ? new Color(0.55f, 0.45f, 0.25f, 0.95f)
+                          : hasEntries ? new Color(0.25f, 0.23f, 0.2f, 0.9f)
+                          : new Color(0.16f, 0.15f, 0.14f, 0.7f);
+                var label = _tabs[i].GetComponentInChildren<Text>();
+                if (label != null)
+                {
+                    label.text = flagged ? TabNames[i] + " <color=#FFB040>!</color>" : TabNames[i];
+                    label.supportRichText = true;
+                    label.color = hasEntries || active ? Color.white : new Color(0.55f, 0.55f, 0.55f);
+                }
+            }
         }
 
         private RectTransform MakeLayer(string name)
@@ -120,18 +273,67 @@ namespace EscapeProto
             _pages.Clear();
             var layout = MemoLayout.Get();
             var lines = new List<MemoLine>();
-            if (Notebook.Count == 0)
+            // 現在のタブに属するエントリだけを対象にし、章内は部屋（起・転・結）の順に並べる
+            var tabEntries = new List<NotebookEntry>();
+            foreach (var e in layout.SortEntries(Notebook.Entries))
             {
-                lines.Add(new MemoLine { text = "まだ何も書かれていない。", color = Color.white });
-                lines.Add(new MemoLine { text = "資料を調べたり手がかりを見つけると、", color = Color.white });
-                lines.Add(new MemoLine { text = "ここに書き留められる。", color = Color.white });
+                int ch = ChapterOf(e.id);
+                if (_tab == EvidenceTab ? ch < 0 : ch == _tab) tabEntries.Add(e);
+            }
+            if (_tab != EvidenceTab)
+            {
+                int Order(NotebookEntry e) => System.Array.IndexOf(RoomOrder, RoomOfEntry(e.id));
+                // 安定ソート（同じ部屋の中は発見順を保つ）
+                var indexed = new List<(int order, int idx, NotebookEntry e)>();
+                for (int i = 0; i < tabEntries.Count; i++) indexed.Add((Order(tabEntries[i]), i, tabEntries[i]));
+                indexed.Sort((a, b) => a.order != b.order ? a.order.CompareTo(b.order) : a.idx.CompareTo(b.idx));
+                tabEntries.Clear();
+                foreach (var t in indexed) tabEntries.Add(t.e);
+            }
+
+            var chapterColor = new Color(1f, 0.85f, 0.55f);
+            var roomColor = new Color(0.75f, 0.7f, 0.6f);
+            var flagColor = new Color(1f, 0.7f, 0.3f);
+
+            if (_tab != EvidenceTab)
+            {
+                lines.Add(new MemoLine { text = ChapterTitles[_tab], color = chapterColor });
+                lines.Add(new MemoLine { text = "", color = Color.white });
+            }
+
+            if (tabEntries.Count == 0)
+            {
+                if (_tab != EvidenceTab)
+                {
+                    lines.Add(new MemoLine { text = "この章の資料は、まだ見つかっていない。", color = Color.white });
+                    lines.Add(new MemoLine { text = "部屋で見つけた資料は、", color = Color.white });
+                    lines.Add(new MemoLine { text = "ここで読み返せる。", color = Color.white });
+                }
+                else
+                {
+                    lines.Add(new MemoLine { text = "まだ何も書かれていない。", color = Color.white });
+                    lines.Add(new MemoLine { text = "手がかりを見つけると、", color = Color.white });
+                    lines.Add(new MemoLine { text = "ここに書き留められる。", color = Color.white });
+                }
             }
             else
             {
-                foreach (var e in layout.SortEntries(Notebook.Entries))
+                string lastRoom = null;
+                foreach (var e in tabEntries)
                 {
                     var rule = layout.RuleFor(e.id);
                     if (rule.hide) continue;
+
+                    // 部屋の見出し（章タブのみ）
+                    string room = RoomOfEntry(e.id);
+                    if (_tab != EvidenceTab && room != null && room != lastRoom)
+                    {
+                        lines.Add(new MemoLine { text = "──　" + RoomDisplayName(room) + "　──", color = roomColor });
+                        lastRoom = room;
+                    }
+                    // 付箋（ギミックの誤答で立つ。読み直すべき資料の目印）
+                    if (Notebook.IsFlagged(e.id))
+                        lines.Add(new MemoLine { text = "▶ 付箋：ここに手がかりがある", color = flagColor, entryId = e.id });
                     if (rule.lines.Count > 0)
                     {
                         // line 命令あり：全文をテンプレートで組む（1行ずつ文章と色を完全指定）

@@ -134,6 +134,15 @@ namespace EscapeProto
             if (PuzzleState.Instance != null) PuzzleState.Instance.LoadFrom(data);
             Notebook.LoadFrom(data.notes);
 
+            // ループ回廊（ストーリープロトタイプ）の進行を復元
+            LoopRooms.Stage = Mathf.Max(LoopRooms.Stage, data.loopStage);
+            LoopProgress.ImportFound(data.loopFound);
+            StoryProgress.ImportVisited(data.loopVisited);
+            StoryProgress.IntroPlayed = data.loopIntroPlayed || data.loopStage > 0;
+            foreach (var f in FindObjectsByType<LoopFindable>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                f.RefreshFound();
+
             BeginPlay();
         }
 
@@ -189,6 +198,10 @@ namespace EscapeProto
             };
             if (PuzzleState.Instance != null) PuzzleState.Instance.WriteTo(data);
             data.notes = Notebook.ToList();
+            data.loopStage = LoopRooms.Stage;
+            data.loopFound = LoopProgress.ExportFound();
+            data.loopVisited = StoryProgress.ExportVisited();
+            data.loopIntroPlayed = StoryProgress.IntroPlayed;
             return data;
         }
 

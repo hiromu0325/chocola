@@ -81,8 +81,13 @@ namespace EscapeProto
         {
             bool isNew = Time.time - _lastCallTime > 0.25f;
             _lastCallTime = Time.time;
-            if (!isNew || IsUp) return;
+            if (!isNew || IsUp)
+            {
+                if (IsUp) AttackDebugLog.Log("breaker", $"操作: {RoomId} は既に上がっている（何もしない）");
+                return;
+            }
 
+            AttackDebugLog.Log("breaker", $"操作: {RoomId} を上げる");
             SetUp(true);
             ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 1f);
             BreakerSystem.Instance?.NotifyRaised(RoomId);

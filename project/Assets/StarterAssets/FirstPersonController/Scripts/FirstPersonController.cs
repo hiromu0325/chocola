@@ -51,6 +51,20 @@ namespace StarterAssets
 		// cinemachine
 		private float _cinemachineTargetPitch;
 
+		/// <summary>
+		/// 視点の向きを外部から設定する（部屋の出入りなどのテレポート時に使う）。
+		/// yaw=水平の向き、pitch=上下の向き。内部の累積値も合わせて更新するので
+		/// 次のフレームで元の向きに戻されることがない。
+		/// </summary>
+		public void SetLook(float yaw, float pitch = 0f)
+		{
+			transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+			_cinemachineTargetPitch = ClampAngle(pitch, BottomClamp, TopClamp);
+			if (CinemachineCameraTarget != null)
+				CinemachineCameraTarget.transform.localRotation =
+					Quaternion.Euler(_cinemachineTargetPitch, 0f, 0f);
+		}
+
 		// player
 		private float _speed;
 		private float _rotationVelocity;

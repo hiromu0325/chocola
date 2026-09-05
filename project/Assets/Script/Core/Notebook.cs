@@ -76,6 +76,28 @@ namespace EscapeProto
             OnChanged?.Invoke();
         }
 
+        // ---- 付箋（ギミックの誤答時に「読み直すべき資料」へ立てる目印。答えは書かない）----
+        private static HashSet<string> _flagged = new HashSet<string>();
+        public static bool IsFlagged(string id) => !string.IsNullOrEmpty(id) && _flagged.Contains(id);
+        public static bool HasAnyFlag => _flagged.Count > 0;
+
+        /// <summary>資料に付箋を立てる（存在しないidは無視）。立てられたらtrue</summary>
+        public static bool Flag(string id)
+        {
+            if (string.IsNullOrEmpty(id) || !_index.ContainsKey(id)) return false;
+            if (!_flagged.Add(id)) return false;
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>付箋を外す（資料を開いて読み直したとき）</summary>
+        public static void Unflag(string id)
+        {
+            if (_flagged.Remove(id)) OnChanged?.Invoke();
+        }
+
+        public static bool Contains(string id) => !string.IsNullOrEmpty(id) && _index.ContainsKey(id);
+
         public static List<NotebookEntry> ToList() => new List<NotebookEntry>(_entries);
 
         public static void LoadFrom(List<NotebookEntry> list)
@@ -97,6 +119,7 @@ namespace EscapeProto
         {
             _entries = new List<NotebookEntry>();
             _index = new Dictionary<string, int>();
+            _flagged = new HashSet<string>();
             OnChanged = null;
         }
     }

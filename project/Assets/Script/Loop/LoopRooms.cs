@@ -46,10 +46,15 @@ namespace EscapeProto
             return r != null && r.UnlockStage <= Stage;
         }
 
-        /// <summary>プレイヤーが入れるか。チュートリアルは一度出ると再入場不可</summary>
+        /// <summary>
+        /// プレイヤーが入れるか。
+        /// ・脚本襲撃中（ブレイカー降下中）は、警報が鳴っている部屋以外すべて入れない
+        /// ・最初の部屋はセーブ地点として常時再入場できる
+        /// </summary>
         public static bool CanPlayerEnter(string id)
         {
-            if (id == LoopProgress.StartRoomId && TutorialExited) return false;
+            var bs = BreakerSystem.Instance;
+            if (bs != null && bs.DownRoomId != null) return id == bs.DownRoomId;
             return IsUnlocked(id);
         }
 

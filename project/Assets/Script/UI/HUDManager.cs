@@ -127,8 +127,21 @@ namespace EscapeProto
 
         public void ToggleMemo()
         {
+            // ループ回廊：手帳は最初の部屋の机で拾うまで開けない
+            //（回廊の部屋が登録されていないシーン＝施設マップ等では従来どおり）
+            if (!_memoOpen &&
+                LoopRooms.Get(LoopProgress.StartRoomId) != null && !LoopProgress.NotebookOwned)
+            {
+                ToastUI.Show("手帳を持っていない（最初の部屋の机にあったはず）");
+                return;
+            }
+
             _memoOpen = !_memoOpen;
-            if (_memoOpen) _memoBoard.RebuildAndShow();
+            if (_memoOpen)
+            {
+                _memoBoard.JumpToCurrentChapter();   // 今いる部屋の章から開く
+                _memoBoard.RebuildAndShow();
+            }
             _memoPanel.SetActive(_memoOpen);
         }
 

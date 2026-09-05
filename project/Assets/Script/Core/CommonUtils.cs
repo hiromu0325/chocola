@@ -47,7 +47,7 @@ namespace EscapeProto
     {
         private const int SampleRate = 44100;
 
-        private static AudioClip _scream, _beep, _alarm, _footstep, _click, _unlock;
+        private static AudioClip _scream, _beep, _alarm, _footstep, _click, _unlock, _tension;
 
         /// <summary>ジャンプスケア用の悲鳴っぽいノイズ</summary>
         public static AudioClip Scream()
@@ -71,6 +71,32 @@ namespace EscapeProto
             _beep = Generate("beep", 0.15f, (t, dur) =>
                 Mathf.Sin(2f * Mathf.PI * 880f * t) * Mathf.Exp(-8f * t / dur) * 0.5f);
             return _beep;
+        }
+
+        /// <summary>
+        /// 襲撃中の不安を煽るBGM（4秒ループ）。
+        /// 半音でうなる低音ドローン＋遅い脈動＋かすかな高音＋毎秒の心音。
+        /// 全成分の周期が4秒の約数になるよう選んであり、切れ目なくループする。
+        /// </summary>
+        public static AudioClip TensionLoop()
+        {
+            if (_tension != null) return _tension;
+            _tension = Generate("tension", 4.0f, (t, dur) =>
+            {
+                // 低音ドローン2声（55Hzと58.25Hz。約3Hzのうなりが不協和を作る）
+                float drone = (Mathf.Sin(2f * Mathf.PI * 55f * t)
+                             + Mathf.Sin(2f * Mathf.PI * 58.25f * t)) * 0.27f;
+                // ゆっくりした脈動（呼吸のような強弱）
+                float throb = 0.6f + 0.4f * Mathf.Sin(2f * Mathf.PI * 1.25f * t - Mathf.PI * 0.5f);
+                // かすかに揺れる高い倍音（耳の後ろがざわつく成分）
+                float high = Mathf.Sin(2f * Mathf.PI * 466.25f * t)
+                           * (0.045f + 0.045f * Mathf.Sin(2f * Mathf.PI * 0.75f * t));
+                // 毎秒の心音（周期1秒＝ループ長の約数なので境界が繋がる）
+                float tb = t % 1.0f;
+                float thump = Mathf.Sin(2f * Mathf.PI * 48f * tb) * Mathf.Exp(-9f * tb) * 0.5f;
+                return (drone * throb + high + thump) * 0.55f;
+            });
+            return _tension;
         }
 
         /// <summary>警告アラーム（2音サイレン）</summary>
@@ -142,6 +168,31 @@ namespace EscapeProto
                 return vib * gate * env * 0.3f;
             });
             return _laugh;
+        }
+
+        private static AudioClip _murmur;
+
+        /// <summary>
+        /// 残響（人物残像）のこもった話し声（3.2秒ループ）。
+        /// 言葉として聞き取れない抑揚だけの会話。EchoSceneがpitch/volumeを変えて
+        /// 「冷静な対話」と「怒鳴り声」を同じクリップから作り分ける。
+        /// </summary>
+        public static AudioClip Murmur()
+        {
+            if (_murmur != null) return _murmur;
+            _murmur = Generate("murmur", 3.2f, (t, dur) =>
+            {
+                // 音節ゲート（周期0.4秒＝ループ長の約数。話す/黙るの繰り返し）
+                float syl = Mathf.Repeat(t, 0.4f);
+                float gate = syl < 0.22f ? 1f : 0.12f;
+                // 低いフォルマント（壁越しに聞こえる声の芯）＋ゆっくりした抑揚
+                float f0 = 165f + 45f * Mathf.Sin(2f * Mathf.PI * 0.625f * t);
+                float v = Mathf.Sin(2f * Mathf.PI * f0 * t) * 0.55f
+                        + Mathf.Sin(2f * Mathf.PI * f0 * 2.15f * t) * 0.25f
+                        + (Random.value * 2f - 1f) * 0.10f;
+                return v * gate * 0.30f;
+            });
+            return _murmur;
         }
 
         /// <summary>ギミック解除成功音</summary>

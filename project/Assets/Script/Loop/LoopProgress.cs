@@ -28,36 +28,72 @@ namespace EscapeProto
 
         public static bool IsFound(string roomId, string id) => FoundKeys.Contains(Key(roomId, id));
 
+        /// <summary>手帳を拾ったか（拾うまでTabの手帳UIは開けず、資料も綴じられない）</summary>
+        public static bool NotebookOwned => IsFound(StartRoomId, "notebook");
+
         /// <summary>アイテム発見。その部屋の必須が揃えば次の部屋を解放する</summary>
         public static void NotifyFound(string roomId, string id)
         {
             if (!FoundKeys.Add(Key(roomId, id))) return;
+
+            // 懐中電灯は拾った時点で点ける（以降は常時携行の想定）
+            if (id == "flashlight")
+            {
+                var fl = Object.FindFirstObjectByType<Flashlight>();
+                if (fl != null) fl.SetOn(true);
+            }
 
             var room = LoopRooms.Get(roomId);
             if (room == null) return;
 
             if (!IsRoomComplete(room)) return;
 
-            // 最初の部屋：必要な資料（新聞・懐中電灯）が揃って初めてブレイカーが落ちる。
-            // これを上げると扉が開き、回廊へ出られる
-            if (roomId == StartRoomId && room.Breaker != null && room.Breaker.IsUp)
+            // 脚本襲撃：この部屋の完了で指定部屋のブレイカーが鳴る。
+            // 次の部屋の解放は復旧（または死亡による終了）まで持ち越す
+            if (StoryScript.AttackOnComplete.TryGetValue(roomId, out var target) &&
+                !IsFound("story", "attack_" + roomId))
             {
-                room.Breaker.SetUp(false);
-                Debug.Log("[LoopProgress] 最初の部屋のブレイカーが落ちた（上げると扉が開く）");
+                FoundKeys.Add(Key("story", "attack_" + roomId));   // 一度きり
+                StoryProgress.PendingUnlockRoom = roomId;
+                Notebook.Add("attack_" + roomId, "警報",
+                    "資料を読み終えた瞬間、どこかでブレイカーの落ちる音がした。\n" +
+                    "警報が鳴り響いている。止めなければ、扉は開かない。");
+                BreakerSystem.Instance?.ScriptedDrop(target);
+                return;
             }
 
-            // 次の段階を解放（この部屋のUnlockStage+1 が次の部屋のUnlockStage）
+            UnlockNext(room);
+        }
+
+        /// <summary>脚本襲撃の解決（ブレイカー復旧 or 死亡による終了）。持ち越した解放を実行</summary>
+        public static void NotifyBreakerRestored(string restoredRoomId)
+        {
+            if (string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom)) return;
+            var completed = LoopRooms.Get(StoryProgress.PendingUnlockRoom);
+            StoryProgress.PendingUnlockRoom = null;
+            if (completed != null) UnlockNext(completed);
+        }
+
+        /// <summary>completedRoomの次の段階を解放する</summary>
+        private static void UnlockNext(LoopRoomRoot room)
+        {
             int next = room.UnlockStage + 1;
-            if (LoopRooms.Stage < next)
+            if (LoopRooms.Stage >= next) return;
+
+            var unlocked = FindRoomByStage(next);
+            if (unlocked == null)
             {
+                // 次の部屋が未実装（仕様が続く場所）。段階だけ進めて静かに終わる
                 LoopRooms.Stage = next;
-                var unlocked = FindRoomByStage(next);
-                string name = unlocked != null ? unlocked.DisplayName : "新しい部屋";
-                Debug.Log($"[LoopProgress] {room.DisplayName} の情報が揃った → {name} が解放");
-                Notebook.Add("unlock_" + next, "新しい扉が開いた",
-                    $"{room.DisplayName}で見つけた情報から、{name}へ通じる扉が開いた。");
-                OnRoomUnlocked?.Invoke(unlocked != null ? unlocked.Id : null);
+                Debug.Log($"[LoopProgress] {room.DisplayName} 完了。次の部屋は未実装（stage={next}）");
+                return;
             }
+
+            LoopRooms.Stage = next;
+            Debug.Log($"[LoopProgress] {room.DisplayName} の情報が揃った → {unlocked.DisplayName} が解放");
+            Notebook.Add("unlock_" + next, "新しい扉が開いた",
+                $"{room.DisplayName}で見つけた情報から、{unlocked.DisplayName}へ通じる扉が開いた。");
+            OnRoomUnlocked?.Invoke(unlocked.Id);
         }
 
         /// <summary>その部屋の必須アイテムが全て見つかっているか</summary>
@@ -93,6 +129,14 @@ namespace EscapeProto
             if (room == null) return "unknown room: " + roomId;
             foreach (var req in room.RequiredFindables) NotifyFound(roomId, req);
             return $"{room.DisplayName} complete → stage={LoopRooms.Stage}";
+        }
+
+        // ---- セーブ連携 ----
+        public static List<string> ExportFound() => new List<string>(FoundKeys);
+        public static void ImportFound(List<string> list)
+        {
+            FoundKeys.Clear();
+            if (list != null) foreach (var k in list) FoundKeys.Add(k);
         }
 
         public static string DebugStatus()

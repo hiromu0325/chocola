@@ -1,0 +1,726 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.16f1 (a56f230f6470) revision 10841891'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Core' Language: 'ja' Physical Memory: 65459 MB
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-sdaha" at "2026-09-05T12:31:09.9209374Z"
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-09-05T12:31:09Z
+
+COMMAND LINE ARGUMENTS:
+E:\Unity\Unity_6_3_16\Editor\Unity.exe
+-batchmode
+-quit
+-projectPath
+D:\Source\chocola\project
+-executeMethod
+EscapeProto.LoopPrototypeBuilder.BuildScene
+-logFile
+D:\Source\chocola\scratch_build.log
+Successfully changed project path to: D:\Source\chocola\project
+D:/Source/chocola/project
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+Player connection [60580]  Target information:
+
+Player connection [60580]  * "[IP] 192.168.40.131 [Port] 55504 [Flags] 2 [Guid] 146163518 [EditorId] 146163518 [Version] 1048832 [Id] WindowsEditor(7,DesktopPC) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [60580]  * "[IP] 172.22.240.1 [Port] 55504 [Flags] 2 [Guid] 146163518 [EditorId] 146163518 [Version] 1048832 [Id] WindowsEditor(7,DesktopPC) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [60580] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [60580] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-60136" after 0.2 seconds.
+[Licensing::Module] Licensing is not yet initialized.
+[Licensing::Client] Error: HandshakeResponse reported an error:
+	ResponseCode: 505
+	ResponseStatus: Unsupported protocol version '1.18.1'.
+[Licensing::Module] Error: Failed to handshake to channel: "LicenseClient-sdaha"
+[Licensing::IpcConnector] LicenseClient-sdaha channel disconnected successfully.
+[Licensing::IpcConnector] Channel LicenseClient-sdaha-6000.3.16 doesn't exist
+[Licensing::Module] Successfully launched the LicensingClient (PId: 54376)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-sdaha-6000.3.16" at "2026-09-05T12:31:14.2728266Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 54376, path: "E:/Unity/Unity_6_3_16/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.1+9fbee8e
+  Session Id:              2d4754c03dd74133a48651c345d6f7db
+  Correlation Id:          fb6fb8a0228271fe055e02d71c41bde9
+  External correlation Id: 5345446694135368018
+  Machine Id:              GjgGCyEa+rkcz0G39We6liYVio4=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-sdaha-6000.3.16" (connect: 2.91s, validation: 0.21s, handshake: 0.01s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-sdaha-6000.3.16-notifications" at "2026-09-05T12:31:14.4901938Z"
+[Licensing::Module] Connected to LicensingClient (PId: 54376, launch time: 0.03, total connection time: 3.12s)
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: F4-NQFD-ZE65-7X7Q-PV26-XXXX
+  Product: Unity Personal
+  Type: ULF
+  Expiration: Unlimited
+[Licensing::Module] License group:
+  Id: 15668055953672-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: F4-NQFD-ZE65-7X7Q-PV26-XXXX
+  Product: Unity Personal
+  Type: ULF
+  Expiration: Unlimited
+[Licensing::Module] License group:
+  Id: 15668055953672-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Module] Licensing Background thread has ended after 4.60s
+[Licensing::Module] Licensing is initialized (took 3.49s).
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: F4-NQFD-ZE65-7X7Q-PV26-XXXX
+  Product: Unity Personal
+  Type: ULF
+  Expiration: Unlimited
+[Licensing::Module] License group:
+  Id: 15668055953672-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 0.54 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.3.16f1 (a56f230f6470)
+[Subsystems] Discovering subsystems at path E:/Unity/Unity_6_3_16/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path D:/Source/chocola/project/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+d3d12: failed to query info queue interface (0x80004002).
+Direct3D:
+    Version:         Direct3D 12 [level 12.2]
+    Renderer:        NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:          NVIDIA
+    VRAM:            12115 MB
+    App VRAM Budget: 11347 MB
+    Driver:          32.0.15.9597
+Initialize mono
+Mono path[0] = 'E:/Unity/Unity_6_3_16/Editor/Data/Managed'
+Mono path[1] = 'E:/Unity/Unity_6_3_16/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'E:/Unity/Unity_6_3_16/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56136
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: E:/Unity/Unity_6_3_16/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.260963 seconds.
+- Loaded All Assemblies, in  2.440 seconds
+Native extension for WindowsStandalone target not found
+Package Manager log level set to [2]
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.443 seconds
+Domain Reload Profiling: 2883ms
+	BeginReloadAssembly (302ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (10ms)
+	RebuildCommonClasses (540ms)
+	RebuildNativeTypeToScriptingClass (18ms)
+	initialDomainReloadingComplete (329ms)
+	LoadAllAssembliesAndSetupDomain (1251ms)
+		LoadAssemblies (291ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (1246ms)
+			TypeCache.Refresh (1244ms)
+				TypeCache.ScanAssembly (1017ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (443ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (407ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (49ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (75ms)
+			ProcessInitializeOnLoadAttributes (155ms)
+			ProcessInitializeOnLoadMethodAttributes (126ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: F4-NQFD-ZE65-7X7Q-PV26-XXXX
+  Product: Unity Personal
+  Type: ULF
+  Expiration: Unlimited
+[Licensing::Module] License group:
+  Id: 15668055953672-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 65 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.cinemachine@3.1.6 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.cinemachine@285f38545487)
+    com.unity.collab-proxy@2.12.4 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.collab-proxy@0b1559bcd34e)
+    com.unity.ide.rider@3.0.40 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.ide.rider@e4950c6d131b)
+    com.unity.ide.visualstudio@2.0.27 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.ide.visualstudio@dc1ddd4f09b6)
+    com.unity.inputsystem@1.19.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.inputsystem@21a28c3a6c83)
+    com.unity.timeline@1.8.12 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.timeline@8cd8509afae5)
+    com.unity.visualscripting@1.9.11 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.visualscripting@8bed5ad90189)
+    com.unity.editorcoroutines@1.1.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.editorcoroutines@87a15ed012c2)
+    com.unity.performance.profile-analyzer@1.3.4 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.performance.profile-analyzer@418130329099)
+    com.unity.testtools.codecoverage@1.3.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.testtools.codecoverage@19a841221620)
+    com.unity.splines@2.8.4 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.splines@9b00833aca09)
+    com.unity.nuget.newtonsoft-json@3.2.2 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64)
+    com.unity.searcher@4.9.4 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.searcher@d45a78918735)
+    com.unity.burst@1.8.29 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.burst@6bb9aca3ef38)
+    com.unity.mathematics@1.3.3 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.mathematics@19a9377c4ffa)
+    com.unity.collections@2.6.6 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.collections@9796e5ee0d9e)
+    com.unity.settings-manager@2.1.1 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.settings-manager@0b8638c5ce86)
+    com.unity.nuget.mono-cecil@1.11.6 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.test-framework.performance@3.4.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.test-framework.performance@aa81a99c4a75)
+  Built-in packages:
+    com.unity.feature.development@1.0.2 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.feature.development@767aadbc6eb7)
+    com.unity.multiplayer.center@1.0.1 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.multiplayer.center@f01f4ba8d00a)
+    com.unity.render-pipelines.universal@17.3.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.render-pipelines.universal@97f77d4dda9a)
+    com.unity.test-framework@1.6.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.test-framework@aebcb98460c6)
+    com.unity.ugui@2.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.ugui@23e8d17bfaf9)
+    com.unity.modules.accessibility@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.ext.nunit@2.0.5 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.ext.nunit@d8c07649098d)
+    com.unity.render-pipelines.core@17.3.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.render-pipelines.core@648b47f96bf1)
+    com.unity.shadergraph@17.3.0 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.shadergraph@138213decc3c)
+    com.unity.render-pipelines.universal-config@17.0.3 (location: D:\Source\chocola\project\Library\PackageCache\com.unity.render-pipelines.universal-config@8dc1aab4af1d)
+  Git packages:
+    com.coplaydev.unity-mcp@https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity (location: D:\Source\chocola\project\Library\PackageCache\com.coplaydev.unity-mcp@ad8beff3ad46)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.04 seconds
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+Starting: E:\Unity\Unity_6_3_16\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: D:/Source/chocola/project
+DisplayProgressbar: Compiling Scripts
+ExitCode: 4 Duration: 0s276ms
+Rebuilding DAG because FileSignature timestamp changed: Library/Bee/1900b0aE-inputdata.json
+*** Tundra requires additional run (0.21 seconds), 0 items updated, 0 evaluated
+Starting: E:\Unity\Unity_6_3_16\Editor\Data\netcorerun\netcorerun.exe "E:\Unity\Unity_6_3_16\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
+WorkingDir: D:/Source/chocola/project
+ExitCode: 0 Duration: 1s987ms
+Starting: E:\Unity\Unity_6_3_16\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
+WorkingDir: D:/Source/chocola/project
+ExitCode: 0 Duration: 8s655ms
+Finished compiling graph: 966 nodes, 17994 flattened edges (14870 ToBuild, 152 ToUse), maximum node priority 1048
+[472/963    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.rsp
+[750/963    0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[955/963    4s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll (+2 others)
+Assets\Script\UI\GrandfatherClock.cs(15,22): warning CS0414: The field 'GrandfatherClock._chimedThisCycle' is assigned but its value is never used
+[956/963    1s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll, with 137 defines and 325 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[957/963    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[958/963    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[959/963    2s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+[960/963    0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp-Editor.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll, with 135 defines and 347 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[961/963    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[962/963    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (8.63 seconds), 10 items updated, 963 evaluated
+Assets\Script\UI\GrandfatherClock.cs(15,22): warning CS0414: The field 'GrandfatherClock._chimedThisCycle' is assigned but its value is never used
+AssetDatabase: script compilation time: 13.725381s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  3.388 seconds
+'Packages/com.unity.cinemachine/Editor/Editors/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+'Packages/com.unity.cinemachine/Editor/Obsolete/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+Refreshing native plugins compatible for Editor in 76.10 ms, found 4 plugins.
+Native extension for WindowsStandalone target not found
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+Refreshing native plugins compatible for Editor in 2.14 ms, found 4 plugins.
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  6.632 seconds
+Domain Reload Profiling: 10019ms
+	BeginReloadAssembly (348ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (24ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (172ms)
+	RebuildCommonClasses (36ms)
+	RebuildNativeTypeToScriptingClass (12ms)
+	initialDomainReloadingComplete (27ms)
+	LoadAllAssembliesAndSetupDomain (2963ms)
+		LoadAssemblies (2418ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (657ms)
+			TypeCache.Refresh (548ms)
+				TypeCache.ScanAssembly (530ms)
+			BuildScriptInfoCaches (81ms)
+			ResolveRequiredComponents (22ms)
+	FinalizeReload (6633ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (5666ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (19ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (171ms)
+			ProcessInitializeOnLoadAttributes (5269ms)
+			ProcessInitializeOnLoadMethodAttributes (199ms)
+			AfterProcessingInitializeOnLoad (4ms)
+			EditorAssembliesLoaded (1ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (39ms)
+Refreshing native plugins compatible for Editor in 1.60 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=383434c96c6b00143875bed99ae310c1): Total: 28.124 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=10187 ms
+		Asset DB Callback time: managed=702 ms, native=70 ms
+		Scripting: domain reloads=1, domain reload time=3388 ms, compile time=13727 ms, other=48 ms
+		Project Asset Count: scripts=1582, non-scripts=3880
+		Asset File Changes: new=1, changed=4, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.002ms
+	InvokePackagesCallback: 58.720ms
+	ApplyChangesToAssetFolders: 0.913ms
+	Scan: 427.923ms
+	OnSourceAssetsModified: 0.740ms
+	CategorizeAssetsWithTransientArtifact: 1971.086ms
+	ProcessAssetsWithTransientArtifactChanges: 93.473ms
+	CategorizeAssets: 128.257ms
+	ImportOutOfDateAssets: 6725.484ms (-7005.860ms without children)
+		CompileScripts: 13727.497ms
+		ReloadNativeAssets: 0.042ms
+		UnloadImportedAssets: 0.948ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 1.689ms
+		InitializingProgressBar: 0.001ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
+		OnDemandSchedulerStart: 1.167ms
+	PostProcessAllAssets: 704.572ms
+	Hotreload: 10.792ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.003ms
+	UnloadStreamsBegin: 2.973ms
+	PersistCurrentRevisions: 0.238ms
+	UnloadStreamsEnd: 0.002ms
+	GenerateScriptTypeHashes: 5.846ms
+	Untracked: 17998.970ms
+
+Application.AssetDatabase Initial Refresh End
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.04 seconds
+Scanning for USB devices : 12.148ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-project
+Unloading 20 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 7339 unused Assets / (5.9 MB). Loaded Objects now: 8185.
+Memory consumption went from 238.1 MB to 232.1 MB.
+Total: 18.098100 ms (FindLiveObjects: 1.603900 ms CreateObjectMapping: 2.004900 ms MarkObjects: 10.333700 ms  DeleteObjects: 4.153700 ms)
+
+Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 1 unused Assets / (4.9 KB). Loaded Objects now: 8187.
+Memory consumption went from 220.8 MB to 220.8 MB.
+Total: 11.621100 ms (FindLiveObjects: 0.743600 ms CreateObjectMapping: 0.728900 ms MarkObjects: 10.118500 ms  DeleteObjects: 0.028800 ms)
+
+Refreshing native plugins compatible for Editor in 1.40 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=b952a718c7937be41ae73b2cbf6df96e): Total: 0.082 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/Cutscenes/LoopIntro.playable using Guid(2042f536495c3fb479ae14bb4627d891) (NativeFormatImporter) -> (artifact id: '1dd4e51ff00cd74b57f8e4fc82d0f78b') in 0.0075638 seconds
+Refreshing native plugins compatible for Editor in 1.42 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=7f615337c5af5b9408ce69b447762499): Total: 0.056 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/Cutscenes/LoopIntro.playable using Guid(2042f536495c3fb479ae14bb4627d891) (NativeFormatImporter) -> (artifact id: 'da8862169cc8e9b660049d646e404c49') in 0.0025357 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WoodFloor.mat using Guid(80b41a8ac9bccb14c8acb8b4be78a484) (NativeFormatImporter) -> (artifact id: 'eae95482c40dac062df269c21b926aae') in 0.0012462 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_DoorFrame.mat using Guid(b023d095cad286045b042a8fee06f696) (NativeFormatImporter) -> (artifact id: 'a4ebb96512194fc76b6e3682e052b412') in 0.0014641 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Metal.mat using Guid(d05ad41c6a1dd2945aa00cc35b19f032) (NativeFormatImporter) -> (artifact id: '8afe5507e51a2884fa2575a652f2ef0e') in 0.0012618 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_NotebookItem.mat using Guid(127e1ecaec82bad40b7e5193fd4aa421) (NativeFormatImporter) -> (artifact id: '7b67e3f7e261482ab3149d1e1c3bbae5') in 0.0011128 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_RoomWall.mat using Guid(c398a0c8c20daa64f94ec4b36473e911) (NativeFormatImporter) -> (artifact id: 'd33082b6c5a7dd38ca24d40e670206c0') in 0.0011732 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_NotebookPages.mat using Guid(54a9dff0d54068e40a130fc16a965051) (NativeFormatImporter) -> (artifact id: 'bf12637ce8d93464bf431db12473eeca') in 0.0017832 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_White.mat using Guid(35bffb44da17b364495d14aad66915f6) (NativeFormatImporter) -> (artifact id: '2edc6cdf32dcbaec9410ee18088ae6e0') in 0.0016502 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_dim.mat using Guid(f5d60d352f7858a43958bed6becc1df8) (NativeFormatImporter) -> (artifact id: 'ce8fc639b51b919d734fa7f51fc38675') in 0.0012451 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_DollShelf.mat using Guid(e6ef110f541e782408feddb5ce7b014a) (NativeFormatImporter) -> (artifact id: 'c26edad8d6611f721142e6edd4279967') in 0.0012279 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Furniture.mat using Guid(e7479f73a42742f42b8ad443cac1ea25) (NativeFormatImporter) -> (artifact id: '1cc0cb5925f8048f14317204019eb4e8') in 0.0011396 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SavePc.mat using Guid(e804d303d31e3364db7e9dc6d6448904) (NativeFormatImporter) -> (artifact id: '8c2ac006eb9cb200ccd1a8fe0ca508d6') in 0.0011977 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_NotebookMark.mat using Guid(0b80a7c5eccc7694b9c7a304bade43c9) (NativeFormatImporter) -> (artifact id: '26c949d262fb9875b5024aac5fb3eca2') in 0.0011556 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Paper.mat using Guid(7bf64d41d6456df4ca54431686392a24) (NativeFormatImporter) -> (artifact id: '38ae97bfbcb2dbbbfc985207ae2445b9') in 0.0012046 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Door.mat using Guid(9b3d9109049940047b03d39b51a51a9f) (NativeFormatImporter) -> (artifact id: 'd92e1f8798825357647e0e160284e610') in 0.0014927 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_RoomFloor.mat using Guid(bc6f472921cedb8468ed3b8c9ff7d73c) (NativeFormatImporter) -> (artifact id: 'a3a153892021760dc7398df04017e53d') in 0.0013077 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_LampShade.mat using Guid(8eb14b9117a145d4cad4c94d10bf8ec1) (NativeFormatImporter) -> (artifact id: 'c44f81233e6a8bf66c9a144855a655ee') in 0.0011526 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Ceiling.mat using Guid(ce8c12fe1fe075c4b893fab2cb858764) (NativeFormatImporter) -> (artifact id: '0a9a697b4f560d22ee45cab71fccdf55') in 0.0011721 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Doll.mat using Guid(fe880aee4b532a7489422512d2defc33) (NativeFormatImporter) -> (artifact id: '97303166de65fed5d82f58fae6fee2b3') in 0.0011318 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Bedding.mat using Guid(0f2ae785355d26641baccc12d10b7a7c) (NativeFormatImporter) -> (artifact id: 'f45de2d1a258df91a9fb73e112db67c2') in 0.0011643 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SaveScreen.mat using Guid(cfd4725c29b69bb4f9fc45f4176861e3) (NativeFormatImporter) -> (artifact id: '75b16f30d77adac772340e8cfadac51a') in 0.0013378 seconds
+Refreshing native plugins compatible for Editor in 1.57 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=df09152b49ee29c42afe748d0120b788): Total: 0.087 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_PhotoFrame.mat using Guid(88691c8a98a71324790555b5a5bd69c4) (NativeFormatImporter) -> (artifact id: '8217a22cf609d5b413e4f404ba5f2be6') in 0.0023507 seconds
+Refreshing native plugins compatible for Editor in 1.46 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=e2d6fab4fb6b33c448f9f9d6d4a20d79): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_EchoWhite.mat using Guid(e1e0f193c2a5c8943b3a38d6b8d58b4a) (NativeFormatImporter) -> (artifact id: '9a4177fb4a36a9932f6239f7dd390132') in 0.0019237 seconds
+Refreshing native plugins compatible for Editor in 1.45 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=81598b9e35435b6408456c43113114a3): Total: 0.045 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_EchoDark.mat using Guid(496fd8a6e2d169b4b8371bc9b4847a2f) (NativeFormatImporter) -> (artifact id: '51756d7fc8cd2967128506f371427073') in 0.0019105 seconds
+Refreshing native plugins compatible for Editor in 1.45 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=65d729241501b424081352caac75a1d4): Total: 0.044 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_analysis.mat using Guid(9923072ebb6962e45a46abb7fd418885) (NativeFormatImporter) -> (artifact id: '8a3201bc554da11269f4b0d5a92a4365') in 0.002055 seconds
+Refreshing native plugins compatible for Editor in 1.40 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=d19d1cfacd267b845a6e6a5f305c9a64): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AnalysisRack.mat using Guid(916e901255e50964bb2af26cb90ebe20) (NativeFormatImporter) -> (artifact id: 'aa01126e50b62cefd31aeb725759f05f') in 0.0018425 seconds
+Refreshing native plugins compatible for Editor in 1.48 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=3aedb8d7876731946aa4e3693b52a4b0): Total: 0.040 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AnalysisScreen.mat using Guid(b3ce763bb54226a40976f41cddcb6833) (NativeFormatImporter) -> (artifact id: 'ed82fa9e203d218bc135d4b986f7a681') in 0.0023989 seconds
+Refreshing native plugins compatible for Editor in 1.47 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=b0302adc1b1232345862d401c46718c2): Total: 0.046 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_BrainModel.mat using Guid(3d75f4129d6284040a0ffc292075e80c) (NativeFormatImporter) -> (artifact id: '846676b64c5e2c5b92b3ce5ef14e0483') in 0.0019835 seconds
+Refreshing native plugins compatible for Editor in 1.51 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=17db2bc067b913f46ace88417f317114): Total: 0.048 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_saeki_home.mat using Guid(e26a75db2de01fb4195d9d9d32b7dfa6) (NativeFormatImporter) -> (artifact id: 'f00aa4e9ff63da80d3b4d45ceecdf6b0') in 0.0020116 seconds
+Refreshing native plugins compatible for Editor in 1.49 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=e0143dbc2e30dc34a91c96eac4eaeb2d): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoffeeCup.mat using Guid(850e10220e1359942bff3cc810ec63eb) (NativeFormatImporter) -> (artifact id: 'd630e578fc8b08e1cd2e8d4e707c05bd') in 0.0017347 seconds
+Refreshing native plugins compatible for Editor in 1.43 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=f2ae4013e5d012544b304762abc83bdf): Total: 0.049 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_ward.mat using Guid(59393b344711a374088585b4bd7e2028) (NativeFormatImporter) -> (artifact id: '1989bd251286b4e95bbaa985ee3dd234') in 0.0026405 seconds
+Refreshing native plugins compatible for Editor in 1.52 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=3e6295f161bdab7469f2955b3b68d04d): Total: 0.044 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardFrame.mat using Guid(705a3d95370a5444a9836c373c6b323f) (NativeFormatImporter) -> (artifact id: 'a302fa341a3d7e62bb55ef2593053576') in 0.0021598 seconds
+Refreshing native plugins compatible for Editor in 1.55 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=80be354961309124f811d4b8b11644e0): Total: 0.048 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardSheet.mat using Guid(9864859a2d0e588478500938a52342d2) (NativeFormatImporter) -> (artifact id: '03e8d17e2c44dd84f9e89f800aecbaf4') in 0.001756 seconds
+Refreshing native plugins compatible for Editor in 1.50 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=0633c8164fa87524fae557db25499a97): Total: 0.052 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardMonitor.mat using Guid(d097e2682fa1626488b5ca15004c977a) (NativeFormatImporter) -> (artifact id: '53b4fef18f8ace213e48560efcf91111') in 0.001963 seconds
+Refreshing native plugins compatible for Editor in 1.56 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=15374de305a4c1e4ba020a9658f337ff): Total: 0.042 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_core_ante.mat using Guid(c2a264c3a4fb9d8499ea363c8964910d) (NativeFormatImporter) -> (artifact id: 'e71478e1a5e9f0bc7715cb7f73f0a80f') in 0.0021896 seconds
+Refreshing native plugins compatible for Editor in 2.35 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=e2b179f2dede2db498d2660f10f68e8e): Total: 0.057 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreMetal.mat using Guid(9b4abbeee2ba6f742961271416648b7b) (NativeFormatImporter) -> (artifact id: '6c6cc94a657744a417c96c7a3773c7c6') in 0.0021303 seconds
+Refreshing native plugins compatible for Editor in 1.39 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=0b7c6d33e3a2eca468ba8081f476d93a): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_DeadScreen.mat using Guid(8e6edd4756291bf419c3dbf2fc63d052) (NativeFormatImporter) -> (artifact id: 'af3bd2cafd01f43829abd4fffa4d9219') in 0.0018469 seconds
+Refreshing native plugins compatible for Editor in 1.74 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=8ab29a90796afd94ca0295fb6daba395): Total: 0.053 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreWarn.mat using Guid(c6cd54e95dbb14645b3f96a2c55c757e) (NativeFormatImporter) -> (artifact id: '66a3feafe2384a74da70931843f56f63') in 0.0021016 seconds
+Refreshing native plugins compatible for Editor in 1.46 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=d014fceb86d844f4c8482fa7626efada): Total: 0.045 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_mizuno_apart.mat using Guid(c06e82207b62bf8429b655d089d100b9) (NativeFormatImporter) -> (artifact id: 'a742ff8d02b44456eff3d756c478f384') in 0.0028154 seconds
+Refreshing native plugins compatible for Editor in 1.41 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=c8ff443671ac7f348b6de7fe3aa19f4b): Total: 0.051 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AptCloth.mat using Guid(f805b3c9136570b46a7c110bced51b21) (NativeFormatImporter) -> (artifact id: 'a5a474138df8443bad4ed3b356b9ad8d') in 0.0023003 seconds
+Refreshing native plugins compatible for Editor in 1.55 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=cc84def026a10734fa078f8a8475aae9): Total: 0.045 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Plant.mat using Guid(ca624aa7452cd2b4fae6fbd1346b4af2) (NativeFormatImporter) -> (artifact id: '9709e3e1d6d7482ef2d3d824c177b3d1') in 0.002437 seconds
+Refreshing native plugins compatible for Editor in 1.44 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=6d8a81925fbb4cd4e9a0b508cb0f6a5e): Total: 0.046 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Fusuma.mat using Guid(18c6c3ad63ea5684889d0d0fbce3475a) (NativeFormatImporter) -> (artifact id: '986d01af14359d2e9ab1f32e579e2966') in 0.0019141 seconds
+Refreshing native plugins compatible for Editor in 1.38 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=849fb7293a4ea3748a60fa28b2c3d228): Total: 0.054 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Recorder.mat using Guid(9bb44cd82e3ef3045b1b18e32d96f270) (NativeFormatImporter) -> (artifact id: 'bfd7ab80f28bfb33ba412c4e5c8f2a65') in 0.002543 seconds
+Refreshing native plugins compatible for Editor in 1.76 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=21d883ef70b38924aafe2a420a665a26): Total: 0.051 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_data_room.mat using Guid(536eaf7602fc8ff429aa2283d1c73ee6) (NativeFormatImporter) -> (artifact id: 'ddd7f33663ba57545cd7688df4b03357') in 0.0019732 seconds
+Refreshing native plugins compatible for Editor in 1.53 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=be78949264e3ee84a8d7ed66849d28b4): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_ServerRack.mat using Guid(0dcc1ec8baa6b5f4ea472ef5245e759c) (NativeFormatImporter) -> (artifact id: 'b683071046eca7c67710db05a0462229') in 0.0030678 seconds
+Refreshing native plugins compatible for Editor in 1.63 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=f516389936bf56b499f3443cf42e073b): Total: 0.045 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_ServerLed.mat using Guid(d642ccd3f3daac542827ee0ee9f70e19) (NativeFormatImporter) -> (artifact id: '8d19ede8dfb041d929354c06aa3cdb79') in 0.0017785 seconds
+Refreshing native plugins compatible for Editor in 1.44 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=9206aa0ae82f7a142833791c7cc10d48): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_FileCabinet.mat using Guid(48835d728bfdfb048a733cf704e9a6f6) (NativeFormatImporter) -> (artifact id: 'c6f48a3a6a897317b0020f408b11fd05') in 0.0026258 seconds
+Refreshing native plugins compatible for Editor in 1.42 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=a126b8fdb8e72294eb607a7bca742370): Total: 0.051 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CrtScreen.mat using Guid(b672dfd43d2246243aca7b60e3b2ab91) (NativeFormatImporter) -> (artifact id: '5b6c7d6e3558f6ff44dce1fc13603d16') in 0.0021904 seconds
+Refreshing native plugins compatible for Editor in 1.40 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=287d0cd375735c54fba67803fbab73d9): Total: 0.053 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_system_room.mat using Guid(f1e80e7677f83b84dbd78056788ad5f0) (NativeFormatImporter) -> (artifact id: '1a4d6e443f149b54504f4762f4b7d022') in 0.0017695 seconds
+Refreshing native plugins compatible for Editor in 1.41 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=abbe291a6f57c2b4baab116ca82585b6): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SystemCore.mat using Guid(517b7ca99add582448bb2900fed688de) (NativeFormatImporter) -> (artifact id: '98c3982901a4b51833bd6634e11d87cd') in 0.0025598 seconds
+Refreshing native plugins compatible for Editor in 2.00 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=9844ba349f8395f499f4fff4567230ba): Total: 0.049 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Cable.mat using Guid(37745371eef0d644995a00d190bceb5b) (NativeFormatImporter) -> (artifact id: 'cbaa2cdf64321639fc181081e38a7f2f') in 0.0016501 seconds
+Refreshing native plugins compatible for Editor in 1.52 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=f9a655d8f084f1c4dbc8cc89175898ef): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_kuroda_home.mat using Guid(80f806da67fef8240926276490299942) (NativeFormatImporter) -> (artifact id: 'd55ec473660fe4ef87287d216681ced5') in 0.0019547 seconds
+Refreshing native plugins compatible for Editor in 1.58 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=415550528626d0241bfd2f788fb60252): Total: 0.054 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Fridge.mat using Guid(e26d03f319f422449958022a0818819c) (NativeFormatImporter) -> (artifact id: '85ba28960a83bfb6e4c9250068157359') in 0.0020436 seconds
+Refreshing native plugins compatible for Editor in 1.71 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=5c56344d301ab9a4e80d94227a75e231): Total: 0.049 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Crayon.mat using Guid(a71d7ec263b48ba43949af40cdfa56f3) (NativeFormatImporter) -> (artifact id: 'c7fc286285ec2bcddaa841a4e4f42d70') in 0.0017178 seconds
+Refreshing native plugins compatible for Editor in 1.51 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=1446135b52c16bb44be8411fab1b2c76): Total: 0.061 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_core_main.mat using Guid(4e2a343d7b5f91348a31f6fd52cc15ae) (NativeFormatImporter) -> (artifact id: '9247d87e2340d25bcdcadd340661b5f0') in 0.0018166 seconds
+Refreshing native plugins compatible for Editor in 1.63 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=20310993faf5d3b41928aea05e750fad): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_MainCore.mat using Guid(79322a76efa141049a66c4eed811ca78) (NativeFormatImporter) -> (artifact id: '392000d6b3e635c3462b53d0a5426f91') in 0.0020089 seconds
+Refreshing native plugins compatible for Editor in 1.80 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=9aee4f27aa833344e8dbd8bfb328e193): Total: 0.059 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CablePillar.mat using Guid(7533ba21f3581fa44a19899a8df4c0f9) (NativeFormatImporter) -> (artifact id: 'c8691a506a05211f4ec6a104264248af') in 0.0020626 seconds
+Refreshing native plugins compatible for Editor in 1.69 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=58a7dccf5f61a3a4f9dfdd6d96bd06da): Total: 0.054 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreTerminal.mat using Guid(8a817ece8f3b8b44fa082947886fd364) (NativeFormatImporter) -> (artifact id: '0880a4ea637dff2cafe9b71d1c3eafab') in 0.0020437 seconds
+Refreshing native plugins compatible for Editor in 1.66 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=608dbe4524ac186459cf4d70a40b8e8d): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_son_room.mat using Guid(6d8795e536886bb4895607a3afbd97af) (NativeFormatImporter) -> (artifact id: 'c44dc2e01bc38f3d3f647ad6294b1f45') in 0.0019241 seconds
+Refreshing native plugins compatible for Editor in 1.56 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=d17e1d273977c524a8fbefdd613ed567): Total: 0.047 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SmallShoe.mat using Guid(b810944b5c6c1dd41b38841f484fc628) (NativeFormatImporter) -> (artifact id: '20449c6b102233b55d757171d7521ed8') in 0.0030851 seconds
+Refreshing native plugins compatible for Editor in 1.60 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=fa64f62ab2137f841b8c63575ef62fb9): Total: 0.062 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_0.mat using Guid(4b3cf5f350fd4324baa442ad109698c6) (NativeFormatImporter) -> (artifact id: '5c57327ecdee49e69528c2e2e0c5b38d') in 0.0020248 seconds
+Refreshing native plugins compatible for Editor in 1.80 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=52b31602c2b96dc4193c5d9a52059660): Total: 0.051 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_1.mat using Guid(2d50b867307bfac4fad1d5a0948270fb) (NativeFormatImporter) -> (artifact id: '03d9efafac55e5350a8402cf6b853b61') in 0.001696 seconds
+Refreshing native plugins compatible for Editor in 1.48 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=03613debc30a5b844b82e66226d1b929): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_2.mat using Guid(eef5fabd40aa8fc48bf6d57cc4c767ec) (NativeFormatImporter) -> (artifact id: 'dac73c15410901b6c2981de28c6e31d9') in 0.0023921 seconds
+Refreshing native plugins compatible for Editor in 2.23 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=ec2a3a72a4eb77c418dadb529e014328): Total: 0.056 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardFrame.mat using Guid(705a3d95370a5444a9836c373c6b323f) (NativeFormatImporter) -> (artifact id: 'e952650a3b1959dbdf8ace36f2020764') in 0.0029171 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_kuroda_home.mat using Guid(80f806da67fef8240926276490299942) (NativeFormatImporter) -> (artifact id: 'abad9b2b90324933729b0d39bdd27cc9') in 0.0016216 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Board.mat using Guid(a0ba3f4bed1e9334ca903bff01b40ee2) (NativeFormatImporter) -> (artifact id: '8b68e3a711175d4ba64a13abb01fe08c') in 0.0012374 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_mizuno_apart.mat using Guid(c06e82207b62bf8429b655d089d100b9) (NativeFormatImporter) -> (artifact id: '6ce5d62f8a314861a6898c35b883ea56') in 0.0015722 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardMonitor.mat using Guid(d097e2682fa1626488b5ca15004c977a) (NativeFormatImporter) -> (artifact id: 'c01fa2831ff7154b2468792e91bb1520') in 0.0017361 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainAd.mat using Guid(11e0461c52575f744a631e9cb44cec61) (NativeFormatImporter) -> (artifact id: '704882a2da01038fe012a8936c58c0d8') in 0.0017862 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SystemCore.mat using Guid(517b7ca99add582448bb2900fed688de) (NativeFormatImporter) -> (artifact id: '5e6f3f44884657546dd442911f81413a') in 0.0021591 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_IdCard.mat using Guid(71133c803c5553e48be652309a61e559) (NativeFormatImporter) -> (artifact id: '16bf3184480e6ffc0c1b7f7544b7f566') in 0.0014738 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AnalysisRack.mat using Guid(916e901255e50964bb2af26cb90ebe20) (NativeFormatImporter) -> (artifact id: '2ad5ad246ddda1ed4c4a201c3660a436') in 0.0012562 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_EchoWhite.mat using Guid(e1e0f193c2a5c8943b3a38d6b8d58b4a) (NativeFormatImporter) -> (artifact id: '57b234cbbd60593f9efc89442e8491f3') in 0.0012508 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_system_room.mat using Guid(f1e80e7677f83b84dbd78056788ad5f0) (NativeFormatImporter) -> (artifact id: '8b30831d570e5de633106405f70aab62') in 0.0018768 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_PhotoBlacked.mat using Guid(42c3c58cadfe7a84e818087fd1986ab5) (NativeFormatImporter) -> (artifact id: 'bf81219a588bbac9bbc6105924afa5bd') in 0.0019833 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainChromeDark.mat using Guid(42cc6506ef365d14c9e36e51791b4b70) (NativeFormatImporter) -> (artifact id: '5d5a293a929796891db8e1f4c8c841d4') in 0.0024796 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainPoster.mat using Guid(423d1eb240eb8a34c88192f346b84eaa) (NativeFormatImporter) -> (artifact id: '2202285b9edeeafcf9d9d2434976e235') in 0.0019026 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_core_ante.mat using Guid(c2a264c3a4fb9d8499ea363c8964910d) (NativeFormatImporter) -> (artifact id: 'e7dff976ae66193c541f3a3d26ab6668') in 0.0015325 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_saeki_home.mat using Guid(e26a75db2de01fb4195d9d9d32b7dfa6) (NativeFormatImporter) -> (artifact id: 'df760ee18514240e77f72f18363ba2fd') in 0.0017668 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Fridge.mat using Guid(e26d03f319f422449958022a0818819c) (NativeFormatImporter) -> (artifact id: 'a2baa9db8d60d68978e7036a2c5cc727') in 0.001632 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainFloor.mat using Guid(53e15e700f9be7441aaf861a1a7112b7) (NativeFormatImporter) -> (artifact id: '4c71449767f4cbdfc7e0e8550e59246c') in 0.0012548 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_data_room.mat using Guid(536eaf7602fc8ff429aa2283d1c73ee6) (NativeFormatImporter) -> (artifact id: 'fb09b59008b0a6ac8b761974ab32367c') in 0.0012176 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AnalysisScreen.mat using Guid(b3ce763bb54226a40976f41cddcb6833) (NativeFormatImporter) -> (artifact id: '17d7f393ced00faa9ce4605f7734559b') in 0.0016133 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_RoomWall.mat using Guid(c398a0c8c20daa64f94ec4b36473e911) (NativeFormatImporter) -> (artifact id: 'd33082b6c5a7dd38ca24d40e670206c0') in 0.0017705 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Photo.mat using Guid(45ba6aa3f3f11304c9575d5cc880150f) (NativeFormatImporter) -> (artifact id: '31781abd12f890342d35c5f633c4eafa') in 0.0012825 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CablePillar.mat using Guid(7533ba21f3581fa44a19899a8df4c0f9) (NativeFormatImporter) -> (artifact id: '134e8519bf4dd44e7cc3c362e61b8b50') in 0.0014889 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoffeeCup.mat using Guid(850e10220e1359942bff3cc810ec63eb) (NativeFormatImporter) -> (artifact id: '4e235aadd7d0c501915fce08e877f6dc') in 0.0018088 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CrtScreen.mat using Guid(b672dfd43d2246243aca7b60e3b2ab91) (NativeFormatImporter) -> (artifact id: '7e709d2e535d251f1922c729def14b0b') in 0.0013771 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainTube.mat using Guid(c66ce259f606a6a41bb70d7faa8eba61) (NativeFormatImporter) -> (artifact id: 'a323800c815b744c374362d681de0778') in 0.0012233 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreWarn.mat using Guid(c6cd54e95dbb14645b3f96a2c55c757e) (NativeFormatImporter) -> (artifact id: 'b8498d5d04ec546a3aa7f6736b09fea9') in 0.0017224 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_ServerLed.mat using Guid(d642ccd3f3daac542827ee0ee9f70e19) (NativeFormatImporter) -> (artifact id: '9006f5d596922595a08bfde0d09fe0d8') in 0.0020228 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Cable.mat using Guid(37745371eef0d644995a00d190bceb5b) (NativeFormatImporter) -> (artifact id: 'a553ad295ea5a2777422a97b33d61e6c') in 0.0013353 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Crayon.mat using Guid(a71d7ec263b48ba43949af40cdfa56f3) (NativeFormatImporter) -> (artifact id: '2e64707cf162867fcc0167b999b1ea3a') in 0.001214 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Furniture.mat using Guid(e7479f73a42742f42b8ad443cac1ea25) (NativeFormatImporter) -> (artifact id: '1cc0cb5925f8048f14317204019eb4e8') in 0.0019386 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainGrille.mat using Guid(08621a7b21ae0414797b2718fcfa11b2) (NativeFormatImporter) -> (artifact id: '6f3a0aaf8425637589e058e5462dac26') in 0.0012886 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Fusuma.mat using Guid(18c6c3ad63ea5684889d0d0fbce3475a) (NativeFormatImporter) -> (artifact id: '3247363d68ff49c9846e435a15d80c42') in 0.0012095 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_FileCabinet.mat using Guid(48835d728bfdfb048a733cf704e9a6f6) (NativeFormatImporter) -> (artifact id: '57bad8a698fb909818ec6cd7452b9b5d') in 0.0013402 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_PhotoFrame.mat using Guid(88691c8a98a71324790555b5a5bd69c4) (NativeFormatImporter) -> (artifact id: '1f212a8d73a3d2b11fd6a8fb395e06ef') in 0.0011568 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_WardSheet.mat using Guid(9864859a2d0e588478500938a52342d2) (NativeFormatImporter) -> (artifact id: '8e8d2cac4d6dacf1bc76278723ae6789') in 0.0013454 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_SmallShoe.mat using Guid(b810944b5c6c1dd41b38841f484fc628) (NativeFormatImporter) -> (artifact id: 'bad9108c77fdca64180f708fc35381f5') in 0.0016866 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_AptCloth.mat using Guid(f805b3c9136570b46a7c110bced51b21) (NativeFormatImporter) -> (artifact id: '3f44ba2e5b03f741cdb121fd528f0174') in 0.0015337 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_EchoDark.mat using Guid(496fd8a6e2d169b4b8371bc9b4847a2f) (NativeFormatImporter) -> (artifact id: 'f747390343028e4f3df181613f083805') in 0.0015592 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_ward.mat using Guid(59393b344711a374088585b4bd7e2028) (NativeFormatImporter) -> (artifact id: 'db4738ddcef266c76081b9e94498e067') in 0.001607 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_MainCore.mat using Guid(79322a76efa141049a66c4eed811ca78) (NativeFormatImporter) -> (artifact id: 'c1631cb39081711ba84dca2ec7204562') in 0.0013371 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_analysis.mat using Guid(9923072ebb6962e45a46abb7fd418885) (NativeFormatImporter) -> (artifact id: 'dc0ea8f78d404fdacd6c12e55c369b5e') in 0.0012396 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreTerminal.mat using Guid(8a817ece8f3b8b44fa082947886fd364) (NativeFormatImporter) -> (artifact id: '7a96997cd45a142f4755cccca52afc31') in 0.001154 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainStrap.mat using Guid(aafe3d8ade9d134478349b8dedebe589) (NativeFormatImporter) -> (artifact id: '4d3cdf97a0e22602117ba2cb06495be9') in 0.0014841 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Plant.mat using Guid(ca624aa7452cd2b4fae6fbd1346b4af2) (NativeFormatImporter) -> (artifact id: '236d8fb160f3696e9fcf369b70feeac5') in 0.0019034 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainWindow.mat using Guid(2b822265ebac7ff48aaa05ada27c4a28) (NativeFormatImporter) -> (artifact id: 'e9aea6ba865fb053ff8253f185762359') in 0.0013646 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_LabDesk.mat using Guid(2b5a67e9689a50041a672a4d87740550) (NativeFormatImporter) -> (artifact id: '7e2bc41e2796ffb1a3099b57a7fbc667') in 0.0013403 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_study.mat using Guid(3b16be9c91f3a2546bdab2ecc06838b3) (NativeFormatImporter) -> (artifact id: '2b3bc266bb725dc99b8abcbbf40270eb') in 0.0011104 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_0.mat using Guid(4b3cf5f350fd4324baa442ad109698c6) (NativeFormatImporter) -> (artifact id: '36baa4ca5f25e4acee189b2c834e8f10') in 0.0014634 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_FurnitureDark.mat using Guid(7b45e7db108f5944f8ee959389aabad9) (NativeFormatImporter) -> (artifact id: 'f1fb3a4bb42666eb98bf45fc0c3024a0') in 0.0018701 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Paper.mat using Guid(7bf64d41d6456df4ca54431686392a24) (NativeFormatImporter) -> (artifact id: '38ae97bfbcb2dbbbfc985207ae2445b9') in 0.001629 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Recorder.mat using Guid(9bb44cd82e3ef3045b1b18e32d96f270) (NativeFormatImporter) -> (artifact id: 'edcf668c7b0a9c6292c5a4ce699e4be8') in 0.001311 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_CoreMetal.mat using Guid(9b4abbeee2ba6f742961271416648b7b) (NativeFormatImporter) -> (artifact id: '1cacb08068e72dc35c7f8e3618c93178') in 0.0014962 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Door.mat using Guid(9b3d9109049940047b03d39b51a51a9f) (NativeFormatImporter) -> (artifact id: 'd92e1f8798825357647e0e160284e610') in 0.0017229 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainDoor.mat using Guid(cb72beb6c49882141b018489c81fbc7b) (NativeFormatImporter) -> (artifact id: '0caf0d16a53ba64093c3c9fdd24c7300') in 0.0017159 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainWall.mat using Guid(dbb13bdab8bcb4d42b3c55619e61ddfc) (NativeFormatImporter) -> (artifact id: '7d70b7ddf20a05eb5b68ce6d274efd25') in 0.0014529 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_train.mat using Guid(4c3608832fc6bc043abd60d540a4069a) (NativeFormatImporter) -> (artifact id: '901b7ca82de49f0f9942caa5570c7028') in 0.001417 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainChrome.mat using Guid(8ccf4a6d569c9644584ca09242ae18fe) (NativeFormatImporter) -> (artifact id: '81006feaed674ad5463f131bace16cd8') in 0.0019386 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Breaker.mat using Guid(bc0c30bbfd8e1ed47b16a48d2ddc610f) (NativeFormatImporter) -> (artifact id: '55c8865f90febd4e6cb8de1f6275d332') in 0.002143 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_RoomFloor.mat using Guid(bc6f472921cedb8468ed3b8c9ff7d73c) (NativeFormatImporter) -> (artifact id: 'a3a153892021760dc7398df04017e53d') in 0.0019371 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_ServerRack.mat using Guid(0dcc1ec8baa6b5f4ea472ef5245e759c) (NativeFormatImporter) -> (artifact id: '11d871a1ad218500a41462c8793f9bf2') in 0.0015323 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_1.mat using Guid(2d50b867307bfac4fad1d5a0948270fb) (NativeFormatImporter) -> (artifact id: 'b3b008f4ed6dc6ec5bef0c2c95ae9143') in 0.001611 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_BrainModel.mat using Guid(3d75f4129d6284040a0ffc292075e80c) (NativeFormatImporter) -> (artifact id: '3e5f60cf2bc3927f73811cd0e8eab503') in 0.0015131 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_son_room.mat using Guid(6d8795e536886bb4895607a3afbd97af) (NativeFormatImporter) -> (artifact id: '6c12dd41ffb75f6d2907498eda36bb19') in 0.0014512 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainSeat.mat using Guid(7de8234e335179844ab6b00d3a7f7a88) (NativeFormatImporter) -> (artifact id: 'faf589315b5916aa4d5617325ed5443c') in 0.0016051 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_core_main.mat using Guid(4e2a343d7b5f91348a31f6fd52cc15ae) (NativeFormatImporter) -> (artifact id: '7985ed940dec80924a1f043e46d72fc7') in 0.0015117 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainSeatDark.mat using Guid(7e0ca7f50c8604c4a9f27e72c99e07be) (NativeFormatImporter) -> (artifact id: '9962b7c152c0386723f7672b4a499b68') in 0.0038795 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Accent_lab.mat using Guid(7e6ce82830e2b1c48917cf732856d866) (NativeFormatImporter) -> (artifact id: 'a27892a4d266a7bf6a24143541624cc9') in 0.0040719 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_BreakerLever.mat using Guid(8e21e47b63d173c42be02e8b0d15bcbd) (NativeFormatImporter) -> (artifact id: '0ea66ffe7e793496674cfa8857d7f86e') in 0.002952 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_DeadScreen.mat using Guid(8e6edd4756291bf419c3dbf2fc63d052) (NativeFormatImporter) -> (artifact id: '2d95ce6d0d59c46f84cedd9e3b4aed06') in 0.0029749 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainCeiling.mat using Guid(aea71d6e40e096b4a811b1e8177e50e6) (NativeFormatImporter) -> (artifact id: '82d1e3bc1b7dca54f60d0ff8fe94d096') in 0.003047 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Ceiling.mat using Guid(ce8c12fe1fe075c4b893fab2cb858764) (NativeFormatImporter) -> (artifact id: '0a9a697b4f560d22ee45cab71fccdf55') in 0.0024125 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Toy_2.mat using Guid(eef5fabd40aa8fc48bf6d57cc4c767ec) (NativeFormatImporter) -> (artifact id: '06b7b18443ae861460cd58f5e7b304f0') in 0.0024598 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_Bedding.mat using Guid(0f2ae785355d26641baccc12d10b7a7c) (NativeFormatImporter) -> (artifact id: 'f45de2d1a258df91a9fb73e112db67c2') in 0.002395 seconds
+Start importing Assets/EscapePrototype/MoodMaterials/LP_TrainYellowLine.mat using Guid(efb321d8edbf6d0479b5c5e13337bc45) (NativeFormatImporter) -> (artifact id: 'ee386b46edcc6e36dabdec6a4cbecdf1') in 0.0016106 seconds
+Refreshing native plugins compatible for Editor in 1.76 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=4528775c9857ece44aeb27fe02b3fdf5): Total: 0.265 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/EscapePrototype/LoopPrototype.unity using Guid(d4c18ebb35f99a84699a8cf1f3143a71) (DefaultImporter) -> (artifact id: 'd1a5a4fa91dc5212d6e620db3acf6e09') in 0.0013526 seconds
+Refreshing native plugins compatible for Editor in 1.65 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=53f1209228bbf7d4ab93431c2c80f921): Total: 0.067 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[LoopPrototype] 生成完了: Assets/EscapePrototype/LoopPrototype.unity
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EscapeProto.LoopPrototypeBuilder:BuildScene () (at Assets/Script/Editor/LoopPrototypeBuilder.cs:104)
+
+(Filename: Assets/Script/Editor/LoopPrototypeBuilder.cs Line: 104)
+
+Batchmode quit successfully invoked - shutting down!
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-sdaha-6000.3.16-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-sdaha-6000.3.16 channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+Exiting batchmode successfully now!
+Exiting without the bug reporter. Application will terminate with return code 0

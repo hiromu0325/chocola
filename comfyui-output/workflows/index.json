@@ -1,0 +1,982 @@
+{
+  "test_corridor_00001": {
+    "positive": "dark abandoned japanese research facility corridor at night, dim ceiling light, worn white walls, wooden floor, closed doors along the wall, horror game background, cinematic moody lighting, deep shadows, empty, photorealistic, highly detailed",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 7,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 512,
+    "prompt_id": "7526a299-cc40-4d9b-999c-a1bd7a49ed7c",
+    "images": [
+      "test_corridor_00001_.png"
+    ],
+    "api_workflow": "test_corridor_00001.api.json",
+    "ui_workflow": "test_corridor_00001.ui.json",
+    "generated_at": "2026-08-11T06:13:06"
+  },
+  "title_bg_00001": {
+    "positive": "dark abandoned japanese building corridor at night, long hallway with many closed wooden doors on both sides, dim ceiling lights, worn wooden floor, white walls, deep perspective vanishing point, horror atmosphere, cinematic wide shot, empty, photorealistic, highly detailed",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 101,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 1024,
+    "height": 576,
+    "prompt_id": "717480b9-ed5c-4459-a486-f8f102250ef0",
+    "images": [
+      "title_bg_00001_.png"
+    ],
+    "api_workflow": "title_bg_00001.api.json",
+    "ui_workflow": "title_bg_00001.ui.json",
+    "generated_at": "2026-08-11T06:14:38"
+  },
+  "bg_train_interior_00001": {
+    "positive": "empty japanese commuter train car interior at night, long narrow car, blue fabric bench seats along both sides, hanging hand straps from ceiling rail, dim fluorescent lights, dark windows, no passengers, eerie silent atmosphere, photorealistic, highly detailed",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 202,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 1024,
+    "height": 576,
+    "prompt_id": "d14e591a-5365-4652-9dbe-4452828a94cf",
+    "images": [
+      "bg_train_interior_00001_.png"
+    ],
+    "api_workflow": "bg_train_interior_00001.api.json",
+    "ui_workflow": "bg_train_interior_00001.ui.json",
+    "generated_at": "2026-08-11T06:14:52"
+  },
+  "bg_dim_room_00001": {
+    "positive": "dark small japanese bedroom at night, single bed, wooden desk with a lit desk lamp, newspaper on the desk, dim warm light, heavy shadows, worn walls, lonely horror atmosphere, no people, photorealistic, highly detailed",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 303,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 1024,
+    "height": 576,
+    "prompt_id": "3d7b50fc-b502-4790-88ed-052000e03961",
+    "images": [
+      "bg_dim_room_00001_.png"
+    ],
+    "api_workflow": "bg_dim_room_00001.api.json",
+    "ui_workflow": "bg_dim_room_00001.ui.json",
+    "generated_at": "2026-08-11T06:15:06"
+  },
+  "paper_newspaper_00001": {
+    "positive": "old yellowed newspaper page lying flat on a dark desk, top down flat view, dense grey columns of tiny unreadable print, torn bottom edge, grainy aged paper texture, dim moody light, photorealistic",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 404,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 768,
+    "prompt_id": "55eaa2d6-aecd-4c6a-8b3a-0c4c46f9ca12",
+    "images": [
+      "paper_newspaper_00001_.png"
+    ],
+    "api_workflow": "paper_newspaper_00001.api.json",
+    "ui_workflow": "paper_newspaper_00001.ui.json",
+    "generated_at": "2026-08-11T06:15:18"
+  },
+  "paper_document_00001": {
+    "positive": "old typewritten research document sheet lying flat, top down flat view, aged white paper, faint red official stamp, blacked out redacted lines, clinical and unsettling, dim light, photorealistic",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 505,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 768,
+    "prompt_id": "a2333943-1801-48d8-9d0e-491759da8088",
+    "images": [
+      "paper_document_00001_.png"
+    ],
+    "api_workflow": "paper_document_00001.api.json",
+    "ui_workflow": "paper_document_00001.ui.json",
+    "generated_at": "2026-08-11T06:15:30"
+  },
+  "ad_brain_ai_00001": {
+    "positive": "clean corporate advertising poster artwork, glowing blue human brain connected to circuit board traces, medical technology, dark navy gradient background, large empty space at the top for a headline, minimal composition, no text, sharp graphic design",
+    "negative": "people, person, human, face, nsfw, text, letters, words, watermark, signature, cluttered, busy, blurry, lowres",
+    "seed": 606,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 1024,
+    "prompt_id": "69060055-544f-43d4-8bbc-6833ee9122b3",
+    "images": [
+      "ad_brain_ai_00001_.png"
+    ],
+    "api_workflow": "ad_brain_ai_00001.api.json",
+    "ui_workflow": "ad_brain_ai_00001.ui.json",
+    "generated_at": "2026-08-11T06:15:49"
+  },
+  "tex_white_wall_00001": {
+    "positive": "seamless tileable texture of old white painted plaster wall, subtle grey stains and hairline cracks, flat even lighting, straight on view, no perspective, photorealistic material scan",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 707,
+    "steps": 24,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "db4967d2-2243-4dc5-8a70-410c7a3d3e52",
+    "images": [
+      "tex_white_wall_00001_.png"
+    ],
+    "api_workflow": "tex_white_wall_00001.api.json",
+    "ui_workflow": "tex_white_wall_00001.ui.json",
+    "generated_at": "2026-08-11T06:15:55"
+  },
+  "tex_wood_floor_00001": {
+    "positive": "seamless tileable texture of old dark wooden plank floor, long worn floorboards, scratches, flat even lighting, top down view, no perspective, photorealistic material scan",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 808,
+    "steps": 24,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "35af3433-7961-4d42-b8b7-d4592e5a9bb6",
+    "images": [
+      "tex_wood_floor_00001_.png"
+    ],
+    "api_workflow": "tex_wood_floor_00001.api.json",
+    "ui_workflow": "tex_wood_floor_00001.ui.json",
+    "generated_at": "2026-08-11T06:16:01"
+  },
+  "tex_concrete_00001": {
+    "positive": "seamless tileable texture of grey concrete wall, cracks, water stains, flat even lighting, straight on view, no perspective, photorealistic material scan",
+    "negative": "people, person, human, face, figure, body, nsfw, nude, text, letters, words, watermark, signature, logo, blurry, lowres, jpeg artifacts, cartoon, chibi, cute",
+    "seed": 909,
+    "steps": 24,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "c1ed2988-e190-4955-a0cb-5cc435573c5c",
+    "images": [
+      "tex_concrete_00001_.png"
+    ],
+    "api_workflow": "tex_concrete_00001.api.json",
+    "ui_workflow": "tex_concrete_00001.ui.json",
+    "generated_at": "2026-08-11T06:16:07"
+  },
+  "tex_white_wall_00002": {
+    "positive": "extreme close up macro photograph of an old white painted plaster wall surface with faint grey stains and fine hairline cracks, the material completely fills the entire frame, perfectly flat orthographic straight-on view, uniform flat diffuse studio lighting, evenly lit, no shadows, seamless repeating material sample, surface detail, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 7071,
+    "steps": 26,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "c996f5e7-bf25-4089-aa5e-993c9b736221",
+    "images": [
+      "tex_white_wall_00002_.png"
+    ],
+    "api_workflow": "tex_white_wall_00002.api.json",
+    "ui_workflow": "tex_white_wall_00002.ui.json",
+    "generated_at": "2026-08-11T06:18:07"
+  },
+  "tex_wood_floor_00002": {
+    "positive": "extreme close up macro photograph of old dark brown wooden floorboards, straight parallel planks, worn grain and scratches, the material completely fills the entire frame, perfectly flat orthographic straight-on view, uniform flat diffuse studio lighting, evenly lit, no shadows, seamless repeating material sample, surface detail, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 8082,
+    "steps": 26,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "5c547242-63ef-4f6b-84bc-b1f0702bd523",
+    "images": [
+      "tex_wood_floor_00002_.png"
+    ],
+    "api_workflow": "tex_wood_floor_00002.api.json",
+    "ui_workflow": "tex_wood_floor_00002.ui.json",
+    "generated_at": "2026-08-11T06:18:13"
+  },
+  "tex_concrete_00002": {
+    "positive": "extreme close up macro photograph of grey raw concrete surface with cracks, water stains and small pits, the material completely fills the entire frame, perfectly flat orthographic straight-on view, uniform flat diffuse studio lighting, evenly lit, no shadows, seamless repeating material sample, surface detail, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 9093,
+    "steps": 26,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "3a65d60e-61e9-4125-a10b-7c2fec4edf88",
+    "images": [
+      "tex_concrete_00002_.png"
+    ],
+    "api_workflow": "tex_concrete_00002.api.json",
+    "ui_workflow": "tex_concrete_00002.ui.json",
+    "generated_at": "2026-08-11T06:18:19"
+  },
+  "tex_train_floor_00001": {
+    "positive": "extreme close up macro photograph of grey speckled vinyl train floor sheet with fine non-slip texture, the material completely fills the entire frame, perfectly flat orthographic straight-on view, uniform flat diffuse studio lighting, evenly lit, no shadows, seamless repeating material sample, surface detail, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 1114,
+    "steps": 26,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 512,
+    "height": 512,
+    "prompt_id": "642a4633-9914-4edc-958a-f385eba296ec",
+    "images": [
+      "tex_train_floor_00001_.png"
+    ],
+    "api_workflow": "tex_train_floor_00001.api.json",
+    "ui_workflow": "tex_train_floor_00001.ui.json",
+    "generated_at": "2026-08-11T06:18:26"
+  },
+  "paper_newspaper_00002": {
+    "positive": "flat scan of an old yellowed newspaper page, the newspaper completely fills the entire frame, perfectly flat top down orthographic view, dense columns of tiny grey unreadable print, aged discolored paper, evenly lit document scan, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 4044,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 768,
+    "prompt_id": "0a176cf3-8326-4ecd-8436-ef36b16d512c",
+    "images": [
+      "paper_newspaper_00002_.png"
+    ],
+    "api_workflow": "paper_newspaper_00002.api.json",
+    "ui_workflow": "paper_newspaper_00002.ui.json",
+    "generated_at": "2026-08-11T06:18:38"
+  },
+  "paper_document_00002": {
+    "positive": "flat scan of an old typewritten office document sheet, the paper completely fills the entire frame, perfectly flat top down orthographic view, faded typewriter lines, a faint red stamp, black redacted bars, aged white paper, evenly lit document scan, sharp focus",
+    "negative": "room, interior, scene, furniture, bathtub, sink, object, item, perspective, vanishing point, depth, angled view, tilted, corner, wall corner, baseboard, skirting board, floor line, ceiling, window, door, depth of field, bokeh, blur, vignette, shadow, people, person, text, watermark",
+    "seed": 5055,
+    "steps": 28,
+    "cfg": 6.5,
+    "denoise": 1.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "lazymixRealAmateur_v40.safetensors",
+    "width": 768,
+    "height": 768,
+    "prompt_id": "14ad6fc4-46dc-454d-888d-e502792cad08",
+    "images": [
+      "paper_document_00002_.png"
+    ],
+    "api_workflow": "paper_document_00002.api.json",
+    "ui_workflow": "paper_document_00002.ui.json",
+    "generated_at": "2026-08-11T06:18:50"
+  },
+  "jp_text_test_00001": {
+    "positive": "電車の中吊り広告のポスターデザイン。上部に大きな見出しで「小川脳神経総合研究所」、中央に青く光る脳とコンピュータ回路のイラスト、下部にキャッチコピー「記憶は、置き換えられる。」と書かれている。紺色の背景、クリーンな企業広告、日本語の文字がはっきり読める",
+    "negative": "ぼやけた文字, 崩れた文字, blurry, low quality",
+    "seed": 11,
+    "steps": 28,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "anima_baseV10.safetensors",
+    "width": 768,
+    "height": 1024,
+    "prompt_id": "12a5d6be-cd1f-436e-adae-f3bf8bc19809",
+    "images": [
+      "jp_text_test_00001_.png"
+    ],
+    "api_workflow": "jp_text_test_00001.api.json",
+    "ui_workflow": "jp_text_test_00001.ui.json",
+    "generated_at": "2026-08-11T06:52:24"
+  },
+  "krea2_jp_test_00001": {
+    "positive": "日本の電車の中吊り広告ポスター。紺色の背景に青く発光する脳と電子回路のイラスト。上部に白い大きな見出し「小川脳神経総合研究所」、下部に「脳神経×AI開発」と書かれている。文字は鮮明で読みやすい、クリーンな企業広告",
+    "negative": "",
+    "seed": 21,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 768,
+    "height": 1024,
+    "prompt_id": "8f910a21-474f-4fe7-bb40-7c9c6abca3d8",
+    "images": [
+      "krea2_jp_test_00001_.png"
+    ],
+    "api_workflow": "krea2_jp_test_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-11T06:56:10"
+  },
+  "ad_full_00001": {
+    "positive": "日本の電車の中吊り広告ポスター、横長。紺色の背景に青く発光する人間の脳と電子回路がつながったイラストが中央にある。上部に白い大きなゴシック体の見出し「小川脳神経総合研究所」、その下に水色の文字で「脳神経×AI開発」、最下部に小さな白い文字で「記憶は、置き換えられる。」と書かれている。文字は鮮明、クリーンな医療系企業広告デザイン",
+    "negative": "",
+    "seed": 33,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "d1d87242-4764-4ba1-a699-e7e41b43a60f",
+    "images": [
+      "ad_full_00001_.png"
+    ],
+    "api_workflow": "ad_full_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-11T06:57:47"
+  },
+  "k2_tex_wall_00001": {
+    "positive": "古い白い漆喰壁の表面の質感写真。画面全体が壁の表面のみで、薄い灰色の染みと細いひび割れがある。真正面から撮影、均一なフラットな照明、影なし、遠近感なし、継ぎ目のないテクスチャ素材",
+    "negative": "",
+    "seed": 44,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 768,
+    "height": 768,
+    "prompt_id": "f38b1d68-7e80-46e2-9550-850e6364c18b",
+    "images": [
+      "k2_tex_wall_00001_.png"
+    ],
+    "api_workflow": "k2_tex_wall_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-11T06:58:22"
+  },
+  "k2_tex_wood_00001": {
+    "positive": "古い濃い茶色の木の床板の質感写真。真上から撮影、画面全体が床板のみ、まっすぐ平行な板、使い込まれた木目と傷。均一な照明、影なし、遠近感なし、継ぎ目のないテクスチャ素材",
+    "negative": "",
+    "seed": 55,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 768,
+    "height": 768,
+    "prompt_id": "b7ef5b61-d17b-435c-9901-ffd775787a5b",
+    "images": [
+      "k2_tex_wood_00001_.png"
+    ],
+    "api_workflow": "k2_tex_wood_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-11T06:59:01"
+  },
+  "ad_poster_00001": {
+    "positive": "企業広告ポスターのデザインデータ。画面全体がポスターそのもので、壁や額縁や周囲の風景は描かない。紺色の背景に、青く発光する人間の脳と電子回路がつながったイラストが中央にある。上部に白い大きなゴシック体の見出しで「小川脳神経総合研究所」、その下に水色のやや小さい文字で「脳神経×AI開発」と書かれている。下部3分の1は絵のみで文字はない。文字は鮮明、クリーンな医療系広告デザイン",
+    "negative": "",
+    "seed": 71,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "105a0701-df53-4210-89f4-fc45e9ec9ac8",
+    "images": [
+      "ad_poster_00001_.png"
+    ],
+    "api_workflow": "ad_poster_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-11T07:01:56"
+  },
+  "concept_dim_00001": {
+    "positive": "狭く天井の低い薄暗い部屋の内観。左の壁際に古いシングルベッド（灰色の毛布と枕）、右の壁際に木製の机があり、机の上の小さな卓上ランプが唯一の光源として温かい橙色の光を放っている。机の上には切り抜かれた新聞記事と金属製の懐中電灯が置かれている。壁は古びた白い漆喰、床は暗い木の板張り。奥の壁の中央に閉じた扉。ランプの光が届かない部屋の隅は深い闇に沈んでいる。目覚めた直後の孤独な部屋。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 1001,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "54e4d6a7-12a4-4d5d-9eae-189da9e88f36",
+    "images": [
+      "concept_dim_00001_.png"
+    ],
+    "api_workflow": "concept_dim_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:06:10"
+  },
+  "concept_study_00001": {
+    "positive": "こぢんまりとした書斎の内観。部屋の中央やや奥に濃い茶色の重厚な書き物机と木の椅子、左右の壁一面に天井近くまである本棚が並び、古い本がぎっしり詰まっている。机の上には一枚の古い研究文書が広げられている。天井の小さな電灯が机を弱く照らし、本棚の影が壁に落ちる。壁は古い白い漆喰、床は暗い木の板張り。奥の壁に閉じた扉。落ち着いているが息苦しい空間。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 1002,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "25979571-be50-430d-a8ab-ef38afeec4e1",
+    "images": [
+      "concept_study_00001_.png"
+    ],
+    "api_workflow": "concept_study_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:08:15"
+  },
+  "concept_train_00001": {
+    "positive": "深夜に停車した無人の日本の通勤電車の車内。幅の狭い長い車両の奥まで続く一点透視の構図。両側に青い布張りのロングシートが並び、天井のレールから白い吊革がずらりと下がっている。車内の中央、天井から一枚の中吊り広告が吊るされ、紺色の背景に青く光る脳のイラストが描かれている。蛍光灯は薄暗く不規則に明滅し、窓の外は完全な闇。停止したまま動かない電車。奥に車両端の扉が小さく見える。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 1003,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "b59dea5f-1312-4c5d-aa53-f69e4ecd003c",
+    "images": [
+      "concept_train_00001_.png"
+    ],
+    "api_workflow": "concept_train_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:10:22"
+  },
+  "concept_lab_00001": {
+    "positive": "広い研究所の応接室兼オフィスの内観。灰色の事務机が左側に3台、右側に2台、島のように並び、それぞれに書類が散らばっている。奥の壁には研究メンバーの写真を貼った掲示板があり、4枚の顔写真のうち2枚が薬品で溶けたように黒く滲んでいる。天井の蛍光灯が均一に白く照らし、清潔だが冷たく無機質。誰もいないのに今まで人がいたような気配。壁は白、床は暗い木の板張り、奥に閉じた扉。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 1004,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "095b50db-3cc0-457c-8312-a0b3baf72574",
+    "images": [
+      "concept_lab_00001_.png"
+    ],
+    "api_workflow": "concept_lab_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:15:14"
+  },
+  "concept_corridor_00001": {
+    "positive": "終わりのない四角いループ状の廊下の一辺を見た構図。白い壁と暗い木の板張りの床、内側の壁には同じ形の木の扉が等間隔に何枚も並び、外側の壁には窓が一切ない。廊下の先は直角に曲がって見えなくなっている。天井の小さな電灯が等間隔に灯り、その間に暗がりが落ちる。どこまで歩いても同じ景色が繰り返される閉塞感。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 1005,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "1d86b3b8-4326-4396-8b57-6d3ab7ac347e",
+    "images": [
+      "concept_corridor_00001_.png"
+    ],
+    "api_workflow": "concept_corridor_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:17:05"
+  },
+  "concept_lab_v2_s2004_00001": {
+    "positive": "広い研究所の応接室兼オフィスの内観。灰色の事務机が左側に3台、右側に2台、島のように並び、それぞれに書類が散らばっている。奥の壁の中央に大きな掲示板があり、横一列に4枚の顔写真が貼られている。左から1枚目と3枚目は白衣の研究員の普通の証明写真だが、2枚目と4枚目は顔の部分だけが薬品で溶かされたように真っ黒に滲んで判別できない。天井の蛍光灯が均一に白く照らし、清潔だが冷たく無機質。誰もいないのに今まで人がいたような気配。壁は白、床は暗い木の板張り、右手に閉じた扉。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 2004,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "4774b79e-37d2-4125-99ae-35ace5c181e3",
+    "images": [
+      "concept_lab_v2_s2004_00001_.png"
+    ],
+    "api_workflow": "concept_lab_v2_s2004_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:19:35"
+  },
+  "concept_lab_v2_s2005_00001": {
+    "positive": "広い研究所の応接室兼オフィスの内観。灰色の事務机が左側に3台、右側に2台、島のように並び、それぞれに書類が散らばっている。奥の壁の中央に大きな掲示板があり、横一列に4枚の顔写真が貼られている。左から1枚目と3枚目は白衣の研究員の普通の証明写真だが、2枚目と4枚目は顔の部分だけが薬品で溶かされたように真っ黒に滲んで判別できない。天井の蛍光灯が均一に白く照らし、清潔だが冷たく無機質。誰もいないのに今まで人がいたような気配。壁は白、床は暗い木の板張り、右手に閉じた扉。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 2005,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "df8dabfa-cc0f-4b7b-ba5c-4b9287943779",
+    "images": [
+      "concept_lab_v2_s2005_00001_.png"
+    ],
+    "api_workflow": "concept_lab_v2_s2005_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:21:50"
+  },
+  "concept_train_v2_s3103_00001": {
+    "positive": "昭和末期から平成初期の日本の通勤電車の車内、深夜、無人。幅の狭い車両の奥まで続く一点透視の構図。壁と天井はクリーム色がかった白の化粧板、両側に深紅（えんじ色）の布張りロングシートが並び、銀色の握り棒と、天井のパイプから白い輪の吊革がずらりと下がっている。窓は大きく、外は完全な闇。床は灰色のリノリウム。天井の蛍光灯は薄暗く不規則に明滅している。車内中央の天井から一枚の中吊り広告が吊るされ、紺色の背景に青く光る脳のイラストが描かれている。奥の車端には窓付きの赤い両開き扉が閉まっている。停止したまま動かない電車。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 3103,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "2253cc9c-430b-4e57-864b-c700adcee7e6",
+    "images": [
+      "concept_train_v2_s3103_00001_.png"
+    ],
+    "api_workflow": "concept_train_v2_s3103_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:31:28"
+  },
+  "concept_train_v2_s3104_00001": {
+    "positive": "昭和末期から平成初期の日本の通勤電車の車内、深夜、無人。幅の狭い車両の奥まで続く一点透視の構図。壁と天井はクリーム色がかった白の化粧板、両側に深紅（えんじ色）の布張りロングシートが並び、銀色の握り棒と、天井のパイプから白い輪の吊革がずらりと下がっている。窓は大きく、外は完全な闇。床は灰色のリノリウム。天井の蛍光灯は薄暗く不規則に明滅している。車内中央の天井から一枚の中吊り広告が吊るされ、紺色の背景に青く光る脳のイラストが描かれている。奥の車端には窓付きの赤い両開き扉が閉まっている。停止したまま動かない電車。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 3104,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "ab4227da-cce9-45e5-bc2f-add792ceb3d8",
+    "images": [
+      "concept_train_v2_s3104_00001_.png"
+    ],
+    "api_workflow": "concept_train_v2_s3104_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:32:56"
+  },
+  "concept_lab_v3_s4001_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィスの内観。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明が並ぶ。淡い木目の天板と紺色の金属フレームの長い共有デスクが2列並び、黒いメッシュのオフィスチェアが並ぶ。左手前には波打つ銀色の金属板で覆われたバーカウンターと黒い脚のハイスツール、その上に灰色の球体ペンダントランプが5つ吊り下がり暖色に光る。床は濃い茶灰色のカーペット。奥の壁は木目パネルで、上端の間接照明が暖かく照らし、そこに研究メンバーの顔写真4枚を貼った掲示板があり、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。右奥の角にはガラス張りの小さな会議室と観葉植物。壁は青灰色。誰もいないのに今まで人がいた気配。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 4001,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "2db6b3d3-abce-4ccb-8b24-4ced19b0a55c",
+    "images": [
+      "concept_lab_v3_s4001_00001_.png"
+    ],
+    "api_workflow": "concept_lab_v3_s4001_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:55:30"
+  },
+  "concept_lab_v3_s4002_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィスの内観。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明が並ぶ。淡い木目の天板と紺色の金属フレームの長い共有デスクが2列並び、黒いメッシュのオフィスチェアが並ぶ。左手前には波打つ銀色の金属板で覆われたバーカウンターと黒い脚のハイスツール、その上に灰色の球体ペンダントランプが5つ吊り下がり暖色に光る。床は濃い茶灰色のカーペット。奥の壁は木目パネルで、上端の間接照明が暖かく照らし、そこに研究メンバーの顔写真4枚を貼った掲示板があり、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。右奥の角にはガラス張りの小さな会議室と観葉植物。壁は青灰色。誰もいないのに今まで人がいた気配。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 4002,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "52c340a4-9b58-427d-b8b1-8a57e4a5506d",
+    "images": [
+      "concept_lab_v3_s4002_00001_.png"
+    ],
+    "api_workflow": "concept_lab_v3_s4002_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T00:57:37"
+  },
+  "concept_lab_v3_s4003_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィスの内観。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明が並ぶ。淡い木目の天板と紺色の金属フレームの長い共有デスクが2列並び、黒いメッシュのオフィスチェアが並ぶ。左手前には波打つ銀色の金属板で覆われたバーカウンターと黒い脚のハイスツール、その上に灰色の球体ペンダントランプが5つ吊り下がり暖色に光る。床は濃い茶灰色のカーペット。奥の壁は木目パネルで、上端の間接照明が暖かく照らす。その木目壁に掲示板があり、証明写真がちょうど4枚だけ横一列に貼られている。左から1枚目と3枚目は白衣の研究員の普通の顔写真、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。右奥の角にはガラス張りの小さな会議室と観葉植物。壁は青灰色。誰もいないのに今まで人がいた気配。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 4003,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "abbfb950-4c87-42d2-ab45-ab8b8d11fd59",
+    "images": [
+      "concept_lab_v3_s4003_00001_.png"
+    ],
+    "api_workflow": "concept_lab_v3_s4003_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T01:00:25"
+  },
+  "impl_lab_01_overview_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィス。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット、壁は青灰色。入口から見た全景。手前左に波打つ銀色の金属板で覆われたバーカウンターと黒い脚のハイスツール、その上に灰色の球体ペンダントランプが5つ並んで暖色に光る。右に共有デスクが2列奥まで続き、奥の壁は木目パネルで上端の間接照明が暖かく照らす。右奥にガラス張りの小会議室と観葉植物。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5001,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "bc8abb5f-9f20-4b8c-96a9-6a50ac848685",
+    "images": [
+      "impl_lab_01_overview_00001_.png"
+    ],
+    "api_workflow": "impl_lab_01_overview_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T01:45:19"
+  },
+  "impl_lab_02_bar_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィス。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット、壁は青灰色。バーカウンターのクローズアップ。波打つ銀色の金属板（コルゲート）で覆われた側面、淡い木目の天板、黒い細い脚と木の座面のハイスツールが4脚、頭上に灰色の球体ペンダントランプが等間隔に吊られ暖色に光る。背景に共有デスクとライン照明がぼんやり見える。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5002,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "df443fcf-4cdc-4e7c-b3dc-a84fa2d80751",
+    "images": [
+      "impl_lab_02_bar_00001_.png"
+    ],
+    "api_workflow": "impl_lab_02_bar_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T01:48:06"
+  },
+  "impl_lab_03_desks_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィス。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット、壁は青灰色。共有デスクのクローズアップ。長い淡い木目の天板を紺色の角パイプのフレームが支え、両側に黒いメッシュのオフィスチェアが並ぶ。天板の上に散らばった書類と、席ごとの小さな名札。頭上に細長い白いライン型ペンダント照明が平行に走る。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5003,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "cc32b58c-c99a-45d3-b01f-8f1e14fe4cad",
+    "images": [
+      "impl_lab_03_desks_00001_.png"
+    ],
+    "api_workflow": "impl_lab_03_desks_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T01:50:23"
+  },
+  "impl_lab_04_backwall_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィス。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット、壁は青灰色。奥の壁を正面から。木目パネルの壁の上端に間接照明の光の帯、壁の前に灰色のローキャビネットが並ぶ。壁の中央に掲示板があり、証明写真がちょうど4枚だけ横一列に貼られている。左から1枚目と3枚目は白衣の研究員の普通の顔写真、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。掲示板の横に閉じた扉。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5004,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "23bf644a-1b6d-4593-89f0-6d0e170414c4",
+    "images": [
+      "impl_lab_04_backwall_00001_.png"
+    ],
+    "api_workflow": "impl_lab_04_backwall_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T01:58:46"
+  },
+  "impl_lab_05_glassroom_00001": {
+    "positive": "深夜、無人のモダンなオープンオフィス。白い格子状のシステム天井に埋め込みパネル照明と、細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット、壁は青灰色。部屋の角にあるガラス張りの小さな会議室。黒い細いフレームの透明ガラス、中に小さな木目のテーブルと黒い椅子2脚、隅に観葉植物。会議室の中だけ暖色のペンダントが灯り、ガラスにオフィスの照明が映り込む。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5005,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "c9f887e3-7018-4347-8cbd-44ca723f0382",
+    "images": [
+      "impl_lab_05_glassroom_00001_.png"
+    ],
+    "api_workflow": "impl_lab_05_glassroom_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T02:06:51"
+  },
+  "impl_train_01_overview_00001": {
+    "positive": "昭和末期から平成初期の日本の通勤電車の車内、深夜、無人、停車中。壁と天井はクリーム色がかった白の化粧板、深紅（えんじ色）の布張りロングシート、銀色の握り棒、天井のパイプから白い輪の吊革、大きな窓の外は完全な闇、床は灰色のリノリウム、蛍光灯は薄暗く不規則に明滅している。幅の狭い車両の奥まで続く一点透視の構図。両側に深紅のロングシート、天井の中央に一枚の中吊り広告が吊るされ、紺色の背景に青く光る脳のイラストが描かれている。奥の車端に窓付きの赤い両開き扉が閉まっている。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5101,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "365a8bce-11db-48bf-9f3d-ec87bf7a3590",
+    "images": [
+      "impl_train_01_overview_00001_.png"
+    ],
+    "api_workflow": "impl_train_01_overview_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T02:13:18"
+  },
+  "impl_train_02_seats_00001": {
+    "positive": "昭和末期から平成初期の日本の通勤電車の車内、深夜、無人、停車中。壁と天井はクリーム色がかった白の化粧板、深紅（えんじ色）の布張りロングシート、銀色の握り棒、天井のパイプから白い輪の吊革、大きな窓の外は完全な闇、床は灰色のリノリウム、蛍光灯は薄暗く不規則に明滅している。深紅のロングシートのクローズアップ。座面と背もたれは色褪せた深紅の布張り、シートの端に銀色の握り棒と仕切り板、上に網棚と窓、窓の外は闇。吊革の白い輪が手前に揺れて写る。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5102,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "75cfa0e7-82b7-4b39-b120-6ba97b3a4ff5",
+    "images": [
+      "impl_train_02_seats_00001_.png"
+    ],
+    "api_workflow": "impl_train_02_seats_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T02:19:29"
+  },
+  "impl_train_03_door_00001": {
+    "positive": "昭和末期から平成初期の日本の通勤電車の車内、深夜、無人、停車中。壁と天井はクリーム色がかった白の化粧板、深紅（えんじ色）の布張りロングシート、銀色の握り棒、天井のパイプから白い輪の吊革、大きな窓の外は完全な闇、床は灰色のリノリウム、蛍光灯は薄暗く不規則に明滅している。車端の赤い両開き扉を正面から。扉には縦長の窓が2枚、扉の脇に銀色の握り棒と、左右にクリーム色の袖仕切り、上部に小さな路線図と広告枠。扉の窓の向こうは真っ暗な連結部。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 5103,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "0dc644b3-07a5-4d16-a93e-a06987f78351",
+    "images": [
+      "impl_train_03_door_00001_.png"
+    ],
+    "api_workflow": "impl_train_03_door_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-17T02:27:36"
+  },
+  "lab4_test_a_00001": {
+    "positive": "深夜の無人の脳神経科学研究所のオフィス。白い格子天井、淡い木目と紺フレームの共有デスク、黒いメッシュチェア、机上のモニターに脳波の波形、壁のガラスボードに脳の断面図、青灰色の壁、濃い色のカーペット。清潔で無機質、不穏ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6101,
+    "steps": 8,
+    "cfg": 1.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "8e2a2a84-e4c6-4b01-88c4-bbb0359aa802",
+    "images": [
+      "lab4_test_a_00001_.png"
+    ],
+    "api_workflow": "lab4_test_a_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:32:41"
+  },
+  "lab4_test_b_00001": {
+    "positive": "深夜の無人の脳神経科学研究所のオフィス。白い格子天井、淡い木目と紺フレームの共有デスク、黒いメッシュチェア、机上のモニターに脳波の波形、壁のガラスボードに脳の断面図、青灰色の壁、濃い色のカーペット。清潔で無機質、不穏ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6101,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "8807df96-7e14-4b07-a5ca-30ef6b091d79",
+    "images": [
+      "lab4_test_b_00001_.png"
+    ],
+    "api_workflow": "lab4_test_b_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:36:23"
+  },
+  "lab4_01_overview_00001": {
+    "positive": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。入口から見た全景。手前左に波打つ銀色の金属板のバーカウンターとハイスツール、その上に灰色の球体ペンダント。右に共有デスクが2列奥まで続き、机上のモニターが脳波の波形を映す。奥の壁は木目パネルと間接照明、その横にガラスホワイトボードの脳の図。右奥にガラス張りの観察室と観葉植物。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6001,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "a68194a1-36ed-4e2e-b47c-506b8c8bb5a0",
+    "images": [
+      "lab4_01_overview_00001_.png"
+    ],
+    "api_workflow": "lab4_01_overview_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:43:31"
+  },
+  "lab4_02_desks_00001": {
+    "positive": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。共有デスクの寄り。淡い木目の天板の上にモニターが並び、脳波（EEG）の波形と脳の3Dモデルが表示されている。散らばった書類には脳のスケッチ、席ごとに小さな名札、電極付きのヘッドギアが1つ机に置かれている。頭上に細長い白いライン型ペンダント照明。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6002,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "46bbc74c-95ed-4115-8052-c41f28a894af",
+    "images": [
+      "lab4_02_desks_00001_.png"
+    ],
+    "api_workflow": "lab4_02_desks_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:48:55"
+  },
+  "lab4_03_whiteboard_00001": {
+    "positive": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。壁一面のガラスホワイトボードを正面から。脳の断面図、神経回路の配線図、記憶領域を示す矢印と数式が黒と赤のマーカーでびっしり書かれている。その横の木目壁に、研究メンバーの証明写真がちょうど4枚だけ横一列に貼られた掲示板。左から1枚目と3枚目は白衣の研究員の顔写真、2枚目と4枚目は顔が薬品で溶けたように真っ黒に滲んでいる。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6003,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "d8dda37d-bcab-4bba-b230-e407ddaab8ce",
+    "images": [
+      "lab4_03_whiteboard_00001_.png"
+    ],
+    "api_workflow": "lab4_03_whiteboard_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:53:04"
+  },
+  "lab4_04_observation_00001": {
+    "positive": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。部屋の角にあるガラス張りの観察室。黒い細フレームの透明ガラス、中に医療用のリクライニングチェアと電極付きのヘッドギア、脇のスタンドにモニターと計測機器、天井から暖色のペンダント。ガラスの外側に『関係者以外立入禁止』のような赤いラベル。ガラスにオフィスの照明が映り込む。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6004,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "fc37a80c-b8fe-455d-ba44-2e81f77d54e6",
+    "images": [
+      "lab4_04_observation_00001_.png"
+    ],
+    "api_workflow": "lab4_04_observation_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T10:57:12"
+  },
+  "lab4_05_lightbox_00001": {
+    "positive": "深夜、無人の脳神経科学研究所のオフィス兼実験室。モダンで清潔、白基調に青灰色の壁と淡い木目。白い格子状のシステム天井に埋め込みパネル照明と細長い白いライン型ペンダント照明。淡い木目の天板と紺色の金属フレームの長い共有デスク、黒いメッシュのオフィスチェア。床は濃い茶灰色のカーペット。研究所らしい要素：デスクの上に複数のモニターがあり脳波の波形と脳のMRI画像が表示されている、壁一面のガラスホワイトボードに脳の断面図と神経回路の手描き図と数式がびっしり、壁のライトボックスに脳のMRIフィルムが並んで青白く光る、計測機器を載せたワゴンとサーバーラック、椅子の背に白衣、黄色い三角の注意ラベル。誰もいないのに今まで人がいた気配、静かで不穏。壁のライトボックス（シャウカステン）の寄り。脳のMRIフィルムが横一列に並び青白く光る。下に計測機器を載せた銀色のワゴンとサーバーラック、緑と赤のLEDが点滅。手前に波打つ銀色の金属板のバーカウンターの端が見える。ホラーゲームのコンセプトアート、映画的な構図、写実的で緻密な描き込み、重厚な陰影、静かで不穏な空気、人物なし、文字なし。",
+    "negative": "",
+    "seed": 6005,
+    "steps": 24,
+    "cfg": 4.0,
+    "denoise": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": null,
+    "width": 1152,
+    "height": 768,
+    "prompt_id": "77351c8e-b34a-4126-a59e-241922c275c7",
+    "images": [
+      "lab4_05_lightbox_00001_.png"
+    ],
+    "api_workflow": "lab4_05_lightbox_00001.api.json",
+    "ui_workflow": null,
+    "generated_at": "2026-08-18T11:01:22"
+  }
+}

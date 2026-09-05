@@ -1,4 +1,5 @@
 using System.Collections;
+using StarterAssets;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,15 +31,34 @@ namespace EscapeProto
         private void OnDisable() => GameEvents.OnWhiteout -= HandleWhiteout;
         private void OnDestroy() { if (Instance == this) Instance = null; }
 
-        /// <summary>死亡（ホワイトアウト）時：リスポーン先は回廊なので空間状態を回廊に戻す</summary>
+        /// <summary>
+        /// 死亡（ホワイトアウト）時：最初の部屋（薄暗い部屋＝人形の部屋）で目を覚ます。
+        /// GameManagerのリスポーン地点も最初の部屋内を指している。
+        /// </summary>
         private void HandleWhiteout(float _)
         {
             StopAllCoroutines();
             _busy = false;
             if (_fade != null) { _fade.alpha = 0f; _fade.blocksRaycasts = false; }
-            foreach (var r in LoopRooms.All) r.gameObject.SetActive(false);
-            if (CorridorRoot != null) CorridorRoot.SetActive(true);
-            LoopRooms.CurrentRoomId = null;
+            var home = LoopRooms.Get(LoopProgress.StartRoomId);
+            foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == home);
+            if (CorridorRoot != null) CorridorRoot.SetActive(home == null);
+            LoopRooms.CurrentRoomId = home != null ? home.Id : null;
+        }
+
+        private void Update()
+        {
+            // 開始部屋（薄暗い部屋）の初回タイトル。起床カットシーンが終わってから出す
+            if (GameManager.Instance == null || GameManager.Instance.State != GameState.Playing) return;
+            string cur = LoopRooms.CurrentRoomId;
+            if (string.IsNullOrEmpty(cur) || StoryProgress.HasVisited(cur)) return;
+            if (!StoryProgress.IntroPlayed) return;
+            if (CutsceneDirector.Instance != null && CutsceneDirector.Instance.IsPlaying) return;
+            if (StoryProgress.MarkVisited(cur))
+            {
+                var room = LoopRooms.Get(cur);
+                RoomTitleUI.Instance?.Show(room != null ? room.DisplayName : cur, StoryScript.ChapterLabel(cur));
+            }
         }
 
         private void Start()
@@ -70,8 +90,14 @@ namespace EscapeProto
                 if (CorridorRoot != null) CorridorRoot.SetActive(false);
                 foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == room);
                 LoopRooms.CurrentRoomId = roomId;
+                AttackDebugLog.Log("move", $"部屋へ入室: {roomId}");
+                // スポーン地点の向き＝部屋の奥を向く（電車なら車両の奥へ視線が通る）
                 var spawn = exitSide ? room.ExitSpawn : room.EntrySpawn;
-                TeleportPlayer(spawn != null ? spawn.position : room.transform.position);
+                TeleportPlayer(spawn != null ? spawn.position : room.transform.position,
+                               spawn != null ? spawn.eulerAngles.y : (float?)null);
+                // 初入室：部屋名タイトル（ダークソウル風）＋章節ラベル
+                if (StoryProgress.MarkVisited(roomId))
+                    RoomTitleUI.Instance?.Show(room.DisplayName, StoryScript.ChapterLabel(roomId));
             }));
         }
 
@@ -87,9 +113,15 @@ namespace EscapeProto
                 foreach (var r in LoopRooms.All) r.gameObject.SetActive(false);
                 if (CorridorRoot != null) CorridorRoot.SetActive(true);
                 LoopRooms.CurrentRoomId = null;
-                // 最初の部屋は一度出ると再入場不可（進行度はアイテム発見で進む）
+                AttackDebugLog.Log("move", $"回廊へ退出（{roomId}から）");
                 if (roomId == LoopProgress.StartRoomId) LoopRooms.TutorialExited = true;
-                TeleportPlayer(pos);
+                // 廊下へ出たら廊下沿いを向く。
+                //（扉に背を向けると幅3mの廊下では外周壁が目の前に来てしまうため、
+                //   扉の正面方向から90度回して通路の伸びる方向へ視線を通す）
+                TeleportPlayer(pos, LoopCorridorLayout.DoorYaw(side) + 90f);
+                // 初めて回廊に出た時もタイトルを出す
+                if (StoryProgress.MarkVisited("corridor"))
+                    RoomTitleUI.Instance?.Show("回廊", null);
             }));
         }
 
@@ -117,13 +149,23 @@ namespace EscapeProto
             _fade.blocksRaycasts = target > 0.01f;
         }
 
-        private static void TeleportPlayer(Vector3 pos)
+        /// <summary>
+        /// プレイヤーを移動させる。yawを渡すと視点の向きもそこへ揃える
+        /// （部屋に入ったら奥を向く／廊下に出たら扉に背を向ける）。
+        /// </summary>
+        private static void TeleportPlayer(Vector3 pos, float? yaw = null)
         {
             var player = GameObject.FindGameObjectWithTag("Player");
             if (player == null) return;
             var cc = player.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
             player.transform.position = pos;
+            if (yaw.HasValue)
+            {
+                var fpc = player.GetComponent<FirstPersonController>();
+                if (fpc != null) fpc.SetLook(yaw.Value);           // 上下も水平に戻す
+                else player.transform.rotation = Quaternion.Euler(0f, yaw.Value, 0f);
+            }
             if (cc != null) cc.enabled = true;
         }
 

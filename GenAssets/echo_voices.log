@@ -1,0 +1,131 @@
+[codec] dacvae: hf://Aratako/Semantic-DACVAE-Japanese-32dim -> C:\Users\sdaha\.cache\huggingface\hub\models--Aratako--Semantic-DACVAE-Japanese-32dim\snapshots\47376ee24834d7a05a48ebabfe3cde29b3c5e214\weights.pth
+ckpt path or config path does not exist! Downloading the model from the Hugging Face Hub...
+[ref] saeki: 40代の男性。穏やかで理知的、少し疲れた声。落ち着いてはっきり話す。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\saeki.wav
+[ref] kuroda: 50代の男性。低く太い声で、厳格で威圧感がある。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\kuroda.wav
+[ref] mizuno: 20代後半の女性。やわらかく優しい声で、少し控えめに話す。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\mizuno.wav
+[ref] ninomiya: 40代の男性。疲れ切った低めの声で、感情を抑えて話す。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\ninomiya.wav
+[ref] wife: 40代の女性。落ち着いた家庭的な声。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\wife.wav
+[ref] girl: 小学生の女の子。元気で幼い声。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\girl.wav
+[ref] boy: 小学生の男の子。幼くて無邪気な声。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\boy.wav
+[ref] mother: 40代の女性。明るく優しい声。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\mother.wav
+[ref] girl2: 小学校低学年の女の子。少し甘えた幼い声。
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\GenAssets\echo_voice_refs\girl2.wav
+[argue_saeki 1] kuroda: 佐伯くん。システムは止めるべきだ。もう、治療とは呼べない。  <落ち着いた低い声で、静かに諭すように話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_saeki_01.wav
+[argue_saeki 2] saeki: 分かっています。ですが、今止めれば……あの人は。  <穏やかに、言葉を選びながら丁寧に話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_saeki_02.wav
+[argue_saeki 3] kuroda: あの人？　誰の話をしている。  <静かに、探るように問いかける。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_saeki_03.wav
+[argue_saeki 4] saeki: いえ。もう少しだけ、時間をください。  <落ち着いて、誠実に頼み込む。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_saeki_04.wav
+[argue_kuroda 1] kuroda: 佐伯くん。システムは止めるべきだ。もう、治療とは呼べない。  <弱々しく、遠慮がちに小さな声で話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_kuroda_01.wav
+[argue_kuroda 2] saeki: 分かっています。ですが、今止めれば……あの人は。  <激しく怒鳴りつけるように、荒々しく叫ぶ。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_kuroda_02.wav
+[argue_kuroda 3] kuroda: あの人？　誰の話をしている。  <怯えて声が震え、おどおどと尋ねる。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_kuroda_03.wav
+[argue_kuroda 4] saeki: いえ。もう少しだけ、時間をください。  <苛立ちを爆発させ、威圧的に怒鳴る。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\argue_kuroda_04.wav
+[talk_me 1] ninomiya: 水野さん。提供体は……どこから来るんですか。  <穏やかに、静かに尋ねる。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_me_01.wav
+[talk_me 2] mizuno: それは……私たちが決めることでは、ないと思います。  <優しく、少し困ったように答える。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_me_02.wav
+[talk_me 3] ninomiya: 娘を、助けたいんです。  <切実に、しかし穏やかに訴える。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_me_03.wav
+[talk_me 4] mizuno: ……はい。分かっています。  <温かく、微笑むように答える。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_me_04.wav
+[talk_mizuno 1] ninomiya: 水野さん。提供体は……どこから来るんですか。  <低く平坦な声で、感情なく詰め寄るように話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_mizuno_01.wav
+[talk_mizuno 2] mizuno: それは……私たちが決めることでは、ないと思います。  <怯えて声が震え、言葉に詰まりながら話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_mizuno_02.wav
+[talk_mizuno 3] ninomiya: 娘を、助けたいんです。  <低く、抑揚のない不気味な声で話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_mizuno_03.wav
+[talk_mizuno 4] mizuno: ……はい。分かっています。  <泣きそうな声で、小さく答える。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\talk_mizuno_04.wav
+[saeki_wife 1] wife: 恒一さん、コーヒー入ったよ。  <家庭的に、優しく呼びかける。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\saeki_wife_01.wav
+[saeki_wife 2] wife: ……今日は、早く帰ってきてね。  <少し寂しそうに、小さな声でつぶやく。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\saeki_wife_02.wav
+[mizuno_uncle 1] girl: おじさん、今日ね、学校で発表したんだよ。  <元気に、嬉しそうに話しかける。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\mizuno_uncle_01.wav
+[mizuno_uncle 2] girl: ……また明日も来るからね。おやすみ。  <静かに、少し寂しそうに話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\mizuno_uncle_02.wav
+[kuroda_family 1] boy: おとうさん、まだ帰ってこないの？  <無邪気に、不思議そうに尋ねる。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\kuroda_family_01.wav
+[kuroda_family 2] mother: もうすぐ帰るって。先に食べちゃおうか。  <明るく、優しく話す。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\kuroda_family_02.wav
+[kuroda_family 3] girl2: やだ、まってる！  <元気に、少し拗ねて言う。>
+Using the default SDR of 47 dB
+WARNING! Reducing the sampling rate of the original audio from 48000 -> 44100. High frequency components may be lost!
+  -> D:\Source\chocola\project\Assets\Audio\Echo\kuroda_family_03.wav
+done

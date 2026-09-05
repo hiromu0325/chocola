@@ -34,8 +34,10 @@ namespace EscapeProto
         public string GetPrompt()
         {
             if (string.IsNullOrEmpty(RoomId)) return "開かない";
-            // 最初の部屋は一度出ると開かなくなる（ダミー扉と同じ見せ方）
-            if (RoomId == LoopProgress.StartRoomId && LoopRooms.TutorialExited) return "開かない";
+            // 襲撃中は警報の部屋以外どこにも入れない
+            var bs = BreakerSystem.Instance;
+            if (bs != null && bs.DownRoomId != null && RoomId != bs.DownRoomId)
+                return "開かない…（警報が鳴っている）";
             var room = LoopRooms.Get(RoomId);
             if (!LoopRooms.IsUnlocked(RoomId)) return "施錠されている";
             string name = room != null ? room.DisplayName : RoomId;
