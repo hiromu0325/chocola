@@ -1114,8 +1114,8 @@ namespace EscapeProto
             for (int i = 0; i < 3; i++)
                 Box(t, "Cabinet", new Vector3(-hw + 0.35f, 1.0f, -2.0f + i * 1.4f), new Vector3(0.5f, 2.0f, 1.2f), dark);
 
-            // 職員証（キャビネットの上＝佐伯のIDがなぜかここに残されている）
-            Findable(t, "idcard", "職員証", new Vector3(-hw + 0.35f, 2.03f, -0.6f), cardMat,
+            // 職員証（作業台の上＝佐伯のIDがなぜかここに残されている）
+            Findable(table.transform, "idcard", "職員証", new Vector3(-0.05f, 0.9f, 0.35f), cardMat,
                 new Vector3(0.13f, 0.01f, 0.09f),
                 "職員証（佐伯恒一）",
                 "《職員証》　小川脳神経総合研究所\n\n" +
@@ -1477,7 +1477,7 @@ namespace EscapeProto
             }
 
             // 資料（v2: 手順書・一覧・発見メモ・未送信メッセージ）
-            Findable(t, "manual", "運用手順書", new Vector3(-hw + 1.2f, 0.76f, -2.3f), paper,
+            Findable(t, "manual", "運用手順書", new Vector3(-hw + 0.75f, 0.76f, -2.2f), paper,
                 new Vector3(0.34f, 0.02f, 0.26f),
                 "リナシータ運用手順書",
                 "《運用手順書 抜粋》\n\n" +
@@ -1523,7 +1523,7 @@ namespace EscapeProto
                 "登録者の欄は、削除されている。\n" +
                 "3件。──なぜだろう。\n" +
                 "この数字に、指先が冷たくなる。");
-            Findable(t, "wmemo", "発見メモ", new Vector3(-hw + 1.2f, 0.76f, 1.5f), paper,
+            Findable(t, "wmemo", "発見メモ", new Vector3(-hw + 0.75f, 0.76f, 1.6f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "水野の発見メモ",
                 "《メモ》　筆跡: 水野\n\n" +
@@ -1760,7 +1760,7 @@ namespace EscapeProto
             Prop(t, "OfficeChair", new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
             Box(admin.transform, "CrtBody", new Vector3(0f, 0.95f, 0.18f), new Vector3(0.45f, 0.4f, 0.4f), rack);
             Deco(admin.transform, "CrtScreen", new Vector3(0f, 0.95f, -0.04f), new Vector3(0.36f, 0.3f, 0.02f), crt);
-            Deco(admin.transform, "Glasses", new Vector3(-0.45f, 0.765f, -0.1f), new Vector3(0.14f, 0.02f, 0.05f), cab);
+            Deco(admin.transform, "Glasses", new Vector3(-0.15f, 0.765f, -0.22f), new Vector3(0.14f, 0.02f, 0.05f), cab);
 
             Findable(admin.transform, "minutes", "議事録", new Vector3(0.45f, 0.76f, -0.05f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
@@ -1793,7 +1793,7 @@ namespace EscapeProto
                 "CRTが一行だけ吐き出した。\n" +
                 "「……主任じゃない。」\n\n" +
                 "なら、誰が主任のIDを使った。";
-            Findable(admin.transform, "kmemo", "黒田のメモ", new Vector3(-0.1f, 0.76f, 0.1f), paper,
+            Findable(admin.transform, "kmemo", "黒田のメモ", new Vector3(-0.5f, 0.76f, 0.12f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "黒田のメモ（一部欠損）",
                 "《個人メモ》　筆跡: 黒田\n\n" +
@@ -2792,27 +2792,18 @@ namespace EscapeProto
                 }
                 r.sharedMaterials = mats;
             }
-            if (collider && rs.Length > 0)
+            if (collider)
             {
-                bool first = true;
-                var local = new Bounds();
-                foreach (var r in rs)
+                // 境界ボックスだと天板やベッドの上に置いた資料まで箱の中に入ってしまい、
+                // 視線のレイが資料に届かなくなる。形状どおりのメッシュコライダーにする
+                //（静的な什器なので非convexでよい。歩行の衝突も形状どおりになる）
+                foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
                 {
-                    var wb = r.bounds;
-                    for (int c = 0; c < 8; c++)
-                    {
-                        var corner = new Vector3(
-                            (c & 1) == 0 ? wb.min.x : wb.max.x,
-                            (c & 2) == 0 ? wb.min.y : wb.max.y,
-                            (c & 4) == 0 ? wb.min.z : wb.max.z);
-                        var lp = go.transform.InverseTransformPoint(corner);
-                        if (first) { local = new Bounds(lp, Vector3.zero); first = false; }
-                        else local.Encapsulate(lp);
-                    }
+                    if (mf.sharedMesh == null) continue;
+                    var mc = mf.gameObject.AddComponent<MeshCollider>();
+                    mc.sharedMesh = mf.sharedMesh;
+                    mc.convex = false;
                 }
-                var bc = go.AddComponent<BoxCollider>();
-                bc.center = local.center;
-                bc.size = local.size;
             }
             return go;
         }
