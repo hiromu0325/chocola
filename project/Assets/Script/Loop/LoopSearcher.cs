@@ -76,6 +76,8 @@ namespace EscapeProto
 
         /// <summary>退場（消滅歩行）中か（ウォッチドッグはこれを残骸と数えない）</summary>
         public bool IsRetreating => _state == State.Retreat;
+        /// <summary>回廊に居るか（部屋の中に入っていない）</summary>
+        public bool InCorridor => _space == null;
 
         /// <summary>調査ログ用の1行要約</summary>
         public string DebugBrief() =>

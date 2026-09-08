@@ -57,6 +57,9 @@ namespace EscapeProto
         private float _nextLineAt;
         private bool HasLines => Lines != null && Lines.Length > 0;
 
+        /// <summary>「はじめから」用：手帳への記録フラグを戻す（LoopProgress.ResetForNewGame から）</summary>
+        public void ResetForNewGame() { _noted = false; }
+
         private Transform _player;
         private AudioSource _voice;
         private Renderer[] _renderers;
@@ -114,6 +117,19 @@ namespace EscapeProto
                 var go = GameObject.FindGameObjectWithTag("Player");
                 if (go == null) return;
                 _player = go.transform;
+            }
+
+            // 襲撃中（ブレイカー降下中）は残響が消える。復旧すると戻ってくる
+            bool attack = BreakerSystem.Instance != null && BreakerSystem.Instance.DownRoomId != null;
+            if (attack)
+            {
+                _fade = Mathf.MoveTowards(_fade, 0f, Time.deltaTime * 2.5f);
+                ApplyFade();
+                if (_voice.isPlaying) _voice.Stop();
+                _active = false;
+                _lineIdx = 0;
+                _reappearAt = -1f;
+                return;
             }
 
             // 霧散中→再出現待ち

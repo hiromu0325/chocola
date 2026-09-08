@@ -372,6 +372,9 @@ namespace EscapeProto
                 default: required = new string[0]; break;
             }
 
+            // 終章の断片（娘のおもちゃ）。息子の部屋以外の全室に1つ。終章開始まで非表示
+            if (def.id != "son_room") BuildMemoryToy(t, def.id);
+
             BuildRoomLights(t, def);
 
             // ルート登録
@@ -1620,9 +1623,12 @@ namespace EscapeProto
                 Deco(t, "Pin", new Vector3(-hw + 0.11f, 1.6f + dz * 0.5f, -2.0f + dz), new Vector3(0.01f, 0.16f, 0.12f), paper);
 
             // ローテーブルと日記
+            // ローテーブル：入口から襖への動線（部屋の中央）から外し、脚まで当たり判定を付ける
+            //（天板だけの薄い板だと、高さ0.37がキャラクターの段差乗り越え(0.35)と同じで「段差」になって引っかかる）
             var lowT = new GameObject("LowTable"); lowT.transform.SetParent(t, false);
-            lowT.transform.localPosition = new Vector3(0.4f, 0f, -1.6f);
+            lowT.transform.localPosition = new Vector3(1.3f, 0f, -1.6f);
             Box(lowT.transform, "Top", new Vector3(0f, 0.34f, 0f), new Vector3(0.9f, 0.05f, 0.6f), wood);
+            Box(lowT.transform, "Legs", new Vector3(0f, 0.17f, 0f), new Vector3(0.8f, 0.34f, 0.5f), wood);
             Findable(lowT.transform, "diary", "日記帳", new Vector3(-0.15f, 0.38f, 0f), paper,
                 new Vector3(0.24f, 0.02f, 0.18f),
                 "水野の日記",
@@ -2473,6 +2479,64 @@ namespace EscapeProto
             return go;
         }
 
+        // ============================== 終章：娘の記憶の断片（思い出のおもちゃ） ==============================
+
+        private struct Toy
+        {
+            public string name; public Vector3 pos; public string memory;
+            public Toy(string n, Vector3 p, string m) { name = n; pos = p; memory = m; }
+        }
+
+        /// <summary>部屋Id → おもちゃ（娘の視点で書かれた思い出。終章の真贋判定の"真"の断片の素材）</summary>
+        private static readonly Dictionary<string, Toy> Toys = new Dictionary<string, Toy>
+        {
+            { "dim", new Toy("木のガラガラ", new Vector3(-1.2f, 0.08f, 0.6f),
+                "振ると、からから鳴る。\n大きな手が、それを私の手に握らせてくれた。\n──いちばん古い、音の記憶。") },
+            { "train", new Toy("うさぎのぬいぐるみ", new Vector3(0f, 0.08f, 3.0f),
+                "電車の窓に、夕日。\n眠くなって、うさぎを抱いたまま\nお父さんの膝に、頭を乗せた。") },
+            { "lab", new Toy("折り紙の鶴", new Vector3(2.0f, 0.08f, -3.4f),
+                "白衣の人たちが、順番に折ってくれた。\n病室のカーテンレールに、ずらりと並んだ鶴。\n見上げると、ゆらゆら揺れていた。") },
+            { "study", new Toy("絵本『おやすみ』", new Vector3(1.4f, 0.08f, 0.2f),
+                "毎晩、同じ絵本。\n最後のページで、いつも声が小さくなる。\n「おやすみ」──寝たふりをして、聞いていた。") },
+            { "analysis", new Toy("おもちゃの聴診器", new Vector3(-1.6f, 0.08f, -2.0f),
+                "お医者さんごっこ。\n「お父さんの心臓、元気？」\n「元気だよ」と言った顔が、少しだけ困っていた。") },
+            { "saeki_home", new Toy("ままごとのカップ", new Vector3(1.8f, 0.08f, 1.5f),
+                "空のカップで、お茶会。\n大きな手が小さなカップをつまんで、\n「おいしい」と言ってくれた。") },
+            { "ward", new Toy("紙の王冠", new Vector3(0f, 0.08f, 0f),
+                "誕生日。折り紙の王冠を、頭に乗せてもらった。\nベッドの上でも、王女さまになれた。\n見上げた顔が、逆光で暗かった。") },
+            { "core_ante", new Toy("ビー玉", new Vector3(1.5f, 0.08f, 0.5f),
+                "青いビー玉を、光にかざす。\n中に、小さな世界がある。\n「これ、お父さんにあげる」──ポケットに入れてくれた。") },
+            { "mizuno_apart", new Toy("髪のリボン", new Vector3(-1.2f, 0.08f, -0.6f),
+                "お母さんがいなくなってから、\nお父さんが結んでくれた、不器用なリボン。\n曲がっていたけど、直さなかった。") },
+            { "data_room", new Toy("積み木の家", new Vector3(0f, 0.08f, -1.0f),
+                "積み木で、家を作った。\n「ここがお父さんの部屋、ここが私の部屋」\n崩れるたびに、二人で笑った。") },
+            { "system_room", new Toy("おもちゃのカメラ", new Vector3(-2.0f, 0.08f, 1.5f),
+                "カシャ、と音だけ鳴るカメラ。\nお父さんを、何度も撮った。\n写真は、一枚も残らない。ぜんぶ、私の中にある。") },
+            { "kuroda_home", new Toy("折れた赤いクレヨン", new Vector3(-1.5f, 0.08f, 0.8f),
+                "力を入れすぎて、折れた。\n泣きそうになったら、\n「二本になったね」と言われて、笑った。") },
+            { "core_main", new Toy("小さな靴（片方）", new Vector3(2.5f, 0.08f, -2.5f),
+                "はじめて自分で履けた靴。\n左右を間違えたまま、走った。\n後ろから、笑いながら追いかけてくる足音。") },
+        };
+
+        private static void BuildMemoryToy(Transform t, string roomId)
+        {
+            if (!Toys.TryGetValue(roomId, out var toy)) return;
+            var mat = EmissiveMat("LP_MemoryToy", new Color(1f, 0.75f, 0.85f), new Color(1f, 0.55f, 0.75f) * 0.9f);
+            var go = Findable(t, "toy", toy.name, toy.pos, mat, new Vector3(0.16f, 0.16f, 0.16f),
+                "思い出の断片：" + toy.name, toy.memory);
+            go.name = "MemoryToy";
+            var f = go.GetComponent<LoopFindable>();
+            f.DisappearOnPickup = true;
+            f.PickupHint = "娘の記憶";
+            var glowGo = new GameObject("Glow");
+            glowGo.transform.SetParent(go.transform, false);
+            glowGo.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+            var glow = glowGo.AddComponent<Light>();
+            glow.type = LightType.Point; glow.color = new Color(1f, 0.6f, 0.8f);
+            glow.intensity = 0.9f; glow.range = 2.0f;
+            go.SetActive(false);   // 終章開始（LoopFinale.Begin）で表示
+        }
+
         /// <summary>
         /// ギミック（LoopLockBase派生）付きの箱。調べられるようトリガーコライダーにし、
         /// 部屋Id・必須Id・表示名・根拠資料Idを流し込む。細かい設定は戻り値で行う
@@ -2655,6 +2719,9 @@ namespace EscapeProto
             New(root, "LoopPuzzleUI").AddComponent<LoopPuzzleUI>();
             New(root, "RoomTitle").AddComponent<RoomTitleUI>();
             New(root, "Toast").AddComponent<ToastUI>();
+            New(root, "LoopFinale").AddComponent<LoopFinale>();
+            New(root, "Minimap").AddComponent<LoopMinimap>();
+            New(root, "DoorFootsteps").AddComponent<DoorFootstepWarning>();
             var cd = New(root, "CutsceneDirector").AddComponent<CutsceneDirector>();
             cd.PlayOnStart = false;   // 起床カットシーンはLoopIntroが起動する
 

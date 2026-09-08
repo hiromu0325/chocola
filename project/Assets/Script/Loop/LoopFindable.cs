@@ -63,12 +63,21 @@ namespace EscapeProto
                 return;
             }
 
-            if (!Found) MarkFound(silent: false);
-
-            // 何度でも読み返せる（内容はPuzzleUIで表示）
+            // 先に資料を開いてから発見扱いにする。
+            // 逆順だと「発見→部屋完了→『扉が開いた』ダイアログ」が同じフレームで先に開き、
+            // 肝心の資料ウィンドウが表示されない（UiQueueは開いているUIが閉じるまで待つ）
             if (PuzzleUI.Instance != null && !string.IsNullOrEmpty(NoteBody) &&
                 !PuzzleUI.Instance.IsOpen && !PuzzleUI.Instance.BlockReopen)
                 PuzzleUI.Instance.ShowDocument(string.IsNullOrEmpty(NoteTitle) ? DisplayName : NoteTitle, NoteBody);
+
+            if (!Found) MarkFound(silent: false);
+        }
+
+        /// <summary>「はじめから」用：未発見に戻し、拾って消えたものを元の場所に戻す（終章の断片は隠したまま）</summary>
+        public void ResetForNewGame()
+        {
+            Found = false;
+            if (DisappearOnPickup) gameObject.SetActive(Id != "toy");
         }
 
         private void MarkFound(bool silent)
@@ -96,6 +105,8 @@ namespace EscapeProto
 
             // 道具は拾うと消える（発見状態はLoopProgress側に残るので復元しても消えたまま）
             if (DisappearOnPickup) gameObject.SetActive(false);
+            // 終章の断片（娘のおもちゃ）は集めた数を知らせる
+            if (Id == "toy" && !silent && LoopFinale.Instance != null) LoopFinale.Instance.NotifyToyCollected();
         }
 
         public string GetPrompt()

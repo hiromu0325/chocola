@@ -131,6 +131,26 @@ namespace EscapeProto
             return $"{room.DisplayName} complete → stage={LoopRooms.Stage}";
         }
 
+        /// <summary>
+        /// 「はじめから」用：回廊の進行に関わる静的状態を全部初期化する。
+        /// 静的フィールドはシーンの再読み込み（[R]リスタート／タイトルへ戻る）では消えないので、
+        /// 2周目が全解放状態で始まらないよう GameManager.NewGame から呼ぶ。
+        /// </summary>
+        public static void ResetForNewGame()
+        {
+            FoundKeys.Clear();
+            LoopRooms.Stage = 0;
+            LoopRooms.TutorialExited = false;
+            StoryProgress.IntroPlayed = false;
+            StoryProgress.PendingUnlockRoom = null;
+            StoryProgress.ImportVisited(null);
+            MemoBoard.ClearConnections();
+            foreach (var f in Object.FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                f.ResetForNewGame();
+            foreach (var e in Object.FindObjectsByType<EchoScene>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                e.ResetForNewGame();
+        }
+
         // ---- セーブ連携 ----
         public static List<string> ExportFound() => new List<string>(FoundKeys);
         public static void ImportFound(List<string> list)

@@ -45,7 +45,22 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM
 		private void Update()
 		{
+			DisableIme();
 			PollDevices();
+		}
+
+		// 日本語IMEが有効なままだと、スタンドアロン版では W/A/S/D の押下がIMEの変換入力に
+		// 吸われて Keyboard.current に届かない（Shiftを押すとIMEが一時的に直接入力になるため
+		// 「Shiftを押すと動ける」現象になる）。ゲーム中はIMEを切っておく。
+		private float _imeCheckTimer;
+		private void DisableIme()
+		{
+			_imeCheckTimer -= Time.unscaledDeltaTime;
+			if (_imeCheckTimer > 0f) return;
+			_imeCheckTimer = 2f;   // デバイスの差し替えや再フォーカスに備えて定期的に再適用
+			var kb = Keyboard.current;
+			if (kb != null) kb.SetIMEEnabled(false);
+			try { Input.imeCompositionMode = IMECompositionMode.Off; } catch (System.Exception) { /* 旧Input無効時 */ }
 		}
 
 		private void PollDevices()

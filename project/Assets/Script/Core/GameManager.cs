@@ -117,6 +117,7 @@ namespace EscapeProto
             _dolls = _defaultDolls;
             GameEvents.RaiseDollsChanged(_dolls);
             Notebook.Clear();
+            LoopProgress.ResetForNewGame();   // 回廊の進行（解放段階・発見・起床済み等）も初期化
             if (PuzzleState.Instance != null) PuzzleState.Instance.NewGame();
             BeginPlay();
         }
@@ -134,8 +135,10 @@ namespace EscapeProto
             if (PuzzleState.Instance != null) PuzzleState.Instance.LoadFrom(data);
             Notebook.LoadFrom(data.notes);
 
-            // ループ回廊（ストーリープロトタイプ）の進行を復元
-            LoopRooms.Stage = Mathf.Max(LoopRooms.Stage, data.loopStage);
+            // ループ回廊（ストーリープロトタイプ）の進行を復元。
+            // 静的状態は前の周回から残っていることがあるので、いったん初期化してからセーブの値を入れる
+            LoopProgress.ResetForNewGame();
+            LoopRooms.Stage = data.loopStage;
             LoopProgress.ImportFound(data.loopFound);
             StoryProgress.ImportVisited(data.loopVisited);
             StoryProgress.IntroPlayed = data.loopIntroPlayed || data.loopStage > 0;

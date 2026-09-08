@@ -53,6 +53,7 @@ namespace EscapeProto
             GameEvents.OnWhiteout += PlayWhiteout;
             GameEvents.OnGameOver += ShowGameOver;
             GameEvents.OnGameClear += ShowGameClear;
+            GameEvents.OnGameStarted += HideEndPanel;
             GameEvents.OnLaughterEventStart += OnEventStart;
             GameEvents.OnLaughterEventEnd += OnEventEnd;
         }
@@ -62,6 +63,7 @@ namespace EscapeProto
             GameEvents.OnWhiteout -= PlayWhiteout;
             GameEvents.OnGameOver -= ShowGameOver;
             GameEvents.OnGameClear -= ShowGameClear;
+            GameEvents.OnGameStarted -= HideEndPanel;
             GameEvents.OnLaughterEventStart -= OnEventStart;
             GameEvents.OnLaughterEventEnd -= OnEventEnd;
             if (Instance == this) Instance = null;
@@ -166,6 +168,8 @@ namespace EscapeProto
 
         private static string ObjectiveText()
         {
+            // ループ回廊：進行状況から「今やること」を細かく出す
+            if (LoopObjective.IsLoopScene) return LoopObjective.Text();
             var ps = PuzzleState.Instance;
             if (ps == null) return "";
             if (!ps.PcAccessed) return "<color=#FFD060>目標:社員情報を集めPCにログイン</color>";
@@ -302,11 +306,20 @@ namespace EscapeProto
             _endPanel.SetActive(true);
             _endText.text = "<color=#FF3020>そして誰もいなくなった</color>\n陶器の人形はすべて砕けた…\n\n[R] リスタート";
         }
+        /// <summary>クリア/ゲームオーバー後にタイトルから「はじめから」「つづきから」した時、終了パネルを消す</summary>
+        private void HideEndPanel()
+        {
+            _gameEnded = false;
+            if (_endPanel != null) _endPanel.SetActive(false);
+        }
+
         private void ShowGameClear()
         {
             _gameEnded = true;
             _endPanel.SetActive(true);
-            _endText.text = "<color=#60FF80>ESCAPED</color>\n地下室から脱出した\n\n[R] リスタート";
+            _endText.text = LoopObjective.IsLoopScene
+                ? "<color=#60FF80>アップロード完了</color>\n娘の記憶の断片は、すべてリナシータへ送られた。\n（終章の分岐 END A/B/C は未実装）\n\n[R] リスタート"
+                : "<color=#60FF80>ESCAPED</color>\n地下室から脱出した\n\n[R] リスタート";
         }
 
         // ============= UI構築 =============

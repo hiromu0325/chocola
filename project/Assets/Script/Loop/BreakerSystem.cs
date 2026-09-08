@@ -160,8 +160,9 @@ namespace EscapeProto
 
             if (_timeLeft < 0f) return;
 
-            // 部屋の中にいる間は襲撃が始まらない（探索中は安全。回廊に出ると再開）
-            if (!LoopRooms.InCorridor) return;
+            // 部屋の中にいる間は襲撃が始まらない（探索中は安全。回廊に出ると再開）。
+            // 包囲モード（終章のアップロード）だけは部屋の中に居ても降下する
+            if (!LoopRooms.InCorridor && !Siege) return;
 
             _timeLeft -= Time.deltaTime;
             if (_timeLeft <= 0f && DownRoomId == null) Drop();
@@ -282,6 +283,36 @@ namespace EscapeProto
                     if (d > bestD) { bestD = d; best = p; }
                 }
             return best;
+        }
+
+        // ============= 終章の包囲（アップロード中は絶えず襲撃が来る） =============
+
+        /// <summary>包囲モード中か（終章のアップロード）</summary>
+        public bool Siege { get; private set; }
+
+        /// <summary>
+        /// 包囲モードの切替。on: 脚本モードを外して短い周期で降下させ、部屋の中に居ても降下する
+        /// （最初の部屋は降下対象外なので、プレイヤーは回廊へ出て復旧しに行くことになる）
+        /// </summary>
+        public void SetSiege(bool on, float cycleSeconds = 25f)
+        {
+            Siege = on;
+            if (on)
+            {
+                StoryMode = false;
+                CycleSeconds = cycleSeconds;
+                _tutorialTimerStarted = true;
+                if (DownRoomId == null) _timeLeft = cycleSeconds * 0.4f;   // 最初の一撃は早めに
+                AttackDebugLog.Log("siege", $"包囲モード開始 cycle={cycleSeconds}s");
+            }
+            else
+            {
+                StoryMode = true;
+                _timeLeft = -1f;
+                if (DownRoomId != null) DebugRaise();
+                EndHunt();
+                AttackDebugLog.Log("siege", "包囲モード終了");
+            }
         }
 
         /// <summary>BreakerSwitchから：上げられた</summary>

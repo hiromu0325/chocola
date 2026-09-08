@@ -115,6 +115,9 @@ namespace EscapeProto
         private static string PairKey(string a, string b) =>
             string.CompareOrdinal(a, b) <= 0 ? a + "\n" + b : b + "\n" + a;
 
+        /// <summary>結線を全部消す（はじめから）</summary>
+        public static void ClearConnections() => Connections.Clear();
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {

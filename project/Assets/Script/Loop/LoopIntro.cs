@@ -17,6 +17,11 @@ namespace EscapeProto
 
         private bool _armed;
 
+        // 「はじめから」で起床カットシーンをもう一度流せるようにする（シーン再読み込み無しの再開用）
+        private void OnEnable() => GameEvents.OnGameStarted += Rearm;
+        private void OnDisable() => GameEvents.OnGameStarted -= Rearm;
+        private void Rearm() { if (!StoryProgress.IntroPlayed) _armed = false; }
+
         private void Update()
         {
             if (StoryProgress.IntroPlayed || _armed) return;
