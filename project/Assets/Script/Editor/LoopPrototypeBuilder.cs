@@ -2675,6 +2675,7 @@ namespace EscapeProto
             fpc.MoveSpeed = 2.4f; fpc.SprintSpeed = 4.6f; fpc.RotationSpeed = 1.0f;
             fpc.SpeedChangeRate = 30f;
             fpc.GroundLayers = ~0;
+            fpc.JumpHeight = 0f;   // ジャンプ機能は廃止（入力側でも無効化済み）
 
             player.AddComponent<PlayerStatus>();
             player.AddComponent<CrouchController>();

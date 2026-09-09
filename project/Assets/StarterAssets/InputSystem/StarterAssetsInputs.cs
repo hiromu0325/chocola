@@ -77,7 +77,7 @@ namespace StarterAssets
 			}
 
 			bool sprintHeld = kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed);
-			bool jumpHeld = kb != null && kb.spaceKey.isPressed;
+			bool jumpHeld = false;   // ジャンプ機能は廃止（Space/Aボタンは何もしない）
 			bool interactHeld = kb != null && kb.eKey.isPressed;
 
 			bool usingStick = false;
@@ -96,7 +96,6 @@ namespace StarterAssets
 				if (gp.dpad.right.isPressed) m.x = 1f;
 
 				sprintHeld |= gp.leftStickButton.isPressed || gp.leftTrigger.ReadValue() > 0.5f;
-				jumpHeld |= gp.buttonSouth.isPressed;                       // A / ×
 				interactHeld |= gp.buttonWest.isPressed || gp.rightTrigger.ReadValue() > 0.5f; // X / R2
 			}
 
