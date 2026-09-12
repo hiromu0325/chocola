@@ -60,6 +60,11 @@ namespace EscapeProto
         /// <summary>「はじめから」用：手帳への記録フラグを戻す（LoopProgress.ResetForNewGame から）</summary>
         public void ResetForNewGame() { _noted = false; }
 
+        // ---- 記録文はテキスト表（多言語）から引く。表に無ければ上のフィールドを使う ----
+        private string TextKey => GameText.EchoKey(EchoId);
+        public string Title => GameText.Get(TextKey + ".title", NoteTitle);
+        public string Body => GameText.Get(TextKey + ".body", NoteBody);
+
         private Transform _player;
         private AudioSource _voice;
         private Renderer[] _renderers;
@@ -171,11 +176,12 @@ namespace EscapeProto
                 _lineIdx = 0;
                 _nextLineAt = Time.time + 0.6f;   // 姿が動き出してから話し始める
                 if (!HasLines && VoiceVolume > 0.001f && !_voice.isPlaying) _voice.Play();
-                if (!_noted && !string.IsNullOrEmpty(NoteTitle))
+                if (!_noted && !string.IsNullOrEmpty(Title))
                 {
                     _noted = true;
-                    if (Notebook.Add("echo_" + EchoId, NoteTitle, NoteBody))
-                        ToastUI.Show($"残響を見た──『{NoteTitle}』を手帳に記録した");
+                    if (Notebook.Add("echo_" + EchoId, Title, Body))
+                        ToastUI.Show(string.Format(
+                            GameText.Get(GameText.UiKey("echo_seen"), "残響を見た──『{0}』を手帳に記録した"), Title));
                 }
             }
             else if (!near && _active)

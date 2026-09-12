@@ -15,11 +15,11 @@ namespace EscapeProto
 
         protected override void Begin()
         {
-            PuzzleUI.Instance.ShowKeypad(Title, Body, Length, code =>
+            PuzzleUI.Instance.ShowKeypad(TitleText(Title), BodyText(Body), Length, code =>
             {
                 if (string.IsNullOrEmpty(code)) return;   // 中止
                 if (code == Answer) Succeed();
-                else Wrong("番号が違う。");
+                else Wrong(GameText.Get(TextKey + ".wrong", "番号が違う。"));
             });
         }
     }

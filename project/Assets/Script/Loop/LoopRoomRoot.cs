@@ -11,6 +11,10 @@ namespace EscapeProto
     {
         public string Id;
         public string DisplayName;
+
+        // ---- 部屋名・章ラベルはテキスト表（多言語）から引く ----
+        public string Name => GameText.Get(GameText.RoomKey(Id) + ".name", DisplayName);
+        public string ChapterLabel => GameText.Get(GameText.RoomKey(Id) + ".chapter", StoryScript.ChapterLabel(Id));
         [Tooltip("この進行度以上で入れる（0=最初から）")]
         public int UnlockStage;
         [Tooltip("回廊の扉の辺(0=N,1=E,2=S,3=W)とスロット")]

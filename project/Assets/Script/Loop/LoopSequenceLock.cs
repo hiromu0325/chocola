@@ -34,9 +34,11 @@ namespace EscapeProto
             for (int i = 0; i < Steps.Length; i++)
                 if (!Chosen(i)) remaining.Add(i);
 
-            var labels = remaining.ConvertAll(i => Steps[i]).ToArray();
-            string body = Body + $"\n\n手順 {_progress + 1} / {Steps.Length}";
-            PuzzleUI.Instance.ShowSelection(Title, body, labels, idx =>
+            var stepNames = GameText.GetArray(TextKey + ".step", Steps);
+            var labels = remaining.ConvertAll(i => stepNames[i]).ToArray();
+            string body = BodyText(Body) + string.Format(
+                GameText.Get(GameText.UiKey("step_of"), "\n\n手順 {0} / {1}"), _progress + 1, Steps.Length);
+            PuzzleUI.Instance.ShowSelection(TitleText(Title), body, labels, idx =>
             {
                 if (idx < 0) { ResetLamps(); return; }   // 中止
                 int step = remaining[idx];
@@ -45,14 +47,14 @@ namespace EscapeProto
                     _progress++;
                     Lamp(step, true);
                     ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.7f);
-                    if (_progress >= CorrectOrder.Length) Succeed("順序どおりに給電した");
+                    if (_progress >= CorrectOrder.Length) Succeed(GameText.Get(TextKey + ".solved", "順序どおりに給電した"));
                     else AskNext();
                 }
                 else
                 {
                     _progress = 0;
                     ResetLamps();
-                    Wrong("系統が不安定になり、遮断された。順序が違う。");
+                    Wrong(GameText.Get(TextKey + ".wrong", "系統が不安定になり、遮断された。順序が違う。"));
                 }
             });
         }

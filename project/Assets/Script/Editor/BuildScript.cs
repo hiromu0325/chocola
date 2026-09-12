@@ -50,6 +50,14 @@ namespace EscapeProto.EditorTools
                 Debug.LogError($"[Build] メインシーンが見つかりません: {MainScene}");
                 return null;
             }
+            // ビルドのたびにテキスト原本（Excel）を取り込み直す。
+            // 文章の直しがROMへ確実に載り、取り込み忘れでビルドすることが無くなる
+            string book = GameTextImporter.DefaultBookPath();
+            if (File.Exists(book))
+                Debug.Log("[Build] テキスト取り込み: " + GameTextImporter.Import(book));
+            else
+                Debug.Log($"[Build] テキスト原本が無いので取り込みを省略（{book}）。組み込みテキストのままビルドします");
+
             Directory.CreateDirectory(buildDir);
             string exe = Path.Combine(buildDir, ProductName + ".exe");
 

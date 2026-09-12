@@ -24,15 +24,16 @@ namespace EscapeProto
                     if (!string.IsNullOrEmpty(n) && !Notebook.Contains(n))
                     {
                         ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.5f);
-                        ToastUI.Show(NotEnoughMessage);
+                        ToastUI.Show(GameText.Get(TextKey + ".notenough", NotEnoughMessage));
                         return;
                     }
 
-            PuzzleUI.Instance.ShowSelection(Title, Body, Options, idx =>
+            PuzzleUI.Instance.ShowSelection(TitleText(Title), BodyText(Body),
+                GameText.GetArray(TextKey + ".option", Options), idx =>
             {
                 if (idx < 0) return;   // 中止
                 if (idx == CorrectIndex) Succeed();
-                else Wrong("……違う。");
+                else Wrong(GameText.Get(TextKey + ".wrong", "……違う。"));
             });
         }
     }

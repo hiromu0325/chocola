@@ -32,6 +32,16 @@ namespace EscapeProto
         public bool Solved => LoopProgress.IsFound(RoomId, Id);
         public bool CanInteract => GameManager.Instance == null || !GameManager.Instance.IsGameEnded;
 
+        // ---- 表示文はテキスト表（多言語）から引く。表に無ければ上のフィールドを使う ----
+        protected string TextKey => GameText.LockKey(RoomId, Id);
+        public string Name => GameText.Get(TextKey + ".name", DisplayName);
+        public string SuccessTitle => GameText.Get(TextKey + ".success_title", SuccessNoteTitle);
+        public string SuccessBody => GameText.Get(TextKey + ".success_body", SuccessNoteBody);
+        public string RequireText => GameText.Get(TextKey + ".require", RequireMessage);
+        /// <summary>装置ごとの問題文（派生クラスの Title / Body）</summary>
+        protected string TitleText(string builtIn) => GameText.Get(TextKey + ".title", builtIn);
+        protected string BodyText(string builtIn) => GameText.Get(TextKey + ".body", builtIn);
+
         public void OnInteract()
         {
             bool isNew = Time.time - _lastCallTime > 0.25f;
@@ -48,7 +58,7 @@ namespace EscapeProto
                 if (parts.Length == 2 && !LoopProgress.IsFound(parts[0], parts[1]))
                 {
                     ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.5f);
-                    ToastUI.Show(RequireMessage);
+                    ToastUI.Show(RequireText);
                     return;
                 }
             }
@@ -61,10 +71,10 @@ namespace EscapeProto
         /// <summary>解決済みで触ったとき（既定: 成果の資料を読み返す）</summary>
         protected virtual void OnAlreadySolved()
         {
-            if (!string.IsNullOrEmpty(SuccessNoteTitle))
-                PuzzleUI.Instance.ShowDocument(SuccessNoteTitle, SuccessNoteBody);
+            if (!string.IsNullOrEmpty(SuccessTitle))
+                PuzzleUI.Instance.ShowDocument(SuccessTitle, SuccessBody);
             else
-                ToastUI.Show($"{DisplayName}（解決済み）");
+                ToastUI.Show(string.Format(GameText.Get(GameText.UiKey("lock_done"), "{0}（解決済み）"), Name));
         }
 
         /// <summary>誤答：ペナルティ無し。根拠資料へ付箋を立てて手帳へ戻す</summary>
@@ -73,11 +83,13 @@ namespace EscapeProto
             _wrongCount++;
             ProceduralAudio.PlayAt(ProceduralAudio.Beep(), transform.position, 0.6f);
             bool flagged = Notebook.Flag(HintDocId);
-            string msg = message ?? "違うようだ。";
+            string msg = message ?? GameText.Get(GameText.UiKey("wrong"), "違うようだ。");
             if (Notebook.Contains(HintDocId))
-                msg += flagged ? "　──手帳に付箋を立てた。関係のある記録があるはずだ" : "　──手帳の付箋を読み直そう";
+                msg += flagged
+                    ? GameText.Get(GameText.UiKey("wrong.flagged"), "　──手帳に付箋を立てた。関係のある記録があるはずだ")
+                    : GameText.Get(GameText.UiKey("wrong.reread"), "　──手帳の付箋を読み直そう");
             else
-                msg += "　──まだ読んでいない資料があるのかもしれない";
+                msg += GameText.Get(GameText.UiKey("wrong.unread"), "　──まだ読んでいない資料があるのかもしれない");
             ToastUI.Show(msg);
         }
 
@@ -86,9 +98,9 @@ namespace EscapeProto
         {
             ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.8f);
             Notebook.Unflag(HintDocId);
-            if (!string.IsNullOrEmpty(SuccessNoteTitle))
-                Notebook.Add($"{RoomId}_{Id}", SuccessNoteTitle, SuccessNoteBody);
-            ToastUI.Show(toast ?? $"{DisplayName}を解いた");
+            if (!string.IsNullOrEmpty(SuccessTitle))
+                Notebook.Add($"{RoomId}_{Id}", SuccessTitle, SuccessBody);
+            ToastUI.Show(toast ?? string.Format(GameText.Get(GameText.UiKey("lock_solved"), "{0}を解いた"), Name));
             LoopProgress.NotifyFound(RoomId, Id);
             OnSolved();
         }
@@ -96,7 +108,9 @@ namespace EscapeProto
         /// <summary>正解後の見た目の更新など</summary>
         protected virtual void OnSolved() { }
 
-        public virtual string GetPrompt() => Solved ? $"[E] {DisplayName}（解決済み）" : $"[E] {DisplayName}を操作する";
+        public virtual string GetPrompt() => Solved
+            ? string.Format(GameText.Get(GameText.UiKey("prompt.lock_done"), "[E] {0}（解決済み）"), Name)
+            : string.Format(GameText.Get(GameText.UiKey("prompt.lock"), "[E] {0}を操作する"), Name);
         public float GetProgress01() => -1f;
     }
 }

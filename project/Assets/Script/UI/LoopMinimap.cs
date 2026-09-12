@@ -127,7 +127,7 @@ namespace EscapeProto
             if (room != null)
             {
                 _player.rectTransform.anchoredPosition = ToMap(LoopCorridorLayout.DoorPosition(room.Side, room.Slot));
-                _label.text = room.DisplayName;
+                _label.text = room.Name;
             }
             else if (player != null)
             {
@@ -135,7 +135,7 @@ namespace EscapeProto
                 _player.rectTransform.anchoredPosition = new Vector2(
                     Mathf.Clamp(p.x, -LoopCorridorLayout.OuterHalf, LoopCorridorLayout.OuterHalf) * Scale,
                     Mathf.Clamp(p.z, -LoopCorridorLayout.OuterHalf, LoopCorridorLayout.OuterHalf) * Scale);
-                _label.text = next != null ? $"次: {next.DisplayName}{LoopObjective.DoorHint(next)}" : "回廊";
+                _label.text = next != null ? $"次: {next.Name}{LoopObjective.DoorHint(next)}" : "回廊";
             }
             _label.color = Color.white;
         }

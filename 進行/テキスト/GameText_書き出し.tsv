@@ -1,0 +1,275 @@
+﻿id	kind	room	speaker	status	note	ja	en
+room/dim.name	room	dim		仮		薄暗い部屋	
+room/dim.chapter	room	dim		仮		チュートリアル　1節	
+doc/dim.news.name	doc	dim		仮		新聞記事	
+doc/dim.news.title	doc	dim		仮		新聞記事（切り抜き）	
+doc/dim.news.body	doc	dim		仮		@file:doc_dim.news.body	
+doc/dim.flashlight.name	doc	dim		仮		懐中電灯	
+doc/dim.flashlight.hint	doc	dim		仮		F: 点灯	
+doc/dim.notebook.name	doc	dim		仮		手帳	
+doc/dim.notebook.hint	doc	dim		仮		Tab: 開く	
+doc/dim.toy.name	toy	dim		仮		木のガラガラ	
+doc/dim.toy.title	toy	dim		仮		思い出の断片：木のガラガラ	
+doc/dim.toy.body	toy	dim		仮		@file:doc_dim.toy.body	
+doc/dim.toy.hint	toy	dim		仮		娘の記憶	
+room/train.name	room	train		仮		電車車内	
+room/train.chapter	room	train		仮		チュートリアル　2節	
+doc/train.ad.name	doc	train		仮		中吊り広告	
+doc/train.ad.title	doc	train		仮		中吊り広告	
+doc/train.ad.body	doc	train		仮		@file:doc_train.ad.body	
+doc/train.toy.name	toy	train		仮		うさぎのぬいぐるみ	
+doc/train.toy.title	toy	train		仮		思い出の断片：うさぎのぬいぐるみ	
+doc/train.toy.body	toy	train		仮		@file:doc_train.toy.body	
+doc/train.toy.hint	toy	train		仮		娘の記憶	
+room/lab.name	room	lab		仮		研究所応接室	
+room/lab.chapter	room	lab		仮		チュートリアル　3節	
+doc/lab.summary.name	doc	lab		仮		研究概要	
+doc/lab.summary.title	doc	lab		仮		研究概要	
+doc/lab.summary.body	doc	lab		仮		@file:doc_lab.summary.body	
+doc/lab.members.name	doc	lab		仮		社員名簿	
+doc/lab.members.title	doc	lab		仮		社員名簿	
+doc/lab.members.body	doc	lab		仮		@file:doc_lab.members.body	
+doc/lab.toy.name	toy	lab		仮		折り紙の鶴	
+doc/lab.toy.title	toy	lab		仮		思い出の断片：折り紙の鶴	
+doc/lab.toy.body	toy	lab		仮		@file:doc_lab.toy.body	
+doc/lab.toy.hint	toy	lab		仮		娘の記憶	
+room/study.name	room	study		仮		所長の書斎	
+room/study.chapter	room	study		仮		1章『佐伯恒一』　─ 起 ─	
+doc/study.document.name	doc	study		仮		文書	
+doc/study.document.title	doc	study		仮		研究文書（写し）	
+doc/study.document.body	doc	study		仮		@file:doc_study.document.body	
+doc/study.scrap.name	doc	study		仮		手帳の切れ端	
+doc/study.scrap.title	doc	study		仮		主任の手帳の切れ端	
+doc/study.scrap.body	doc	study		仮		@file:doc_study.scrap.body	
+doc/study.invite.name	doc	study		仮		封書	
+doc/study.invite.title	doc	study		仮		招聘状	
+doc/study.invite.body	doc	study		仮		@file:doc_study.invite.body	
+doc/study.photo.name	doc	study		仮		伏せられた写真立て	
+doc/study.photo.title	doc	study		仮		伏せられた写真立て	
+doc/study.photo.body	doc	study		仮		@file:doc_study.photo.body	
+doc/study.toy.name	toy	study		仮		絵本『おやすみ』	
+doc/study.toy.title	toy	study		仮		思い出の断片：絵本『おやすみ』	
+doc/study.toy.body	toy	study		仮		@file:doc_study.toy.body	
+doc/study.toy.hint	toy	study		仮		娘の記憶	
+echo/study_secret.title	echo	study		仮		残響：主任と佐伯の密談（私の記憶）	
+echo/study_secret.body	echo	study		仮		@file:echo_study_secret.body	
+lock/study.safekey.name	lock	study		仮		壁の金庫	
+lock/study.safekey.success_title	lock	study		仮		金庫の中身：解析室キャビネットの鍵	
+lock/study.safekey.success_body	lock	study		仮		@file:lock_study.safekey.success_body	
+lock/study.safekey.require	lock	study		仮		まだ、必要なものが揃っていない。	
+lock/study.safekey.title	lock	study		仮		金庫のダイヤル	
+lock/study.safekey.body	lock	study		仮		@file:lock_study.safekey.body	
+room/analysis.name	room	analysis		仮		脳神経解析室	
+room/analysis.chapter	room	analysis		仮		1章『佐伯恒一』　─ 転 ─	
+doc/analysis.helmet.name	doc	analysis		仮		ヘルメット型スキャン装置	
+doc/analysis.helmet.title	doc	analysis		仮		ヘルメット型スキャン装置	
+doc/analysis.helmet.body	doc	analysis		仮		@file:doc_analysis.helmet.body	
+doc/analysis.idcard.name	doc	analysis		仮		職員証	
+doc/analysis.idcard.title	doc	analysis		仮		職員証（佐伯恒一）	
+doc/analysis.idcard.body	doc	analysis		仮		@file:doc_analysis.idcard.body	
+doc/analysis.plan.name	doc	analysis		仮		研究計画書	
+doc/analysis.plan.title	doc	analysis		仮		リナシータ研究計画書	
+doc/analysis.plan.body	doc	analysis		仮		@file:doc_analysis.plan.body	
+doc/analysis.spec.name	doc	analysis		仮		アルゴリズム仕様	
+doc/analysis.spec.title	doc	analysis		仮		補完アルゴリズム仕様（佐伯）	
+doc/analysis.spec.body	doc	analysis		仮		@file:doc_analysis.spec.body	
+doc/analysis.anomaly.name	doc	analysis		仮		異常レポート	
+doc/analysis.anomaly.title	doc	analysis		仮		異常レポート（佐伯→所長）	
+doc/analysis.anomaly.body	doc	analysis		仮		@file:doc_analysis.anomaly.body	
+doc/analysis.toy.name	toy	analysis		仮		おもちゃの聴診器	
+doc/analysis.toy.title	toy	analysis		仮		思い出の断片：おもちゃの聴診器	
+doc/analysis.toy.body	toy	analysis		仮		@file:doc_analysis.toy.body	
+doc/analysis.toy.hint	toy	analysis		仮		娘の記憶	
+lock/analysis.circuit.name	lock	analysis		仮		記憶回路端末	
+lock/analysis.circuit.success_title	lock	analysis		仮		記憶回路：補完テスト成功	
+lock/analysis.circuit.success_body	lock	analysis		仮		@file:lock_analysis.circuit.success_body	
+lock/analysis.circuit.require	lock	analysis		仮		まだ、必要なものが揃っていない。	
+lock/analysis.circuit.title	lock	analysis		仮		記憶回路　── 補完テスト ──	
+lock/analysis.circuit.body	lock	analysis		仮		@file:lock_analysis.circuit.body	
+room/saeki_home.name	room	saeki_home		仮		佐伯の自宅	
+room/saeki_home.chapter	room	saeki_home		仮		1章『佐伯恒一』　─ 結 ─	
+doc/saeki_home.letter.name	doc	saeki_home		仮		書きかけの手紙	
+doc/saeki_home.letter.title	doc	saeki_home		仮		妻の書きかけの手紙	
+doc/saeki_home.letter.body	doc	saeki_home		仮		@file:doc_saeki_home.letter.body	
+doc/saeki_home.plog.name	doc	saeki_home		仮		私的ログ	
+doc/saeki_home.plog.title	doc	saeki_home		仮		佐伯の私的ログ（最終頁）	
+doc/saeki_home.plog.body	doc	saeki_home		仮		@file:doc_saeki_home.plog.body	
+doc/saeki_home.unsent.name	doc	saeki_home		仮		未送信メモ	
+doc/saeki_home.unsent.title	doc	saeki_home		仮		宛先のないメモ	
+doc/saeki_home.unsent.body	doc	saeki_home		仮		@file:doc_saeki_home.unsent.body	
+doc/saeki_home.toy.name	toy	saeki_home		仮		ままごとのカップ	
+doc/saeki_home.toy.title	toy	saeki_home		仮		思い出の断片：ままごとのカップ	
+doc/saeki_home.toy.body	toy	saeki_home		仮		@file:doc_saeki_home.toy.body	
+doc/saeki_home.toy.hint	toy	saeki_home		仮		娘の記憶	
+echo/argue_saeki.title	echo	saeki_home		仮		残響：口論（佐伯の記憶）	
+echo/argue_saeki.body	echo	saeki_home		仮		@file:echo_argue_saeki.body	
+echo/saeki_wife.title	echo	saeki_home		仮		残響：二人分の食器（妻の記憶）	
+echo/saeki_wife.body	echo	saeki_home		仮		@file:echo_saeki_wife.body	
+room/ward.name	room	ward		仮		臨床病棟	
+room/ward.chapter	room	ward		仮		2章『水野美奈』　─ 起 ─	
+doc/ward.obs.name	doc	ward		仮		観察記録	
+doc/ward.obs.title	doc	ward		仮		水野の患者観察記録	
+doc/ward.obs.body	doc	ward		仮		@file:doc_ward.obs.body	
+doc/ward.girlfile.name	doc	ward		仮		少女のファイル	
+doc/ward.girlfile.title	doc	ward		仮		患者番号の無いファイル	
+doc/ward.girlfile.body	doc	ward		仮		@file:doc_ward.girlfile.body	
+doc/ward.toy.name	toy	ward		仮		紙の王冠	
+doc/ward.toy.title	toy	ward		仮		思い出の断片：紙の王冠	
+doc/ward.toy.body	toy	ward		仮		@file:doc_ward.toy.body	
+doc/ward.toy.hint	toy	ward		仮		娘の記憶	
+echo/talk_me.title	echo	ward		仮		残響：会話（私の記憶）	
+echo/talk_me.body	echo	ward		仮		@file:echo_talk_me.body	
+room/core_ante.name	room	core_ante		仮		CORE前室	
+room/core_ante.chapter	room	core_ante		仮		2章『水野美奈』　─ 転 ─	
+doc/core_ante.manual.name	doc	core_ante		仮		運用手順書	
+doc/core_ante.manual.title	doc	core_ante		仮		リナシータ運用手順書	
+doc/core_ante.manual.body	doc	core_ante		仮		@file:doc_core_ante.manual.body	
+doc/core_ante.brainlist.name	doc	core_ante		仮		登録一覧	
+doc/core_ante.brainlist.title	doc	core_ante		仮		BRAIN DATA 登録一覧	
+doc/core_ante.brainlist.body	doc	core_ante		仮		@file:doc_core_ante.brainlist.body	
+doc/core_ante.wmemo.name	doc	core_ante		仮		発見メモ	
+doc/core_ante.wmemo.title	doc	core_ante		仮		水野の発見メモ	
+doc/core_ante.wmemo.body	doc	core_ante		仮		@file:doc_core_ante.wmemo.body	
+doc/core_ante.unsentmsg.name	doc	core_ante		仮		未送信メッセージ	
+doc/core_ante.unsentmsg.title	doc	core_ante		仮		未送信メッセージ（水野）	
+doc/core_ante.unsentmsg.body	doc	core_ante		仮		@file:doc_core_ante.unsentmsg.body	
+doc/core_ante.toy.name	toy	core_ante		仮		ビー玉	
+doc/core_ante.toy.title	toy	core_ante		仮		思い出の断片：ビー玉	
+doc/core_ante.toy.body	toy	core_ante		仮		@file:doc_core_ante.toy.body	
+doc/core_ante.toy.hint	toy	core_ante		仮		娘の記憶	
+lock/core_ante.power.name	lock	core_ante		仮		配電盤	
+lock/core_ante.power.success_title	lock	core_ante		仮		配電盤：系統復電 完了	
+lock/core_ante.power.success_body	lock	core_ante		仮		@file:lock_core_ante.power.success_body	
+lock/core_ante.power.require	lock	core_ante		仮		まだ、必要なものが揃っていない。	
+lock/core_ante.power.title	lock	core_ante		仮		配電盤　── 系統別給電 ──	
+lock/core_ante.power.body	lock	core_ante		仮		非常電源から各系統へ復電する。給電する系統を順に選ぶこと。	
+lock/core_ante.power.step.0	lock	core_ante		仮		言語野	
+lock/core_ante.power.step.1	lock	core_ante		仮		自己認識野	
+lock/core_ante.power.step.2	lock	core_ante		仮		記憶野	
+room/mizuno_apart.name	room	mizuno_apart		仮		水野のアパート	
+room/mizuno_apart.chapter	room	mizuno_apart		仮		2章『水野美奈』　─ 結 ─	
+doc/mizuno_apart.diary.name	doc	mizuno_apart		仮		日記帳	
+doc/mizuno_apart.diary.title	doc	mizuno_apart		仮		水野の日記	
+doc/mizuno_apart.diary.body	doc	mizuno_apart		仮		@file:doc_mizuno_apart.diary.body	
+doc/mizuno_apart.recorder.name	doc	mizuno_apart		仮		ボイスレコーダー	
+doc/mizuno_apart.recorder.title	doc	mizuno_apart		仮		最後の録音	
+doc/mizuno_apart.recorder.body	doc	mizuno_apart		仮		@file:doc_mizuno_apart.recorder.body	
+doc/mizuno_apart.toy.name	toy	mizuno_apart		仮		髪のリボン	
+doc/mizuno_apart.toy.title	toy	mizuno_apart		仮		思い出の断片：髪のリボン	
+doc/mizuno_apart.toy.body	toy	mizuno_apart		仮		@file:doc_mizuno_apart.toy.body	
+doc/mizuno_apart.toy.hint	toy	mizuno_apart		仮		娘の記憶	
+echo/mizuno_uncle.title	echo	mizuno_apart		仮		残響：病室（幼い水野の記憶）	
+echo/mizuno_uncle.body	echo	mizuno_apart		仮		@file:echo_mizuno_uncle.body	
+echo/talk_mizuno.title	echo	mizuno_apart		仮		残響：会話（水野の記憶）	
+echo/talk_mizuno.body	echo	mizuno_apart		仮		@file:echo_talk_mizuno.body	
+lock/mizuno_apart.pcfile.name	lock	mizuno_apart		仮		水野のノートPC	
+lock/mizuno_apart.pcfile.success_title	lock	mizuno_apart		仮		水野のPC：第12研究室 入室情報	
+lock/mizuno_apart.pcfile.success_body	lock	mizuno_apart		仮		@file:lock_mizuno_apart.pcfile.success_body	
+lock/mizuno_apart.pcfile.require	lock	mizuno_apart		仮		まだ、必要なものが揃っていない。	
+lock/mizuno_apart.pcfile.title	lock	mizuno_apart		仮		水野のノートPC	
+lock/mizuno_apart.pcfile.body	lock	mizuno_apart		仮		@file:lock_mizuno_apart.pcfile.body	
+room/data_room.name	room	data_room		仮		データ管理室	
+room/data_room.chapter	room	data_room		仮		3章『黒田恒一』　─ 起 ─	
+doc/data_room.minutes.name	doc	data_room		仮		議事録	
+doc/data_room.minutes.title	doc	data_room		仮		停止要求の議事録	
+doc/data_room.minutes.body	doc	data_room		仮		@file:doc_data_room.minutes.body	
+doc/data_room.kmemo.name	doc	data_room		仮		黒田のメモ	
+doc/data_room.kmemo.title	doc	data_room		仮		黒田のメモ（一部欠損）	
+doc/data_room.kmemo.body	doc	data_room		仮		@file:doc_data_room.kmemo.body	
+doc/data_room.scribble.name	doc	data_room		仮		走り書き	
+doc/data_room.scribble.title	doc	data_room		仮		キャビネットの走り書き	
+doc/data_room.scribble.body	doc	data_room		仮		@file:doc_data_room.scribble.body	
+doc/data_room.toy.name	toy	data_room		仮		積み木の家	
+doc/data_room.toy.title	toy	data_room		仮		思い出の断片：積み木の家	
+doc/data_room.toy.body	toy	data_room		仮		@file:doc_data_room.toy.body	
+doc/data_room.toy.hint	toy	data_room		仮		娘の記憶	
+echo/argue_kuroda.title	echo	data_room		仮		残響：口論（黒田の記憶）	
+echo/argue_kuroda.body	echo	data_room		仮		@file:echo_argue_kuroda.body	
+lock/data_room.audit.name	lock	data_room		仮		入退室ログ端末	
+lock/data_room.audit.success_title	lock	data_room		仮		照合結果：主任IDの移動記録は本人ではない	
+lock/data_room.audit.success_body	lock	data_room		仮		@file:lock_data_room.audit.success_body	
+lock/data_room.audit.require	lock	data_room		仮		まだ、必要なものが揃っていない。	
+lock/data_room.audit.title	lock	data_room		仮		入退室ログ照合　4/16 〜 4/20	
+lock/data_room.audit.body	lock	data_room		仮		記録のうち「あり得ない行」を特定せよ。	
+lock/data_room.audit.row.0	lock	data_room		仮		04/16 09:02  黒田  第10研究室 入室	
+lock/data_room.audit.row.1	lock	data_room		仮		04/16 13:40  水野  臨床病棟   入室	
+lock/data_room.audit.row.2	lock	data_room		仮		04/17 22:15  佐伯  第8研究室  入室	
+lock/data_room.audit.row.3	lock	data_room		仮		04/18 08:55  水野  臨床病棟   入室	
+lock/data_room.audit.row.4	lock	data_room		仮		04/18 23:41  主任  第12研究室 入室	
+lock/data_room.audit.row.5	lock	data_room		仮		04/18 23:58  主任  第12研究室 退室	
+lock/data_room.audit.row.6	lock	data_room		仮		04/19 00:12  主任  第12研究室 入室	
+lock/data_room.audit.row.7	lock	data_room		仮		04/19 07:30  黒田  データ管理室 入室	
+lock/data_room.audit.row.8	lock	data_room		仮		04/19 09:10  佐伯  第8研究室  入室	
+lock/data_room.audit.row.9	lock	data_room		仮		04/20 18:05  主任  第1研究室  入室	
+room/system_room.name	room	system_room		仮		SYSTEM ROOM	
+room/system_room.chapter	room	system_room		仮		3章『黒田恒一』　─ 転 ─	
+doc/system_room.devlog.name	doc	system_room		仮		開発記録	
+doc/system_room.devlog.title	doc	system_room		仮		開発記録・治療手順	
+doc/system_room.devlog.body	doc	system_room		仮		@file:doc_system_room.devlog.body	
+doc/system_room.gaplog.name	doc	system_room		仮		照合ログ	
+doc/system_room.gaplog.title	doc	system_room		仮		黒田の照合ログ	
+doc/system_room.gaplog.body	doc	system_room		仮		@file:doc_system_room.gaplog.body	
+doc/system_room.restored.name	doc	system_room		仮		復元ファイル	
+doc/system_room.restored.title	doc	system_room		仮		復元された操作記録	
+doc/system_room.restored.body	doc	system_room		仮		@file:doc_system_room.restored.body	
+doc/system_room.toy.name	toy	system_room		仮		おもちゃのカメラ	
+doc/system_room.toy.title	toy	system_room		仮		思い出の断片：おもちゃのカメラ	
+doc/system_room.toy.body	toy	system_room		仮		@file:doc_system_room.toy.body	
+doc/system_room.toy.hint	toy	system_room		仮		娘の記憶	
+room/kuroda_home.name	room	kuroda_home		仮		黒田の自宅	
+room/kuroda_home.chapter	room	kuroda_home		仮		3章『黒田恒一』　─ 結 ─	
+doc/kuroda_home.drawing.name	doc	kuroda_home		仮		子供の絵	
+doc/kuroda_home.drawing.title	doc	kuroda_home		仮		冷蔵庫の絵	
+doc/kuroda_home.drawing.body	doc	kuroda_home		仮		@file:doc_kuroda_home.drawing.body	
+doc/kuroda_home.rules.name	doc	kuroda_home		仮		個人記録	
+doc/kuroda_home.rules.title	doc	kuroda_home		仮		黒田の個人記録	
+doc/kuroda_home.rules.body	doc	kuroda_home		仮		@file:doc_kuroda_home.rules.body	
+doc/kuroda_home.lastrec.name	doc	kuroda_home		仮		対峙の記録	
+doc/kuroda_home.lastrec.title	doc	kuroda_home		仮		最後の対峙の記録（破損）	
+doc/kuroda_home.lastrec.body	doc	kuroda_home		仮		@file:doc_kuroda_home.lastrec.body	
+doc/kuroda_home.toy.name	toy	kuroda_home		仮		折れた赤いクレヨン	
+doc/kuroda_home.toy.title	toy	kuroda_home		仮		思い出の断片：折れた赤いクレヨン	
+doc/kuroda_home.toy.body	toy	kuroda_home		仮		@file:doc_kuroda_home.toy.body	
+doc/kuroda_home.toy.hint	toy	kuroda_home		仮		娘の記憶	
+echo/kuroda_family.title	echo	kuroda_home		仮		残響：食卓（黒田の家族の記憶）	
+echo/kuroda_family.body	echo	kuroda_home		仮		@file:echo_kuroda_family.body	
+lock/kuroda_home.verdict.name	lock	kuroda_home		仮		黒田の手帳（白紙のページ）	
+lock/kuroda_home.verdict.success_title	lock	kuroda_home		仮		判定：どちらも、怒鳴ってはいなかった	
+lock/kuroda_home.verdict.success_body	lock	kuroda_home		仮		@file:lock_kuroda_home.verdict.success_body	
+lock/kuroda_home.verdict.require	lock	kuroda_home		仮		まだ、必要なものが揃っていない。	
+lock/kuroda_home.verdict.title	lock	kuroda_home		仮		黒田の手帳　── 白紙のページ ──	
+lock/kuroda_home.verdict.body	lock	kuroda_home		仮		@file:lock_kuroda_home.verdict.body	
+lock/kuroda_home.verdict.notenough	lock	kuroda_home		仮		まだ判断できない。あの口論を、両方の側から見ていない。	
+lock/kuroda_home.verdict.option.0	lock	kuroda_home		仮		佐伯	
+lock/kuroda_home.verdict.option.1	lock	kuroda_home		仮		黒田	
+lock/kuroda_home.verdict.option.2	lock	kuroda_home		仮		どちらでもない──記憶は主観で歪む	
+room/core_main.name	room	core_main		仮		MAIN CORE ROOM	
+room/core_main.chapter	room	core_main		仮		終章『RENASCITA』	
+doc/core_main.message.name	doc	core_main		仮		操作端末	
+doc/core_main.message.title	doc	core_main		仮		主任のメッセージ	
+doc/core_main.message.body	doc	core_main		仮		@file:doc_core_main.message.body	
+doc/core_main.toy.name	toy	core_main		仮		小さな靴（片方）	
+doc/core_main.toy.title	toy	core_main		仮		思い出の断片：小さな靴（片方）	
+doc/core_main.toy.body	toy	core_main		仮		@file:doc_core_main.toy.body	
+doc/core_main.toy.hint	toy	core_main		仮		娘の記憶	
+room/son_room.name	room	son_room		仮		息子の部屋	
+room/son_room.chapter	room	son_room		仮		終章　─ 誰の記憶でもない部屋 ─	
+doc/son_room.plan.name	doc	son_room		仮		古いファイル	
+doc/son_room.plan.title	doc	son_room		仮		書きかけの治療計画書	
+doc/son_room.plan.body	doc	son_room		仮		@file:doc_son_room.plan.body	
+ui/pickup	ui			仮		『{0}』を手に入れた{1}	
+ui/filed	ui			仮		『{0}』を手帳に綴じた	
+ui/echo_seen	ui			仮		残響を見た──『{0}』を手帳に記録した	
+ui/need_notebook	ui			仮		書き留めるものがない……手帳を探そう	
+ui/prompt.doc	ui			仮		[E] {0}を調べる	
+ui/prompt.doc_done	ui			仮		[E] {0}（記録済み）	
+ui/prompt.no_notebook	ui			仮		{0}（書き留めるものがない）	
+ui/prompt.lock	ui			仮		[E] {0}を操作する	
+ui/prompt.lock_done	ui			仮		[E] {0}（解決済み）	
+ui/lock_done	ui			仮		{0}（解決済み）	
+ui/lock_solved	ui			仮		{0}を解いた	
+ui/wrong	ui			仮		違うようだ。	
+ui/wrong.flagged	ui			仮		　──手帳に付箋を立てた。関係のある記録があるはずだ	
+ui/wrong.reread	ui			仮		　──手帳の付箋を読み直そう	
+ui/wrong.unread	ui			仮		　──まだ読んでいない資料があるのかもしれない	
+ui/step_of	ui			仮		@file:ui_step_of	

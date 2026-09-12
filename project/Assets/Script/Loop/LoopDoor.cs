@@ -40,7 +40,7 @@ namespace EscapeProto
                 return "開かない…（警報が鳴っている）";
             var room = LoopRooms.Get(RoomId);
             if (!LoopRooms.IsUnlocked(RoomId)) return "施錠されている";
-            string name = room != null ? room.DisplayName : RoomId;
+            string name = room != null ? room.Name : RoomId;
             return $"[E] {name}へ入る";
         }
 

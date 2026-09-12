@@ -16,9 +16,10 @@ namespace EscapeProto
         protected override void Begin()
         {
             if (LoopPuzzleUI.Instance == null) return;
-            LoopPuzzleUI.Instance.ShowChecklist(Title, Body, Rows, CorrectRows,
-                solved => { if (solved) Succeed("矛盾が確定した"); },
-                () => Wrong("その組み合わせでは矛盾にならない。"));
+            LoopPuzzleUI.Instance.ShowChecklist(TitleText(Title), BodyText(Body),
+                GameText.GetArray(TextKey + ".row", Rows), CorrectRows,
+                solved => { if (solved) Succeed(GameText.Get(TextKey + ".solved", "矛盾が確定した")); },
+                () => Wrong(GameText.Get(TextKey + ".wrong", "その組み合わせでは矛盾にならない。")));
         }
 
         public static string[] DefaultRows() => new[]

@@ -18,9 +18,9 @@ namespace EscapeProto
         protected override void Begin()
         {
             if (LoopPuzzleUI.Instance == null) return;
-            LoopPuzzleUI.Instance.ShowCircuit(Title, Body, Level,
-                solved => { if (solved) Succeed("光が通った。記憶回路が繋がった"); },
-                cell => Wrong("補完が噛み合わない。"));
+            LoopPuzzleUI.Instance.ShowCircuit(TitleText(Title), BodyText(Body), Level,
+                solved => { if (solved) Succeed(GameText.Get(TextKey + ".solved", "光が通った。記憶回路が繋がった")); },
+                cell => Wrong(GameText.Get(TextKey + ".wrong", "補完が噛み合わない。")));
         }
 
         protected override void OnSolved()

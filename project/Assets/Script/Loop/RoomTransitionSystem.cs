@@ -57,7 +57,7 @@ namespace EscapeProto
             if (StoryProgress.MarkVisited(cur))
             {
                 var room = LoopRooms.Get(cur);
-                RoomTitleUI.Instance?.Show(room != null ? room.DisplayName : cur, StoryScript.ChapterLabel(cur));
+                RoomTitleUI.Instance?.Show(room != null ? room.Name : cur, room != null ? room.ChapterLabel : null);
             }
         }
 
@@ -97,7 +97,7 @@ namespace EscapeProto
                                spawn != null ? spawn.eulerAngles.y : (float?)null);
                 // 初入室：部屋名タイトル（ダークソウル風）＋章節ラベル
                 if (StoryProgress.MarkVisited(roomId))
-                    RoomTitleUI.Instance?.Show(room.DisplayName, StoryScript.ChapterLabel(roomId));
+                    RoomTitleUI.Instance?.Show(room.Name, room.ChapterLabel);
             }));
         }
 

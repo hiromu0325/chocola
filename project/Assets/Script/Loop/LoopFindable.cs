@@ -30,6 +30,14 @@ namespace EscapeProto
 
         public bool CanInteract => GameManager.Instance == null || !GameManager.Instance.IsGameEnded;
 
+        // ---- 表示文はテキスト表（多言語）から引く。表に無ければ上のフィールドをそのまま使う ----
+        // IDは部屋Id＋Idから導出するので、シーンに新しいフィールドを持たせる必要が無い
+        private string TextKey => GameText.DocKey(RoomId, Id);
+        public string Name => GameText.Get(TextKey + ".name", DisplayName);
+        public string Title => GameText.Get(TextKey + ".title", NoteTitle);
+        public string Body => GameText.Get(TextKey + ".body", NoteBody);
+        public string Hint => GameText.Get(TextKey + ".hint", PickupHint);
+
         private void Start()
         {
             // セーブ復帰やリスポーン時に発見済み状態を復元
@@ -59,16 +67,16 @@ namespace EscapeProto
             if (BlockedByNoNotebook)
             {
                 ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.5f);
-                ToastUI.Show("書き留めるものがない……手帳を探そう");
+                ToastUI.Show(GameText.Get(GameText.UiKey("need_notebook"), "書き留めるものがない……手帳を探そう"));
                 return;
             }
 
             // 先に資料を開いてから発見扱いにする。
             // 逆順だと「発見→部屋完了→『扉が開いた』ダイアログ」が同じフレームで先に開き、
             // 肝心の資料ウィンドウが表示されない（UiQueueは開いているUIが閉じるまで待つ）
-            if (PuzzleUI.Instance != null && !string.IsNullOrEmpty(NoteBody) &&
+            if (PuzzleUI.Instance != null && !string.IsNullOrEmpty(Body) &&
                 !PuzzleUI.Instance.IsOpen && !PuzzleUI.Instance.BlockReopen)
-                PuzzleUI.Instance.ShowDocument(string.IsNullOrEmpty(NoteTitle) ? DisplayName : NoteTitle, NoteBody);
+                PuzzleUI.Instance.ShowDocument(string.IsNullOrEmpty(Title) ? Name : Title, Body);
 
             if (!Found) MarkFound(silent: false);
         }
@@ -87,18 +95,18 @@ namespace EscapeProto
             // 資料は手帳へ綴じる（OnInteract側で手帳所持を保証済み。
             // silent=セーブ復帰時は既に綴じられているので通知だけ出さない）
             bool filed = false;
-            if (!string.IsNullOrEmpty(NoteTitle))
-                filed = Notebook.Add($"{RoomId}_{Id}", NoteTitle, NoteBody);
+            if (!string.IsNullOrEmpty(Title))
+                filed = Notebook.Add($"{RoomId}_{Id}", Title, Body);
 
             if (!silent)
             {
                 ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.7f);
 
                 if (DisappearOnPickup)
-                    ToastUI.Show($"『{DisplayName}』を手に入れた" +
-                                 (string.IsNullOrEmpty(PickupHint) ? "" : $"　[{PickupHint}]"));
+                    ToastUI.Show(string.Format(GameText.Get(GameText.UiKey("pickup"), "『{0}』を手に入れた{1}"),
+                                 Name, string.IsNullOrEmpty(Hint) ? "" : $"　[{Hint}]"));
                 else if (filed)
-                    ToastUI.Show($"『{NoteTitle}』を手帳に綴じた");
+                    ToastUI.Show(string.Format(GameText.Get(GameText.UiKey("filed"), "『{0}』を手帳に綴じた"), Title));
             }
 
             LoopProgress.NotifyFound(RoomId, Id);
@@ -111,8 +119,11 @@ namespace EscapeProto
 
         public string GetPrompt()
         {
-            if (BlockedByNoNotebook) return $"{DisplayName}（書き留めるものがない）";
-            return Found ? $"[E] {DisplayName}（記録済み）" : $"[E] {DisplayName}を調べる";
+            if (BlockedByNoNotebook)
+                return string.Format(GameText.Get(GameText.UiKey("prompt.no_notebook"), "{0}（書き留めるものがない）"), Name);
+            return Found
+                ? string.Format(GameText.Get(GameText.UiKey("prompt.doc_done"), "[E] {0}（記録済み）"), Name)
+                : string.Format(GameText.Get(GameText.UiKey("prompt.doc"), "[E] {0}を調べる"), Name);
         }
         public float GetProgress01() => -1f;
     }

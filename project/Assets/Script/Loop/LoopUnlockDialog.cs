@@ -15,7 +15,7 @@ namespace EscapeProto
         private void HandleUnlocked(string roomId)
         {
             var room = LoopRooms.Get(roomId);
-            string name = room != null ? room.DisplayName : "新しい部屋";
+            string name = room != null ? room.Name : "新しい部屋";
 
             if (UiQueue.Instance == null) return;
             UiQueue.Instance.Enqueue(

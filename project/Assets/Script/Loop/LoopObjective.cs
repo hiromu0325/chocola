@@ -25,7 +25,7 @@ namespace EscapeProto
             if (bs != null && bs.DownRoomId != null)
             {
                 var down = LoopRooms.Get(bs.DownRoomId);
-                string name = down != null ? down.DisplayName : bs.DownRoomId;
+                string name = down != null ? down.Name : bs.DownRoomId;
                 if (cur == bs.DownRoomId) return Warn("ブレイカーを上げる（東の壁）");
                 if (fin != null && fin.Uploading) return Warn($"アップロード中断中──『{name}』のブレイカーを上げて戻る");
                 return Warn($"警報の部屋『{name}』{DoorHint(down)}へ行き、ブレイカーを上げる　※異形が徘徊中");
@@ -38,10 +38,10 @@ namespace EscapeProto
                 if (!fin.AllToysCollected)
                 {
                     if (room != null && !LoopProgress.IsFound(cur, "toy"))
-                        return Main($"『{room.DisplayName}』で娘のおもちゃを探す（{fin.CollectedCount}/{fin.TotalCount}）");
+                        return Main($"『{room.Name}』で娘のおもちゃを探す（{fin.CollectedCount}/{fin.TotalCount}）");
                     var next = fin.NextToyRoom();
                     return next != null
-                        ? Main($"娘のおもちゃを集める（{fin.CollectedCount}/{fin.TotalCount}）──次は『{next.DisplayName}』{DoorHint(next)}")
+                        ? Main($"娘のおもちゃを集める（{fin.CollectedCount}/{fin.TotalCount}）──次は『{next.Name}』{DoorHint(next)}")
                         : Main("娘のおもちゃを集める");
                 }
                 if (fin.Uploading) return Main($"記録端末で[E]長押し──アップロード {Mathf.RoundToInt(fin.UploadProgress * 100f)}%");
@@ -63,20 +63,20 @@ namespace EscapeProto
                     foreach (var l in room.GetComponentsInChildren<LoopLockBase>(true))
                         if (!l.Solved && System.Array.IndexOf(room.RequiredFindables, l.Id) >= 0) { lockLeft = true; break; }
                     int docs = remain - CountUnsolvedLocks(room);
-                    if (docs > 0 && lockLeft) return Main($"『{room.DisplayName}』で資料を読み、装置を解く（残り{remain}）");
-                    if (lockLeft) return Main($"『{room.DisplayName}』の装置を解く──答えは資料の中（残り{remain}）");
-                    return Main($"『{room.DisplayName}』で資料を探す（残り{remain}）");
+                    if (docs > 0 && lockLeft) return Main($"『{room.Name}』で資料を読み、装置を解く（残り{remain}）");
+                    if (lockLeft) return Main($"『{room.Name}』の装置を解く──答えは資料の中（残り{remain}）");
+                    return Main($"『{room.Name}』で資料を探す（残り{remain}）");
                 }
                 if (!string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom)) return Warn("警報が鳴っている。部屋を出て、鳴っている部屋へ向かう");
                 var nxt = NextRoom();
                 if (nxt == null) return Good("この部屋の情報は揃った。部屋を出る");
-                return Main($"部屋を出て『{nxt.DisplayName}』{DoorHint(nxt)}へ向かう");
+                return Main($"部屋を出て『{nxt.Name}』{DoorHint(nxt)}へ向かう");
             }
 
             // ---- 回廊 ----
             var target = NextRoom();
             if (target == null) return Main("開いている部屋を探す");
-            return Main($"『{target.DisplayName}』{DoorHint(target)}の扉へ向かう");
+            return Main($"『{target.Name}』{DoorHint(target)}の扉へ向かう");
         }
 
         /// <summary>まだ完了していない、入れる部屋のうち最も段階の進んだもの</summary>
