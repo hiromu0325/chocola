@@ -39,31 +39,10 @@ namespace EscapeProto
         private const int EvidenceTab = 5;
         private int _tab = 0;
         private readonly Button[] _tabs = new Button[6];
+        // 章の区分・並び・見出しは StoryScript が唯一の定義（テキストシートの章分けと共用）
         private static readonly string[] TabNames = { "序", "1章", "2章", "3章", "終章", "メモ" };
-        private static readonly string[] ChapterTitles =
-        {
-            "序　── 目覚め ──",
-            "1章　佐伯恒一　── 本人を本人たらしめるものは何か ──",
-            "2章　水野美奈　── 善意はどこまで許されるのか ──",
-            "3章　黒田恒一　── 正しいことと救うことは同じではない ──",
-            "終章　RENASCITA",
-        };
-
-        /// <summary>部屋Id → 章（0..4）。未知の部屋は -1</summary>
-        private static readonly Dictionary<string, int> RoomChapter = new Dictionary<string, int>
-        {
-            { "dim", 0 }, { "train", 0 }, { "lab", 0 },
-            { "study", 1 }, { "analysis", 1 }, { "saeki_home", 1 },
-            { "ward", 2 }, { "core_ante", 2 }, { "mizuno_apart", 2 },
-            { "data_room", 3 }, { "system_room", 3 }, { "kuroda_home", 3 },
-            { "core_main", 4 }, { "son_room", 4 },
-        };
-        /// <summary>章内での部屋の並び（起・転・結の順）</summary>
-        private static readonly string[] RoomOrder =
-        {
-            "dim", "train", "lab", "study", "analysis", "saeki_home", "ward", "core_ante", "mizuno_apart",
-            "data_room", "system_room", "kuroda_home", "core_main", "son_room",
-        };
+        private static string[] ChapterTitles => StoryScript.ChapterTitles;
+        private static string[] RoomOrder => StoryScript.RoomOrder;
         /// <summary>残響Id → それを見た部屋</summary>
         private static readonly Dictionary<string, string> EchoRoom = new Dictionary<string, string>
         {
@@ -79,7 +58,7 @@ namespace EscapeProto
             if (id.StartsWith("echo_"))
                 return EchoRoom.TryGetValue(id.Substring(5), out var er) ? er : "dim";
             if (id.StartsWith("attack_"))
-                return RoomChapter.ContainsKey(id.Substring(7)) ? id.Substring(7) : "dim";
+                return StoryScript.ChapterOf(id.Substring(7)) >= 0 ? id.Substring(7) : "dim";
             if (id.StartsWith("unlock_"))
             {
                 // unlock_<stage>: 解放された部屋の"前"の部屋の記録として、直前の部屋に置く
@@ -95,13 +74,13 @@ namespace EscapeProto
         private static int ChapterOf(string id)
         {
             var room = RoomOfEntry(id);
-            return room != null && RoomChapter.TryGetValue(room, out int ch) ? ch : -1;
+            return room != null ? StoryScript.ChapterOf(room) : -1;
         }
 
         private static string RoomDisplayName(string roomId)
         {
             var r = LoopRooms.Get(roomId);
-            return r != null ? r.DisplayName : roomId;
+            return r != null ? r.Name : roomId;
         }
         // ノードID（エントリid:ワード:出現順） → チップ。出現箇所ごとに独立したノードなので
         // 「アルバムの佐藤」と「人事ファイルの佐藤」のような同一ワード同士も結べる
@@ -202,7 +181,8 @@ namespace EscapeProto
         public void JumpToCurrentChapter()
         {
             var room = LoopRooms.CurrentRoomId;
-            if (room != null && RoomChapter.TryGetValue(room, out int ch) && ch != _tab)
+            int ch = StoryScript.ChapterOf(room);
+            if (room != null && ch >= 0 && ch != _tab)
             {
                 _tab = ch;
                 _spread = 0;

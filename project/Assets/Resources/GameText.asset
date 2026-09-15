@@ -15,7 +15,7 @@ MonoBehaviour:
   Languages:
   - ja
   - en
-  SourceInfo: "GameText_\u66F8\u304D\u51FA\u3057.tsv / 2026-09-13 00:56"
+  SourceInfo: GameText.xlsx / 2026-09-15 21:34
   Entries:
   - id: room/dim.name
     values:

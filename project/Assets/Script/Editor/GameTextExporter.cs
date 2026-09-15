@@ -31,57 +31,177 @@ namespace EscapeProto.EditorTools
             public string note = "";
         }
 
-        [MenuItem("Tools/EscapePrototype/Text/現在のテキストを書き出す（TSV）")]
+        [MenuItem("Tools/EscapePrototype/Text/現在のテキストを書き出す（章ごとのExcel）")]
         public static void ExportFromMenu()
         {
             string report = Export();
             Debug.Log(report);
             EditorUtility.DisplayDialog("テキスト書き出し", report, "OK");
-            string tsv = Path.Combine(GameTextImporter.RepoRoot(), @"進行\テキスト", ExportFileName);
-            if (File.Exists(tsv)) EditorUtility.RevealInFinder(tsv);
+            string book = Path.Combine(GameTextImporter.RepoRoot(), TextFolderRelative, ExportBookName);
+            if (File.Exists(book)) EditorUtility.RevealInFinder(book);
         }
 
+        public const string TextFolderRelative = @"進行\テキスト";
+        /// <summary>書き出し先。原本（GameText.xlsx）は絶対に上書きしない</summary>
+        public const string ExportBookName = "GameText_書き出し.xlsx";
         public const string ExportFileName = "GameText_書き出し.tsv";
+        /// <summary>管理列（言語列より前に並ぶ）</summary>
+        private static readonly string[] MetaHeader = { "id", "kind", "room", "speaker", "status", "note" };
 
-        /// <summary>書き出し本体（ダイアログを出さない。自動テスト・バッチから呼べる）</summary>
+        /// <summary>
+        /// 書き出し本体（ダイアログを出さない）。章ごとのシートに分けた .xlsx と、
+        /// 差分確認用の TSV を出す。
+        ///
+        /// 【既存の訳を消さない】原本 GameText.xlsx があれば読み込み、
+        /// 既に載っているIDはその文面（全言語・status・note）を引き継ぐ。
+        /// シーンにしか無い新しいIDだけを、組み込み文を入れた新規行として足す。
+        /// </summary>
         public static string Export()
         {
             var rows = Collect(out int roomCount);
             if (rows.Count == 0)
                 return "テキストが見つかりません。ループ回廊のシーンを開いてから実行してください。";
 
-            string outDir = Path.Combine(GameTextImporter.RepoRoot(), @"進行\テキスト");
+            string outDir = Path.Combine(GameTextImporter.RepoRoot(), TextFolderRelative);
             Directory.CreateDirectory(outDir);
-            string tsvPath = Path.Combine(outDir, ExportFileName);
             string docDir = Path.Combine(GameTextImporter.RepoRoot(), @"進行\文書\ja");
             Directory.CreateDirectory(docDir);
 
-            int fileCount = 0, overBudget = 0;
-            var sb = new StringBuilder();
-            sb.Append("id\tkind\troom\tspeaker\tstatus\tnote\tja\ten\n");
+            // ---- 既存の原本を読む（あれば） ----
+            var existing = LoadExistingBook(out var languages, out string existingNote);
+            if (languages == null || languages.Length == 0) languages = new[] { "ja", "en" };
+            int jaCol = Array.IndexOf(languages, "ja");
+            if (jaCol < 0) jaCol = 0;
+
+            // ---- 行を組み立てる ----
+            int fileCount = 0, overBudget = 0, kept = 0, added = 0;
+            var built = new List<(Row row, string[] cells)>();
             foreach (var r in rows)
             {
-                string cell = r.text ?? "";
-                bool longText = cell.Contains("\n") || cell.Length > InlineLimit;
-                if (longText)
+                var cells = new string[MetaHeader.Length + languages.Length];
+                cells[0] = r.id; cells[1] = r.kind; cells[2] = r.room; cells[3] = r.speaker;
+
+                if (existing != null && existing.TryGetValue(r.id, out var old))
                 {
-                    string name = SafeFileName(r.id);
-                    File.WriteAllText(Path.Combine(docDir, name + ".txt"), cell, new UTF8Encoding(true));
-                    cell = "@file:" + name;
-                    fileCount++;
+                    // 既に原本にある行 → 文面も status も note もそのまま残す
+                    cells[4] = old.status; cells[5] = old.note;
+                    for (int i = 0; i < languages.Length; i++)
+                        cells[MetaHeader.Length + i] = i < old.values.Length ? old.values[i] : "";
+                    kept++;
                 }
-                if ((r.text?.Length ?? 0) > BodyCharBudget) { r.note += "（長い:要確認）"; overBudget++; }
-                sb.Append($"{r.id}\t{r.kind}\t{r.room}\t{r.speaker}\t仮\t{r.note}\t{cell}\t\n");
+                else
+                {
+                    // 新しいID → 組み込み文を ja に入れる。長文は個別txtへ逃がす
+                    string cell = r.text ?? "";
+                    if (cell.Contains("\n") || cell.Length > InlineLimit)
+                    {
+                        string name = SafeFileName(r.id);
+                        File.WriteAllText(Path.Combine(docDir, name + ".txt"), cell, new UTF8Encoding(true));
+                        cell = "@file:" + name;
+                        fileCount++;
+                    }
+                    if ((r.text?.Length ?? 0) > BodyCharBudget) { r.note += "（長い:要確認）"; overBudget++; }
+                    cells[4] = "仮";
+                    cells[5] = (existing != null ? "★新規 " : "") + r.note;
+                    cells[MetaHeader.Length + jaCol] = cell;
+                    added++;
+                }
+                built.Add((r, cells));
             }
-            // ExcelがUTF-8と判別できるようBOM付きで書く
-            File.WriteAllText(tsvPath, sb.ToString(), new UTF8Encoding(true));
+
+            // ---- 章ごとのシートに分ける ----
+            var header = new List<string>(MetaHeader);
+            header.AddRange(languages);
+            var widths = new List<double> { 34, 7, 13, 9, 7, 18 };
+            for (int i = 0; i < languages.Length; i++) widths.Add(52);
+
+            var sheets = new List<XlsxWriter.Sheet>();
+            var counts = new List<string>();
+            for (int ch = 0; ch <= StoryScript.ChapterTabNames.Length; ch++)
+            {
+                bool common = ch == StoryScript.ChapterTabNames.Length;   // 最後は部屋に属さない定型文
+                var sheetRows = new List<string[]> { header.ToArray() };
+                foreach (var (row, cells) in built)
+                {
+                    int rowCh = string.IsNullOrEmpty(row.room) ? -1 : StoryScript.ChapterOf(row.room);
+                    if (common ? rowCh >= 0 : rowCh != ch) continue;
+                    sheetRows.Add(cells);
+                }
+                if (sheetRows.Count <= 1) continue;
+                string name = common ? "共通" : StoryScript.ChapterTabNames[ch];
+                sheets.Add(new XlsxWriter.Sheet { Name = name, Rows = sheetRows, ColumnWidths = widths.ToArray() });
+                counts.Add($"{name} {sheetRows.Count - 1}件");
+            }
+
+            string bookPath = Path.Combine(outDir, ExportBookName);
+            XlsxWriter.Write(bookPath, sheets);
+
+            // 差分が見えるようTSVも出す（Gitで中身の変化を追える。取り込みにも使える）
+            var tsv = new StringBuilder();
+            tsv.Append(string.Join("\t", header)).Append('\n');
+            foreach (var (_, cells) in built)
+                tsv.Append(string.Join("\t", Array.ConvertAll(cells, c => (c ?? "").Replace("\n", "\\n").Replace("\t", " ")))).Append('\n');
+            string tsvPath = Path.Combine(outDir, ExportFileName);
+            File.WriteAllText(tsvPath, tsv.ToString(), new UTF8Encoding(true));
 
             return
-                $"書き出し完了\n\n" +
-                $"　シート: {tsvPath}\n　　{rows.Count}件（部屋 {roomCount}）\n" +
-                $"　本文txt: {docDir}\n　　{fileCount}件（長文はこちら。セルは @file: 参照）\n" +
+                "書き出し完了\n\n" +
+                $"　Excel: {bookPath}\n　　{string.Join(" / ", counts)}\n" +
+                $"　　計 {rows.Count}件（部屋 {roomCount}）　言語 {string.Join(", ", languages)}\n" +
+                (existing != null
+                    ? $"　　原本から引き継ぎ {kept}件／新規 {added}件（note列に★新規）\n"
+                    : "　　（原本がまだ無いので、全件を新規として書き出しました）\n") +
+                $"　本文txt: {docDir}　{fileCount}件（長文。セルは @file: 参照）\n" +
                 (overBudget > 0 ? $"　※資料ウィンドウに収まらない恐れ: {overBudget}件（note列に印）\n" : "") +
-                $"\nこのTSVをExcelで開き『GameText.xlsx』として保存すると原本になります。";
+                existingNote +
+                $"\n原本（{GameTextImporter.DefaultBookRelative}）は上書きしていません。\n" +
+                "この書き出しを原本として使う場合は、名前を GameText.xlsx に変えてください。";
+        }
+
+        /// <summary>原本 GameText.xlsx を読み、id → （各言語の文面・status・note）にする</summary>
+        private static Dictionary<string, (string[] values, string status, string note)> LoadExistingBook(
+            out string[] languages, out string note)
+        {
+            languages = null; note = "";
+            string path = GameTextImporter.DefaultBookPath();
+            if (!File.Exists(path)) return null;
+            try
+            {
+                var rows = GameTextImporter.ReadSheet(path);
+                if (rows.Count < 2) return null;
+                var header = Array.ConvertAll(rows[0], h => (h ?? "").Replace("\uFEFF", "").Trim());
+                int idCol = Array.FindIndex(header, h => string.Equals(h, "id", StringComparison.OrdinalIgnoreCase));
+                if (idCol < 0) { note = "　※原本に id 列が無いので引き継げませんでした\n"; return null; }
+                int statusCol = Array.FindIndex(header, h => string.Equals(h, "status", StringComparison.OrdinalIgnoreCase));
+                int noteCol = Array.FindIndex(header, h => string.Equals(h, "note", StringComparison.OrdinalIgnoreCase));
+
+                var meta = new HashSet<string>(MetaHeader, StringComparer.OrdinalIgnoreCase) { "memo", "max", "種別", "部屋", "話者", "状態", "備考" };
+                var langCols = new List<(string lang, int col)>();
+                for (int c = 0; c < header.Length; c++)
+                    if (!string.IsNullOrEmpty(header[c]) && !meta.Contains(header[c])) langCols.Add((header[c], c));
+                if (langCols.Count == 0) { note = "　※原本に言語列が無いので引き継げませんでした\n"; return null; }
+                languages = langCols.ConvertAll(l => l.lang).ToArray();
+
+                var map = new Dictionary<string, (string[], string, string)>(StringComparer.Ordinal);
+                for (int r = 1; r < rows.Count; r++)
+                {
+                    var row = rows[r];
+                    string id = idCol < row.Length ? (row[idCol] ?? "").Replace("\uFEFF", "").Trim() : null;
+                    if (string.IsNullOrEmpty(id) || id.StartsWith("#") || map.ContainsKey(id)) continue;
+                    var vals = new string[langCols.Count];
+                    for (int i = 0; i < langCols.Count; i++)
+                        vals[i] = langCols[i].col < row.Length ? row[langCols[i].col] : "";
+                    map[id] = (vals,
+                        statusCol >= 0 && statusCol < row.Length ? row[statusCol] : "",
+                        noteCol >= 0 && noteCol < row.Length ? row[noteCol] : "");
+                }
+                return map;
+            }
+            catch (Exception e)
+            {
+                note = $"　※原本を読めませんでした（{e.Message}）。引き継ぎ無しで書き出します\n";
+                return null;
+            }
         }
 
         [MenuItem("Tools/EscapePrototype/Text/差し替え状況を確認する")]

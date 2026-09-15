@@ -46,6 +46,51 @@ namespace EscapeProto
 
         public static string ChapterLabel(string roomId) =>
             roomId != null && ChapterLabels.TryGetValue(roomId, out var s) ? s : null;
+
+        // ============================== 章の区分（手帳のタブ・テキストシートの分割で共用） ==============================
+
+        /// <summary>部屋の並び（章内は 起・転・結 の順）</summary>
+        public static readonly string[] RoomOrder =
+        {
+            "dim", "train", "lab",
+            "study", "analysis", "saeki_home",
+            "ward", "core_ante", "mizuno_apart",
+            "data_room", "system_room", "kuroda_home",
+            "core_main", "son_room",
+        };
+
+        /// <summary>章の短い名前（手帳のタブ／シート名）</summary>
+        public static readonly string[] ChapterTabNames = { "序", "1章", "2章", "3章", "終章" };
+
+        /// <summary>章の見出し（手帳の章タイトル）</summary>
+        public static readonly string[] ChapterTitles =
+        {
+            "序　── 目覚め ──",
+            "1章　佐伯恒一　── 本人を本人たらしめるものは何か ──",
+            "2章　水野美奈　── 善意はどこまで許されるのか ──",
+            "3章　黒田恒一　── 正しいことと救うことは同じではない ──",
+            "終章　RENASCITA",
+        };
+
+        private static readonly Dictionary<string, int> RoomChapter = new Dictionary<string, int>
+        {
+            { "dim", 0 }, { "train", 0 }, { "lab", 0 },
+            { "study", 1 }, { "analysis", 1 }, { "saeki_home", 1 },
+            { "ward", 2 }, { "core_ante", 2 }, { "mizuno_apart", 2 },
+            { "data_room", 3 }, { "system_room", 3 }, { "kuroda_home", 3 },
+            { "core_main", 4 }, { "son_room", 4 },
+        };
+
+        /// <summary>部屋Id → 章番号（0=序 … 4=終章）。未知の部屋は -1</summary>
+        public static int ChapterOf(string roomId) =>
+            roomId != null && RoomChapter.TryGetValue(roomId, out int c) ? c : -1;
+
+        /// <summary>部屋Id → 並び順（未知は最後）</summary>
+        public static int RoomOrderIndex(string roomId)
+        {
+            int i = System.Array.IndexOf(RoomOrder, roomId);
+            return i < 0 ? int.MaxValue : i;
+        }
     }
 
     /// <summary>
