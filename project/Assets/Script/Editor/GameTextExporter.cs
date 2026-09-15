@@ -29,7 +29,12 @@ namespace EscapeProto.EditorTools
         {
             public string id, kind, room, speaker, text;
             public string note = "";
+            /// <summary>拾った瞬間に画面へ出る文（＝「拾得」シートへ集める）</summary>
+            public bool pickup;
         }
+
+        /// <summary>「拾得」シートの名前</summary>
+        private const string PickupSheetName = "拾得";
 
         [MenuItem("Tools/EscapePrototype/Text/現在のテキストを書き出す（章ごとのExcel）")]
         public static void ExportFromMenu()
@@ -83,8 +88,10 @@ namespace EscapeProto.EditorTools
 
                 if (existing != null && existing.TryGetValue(r.id, out var old))
                 {
-                    // 既に原本にある行 → 文面も status も note もそのまま残す
-                    cells[4] = old.status; cells[5] = old.note;
+                    // 既に原本にある行 → 文面と status はそのまま残す。
+                    // note は書き手が書いたものを優先し、空ならこちらの説明を入れる
+                    cells[4] = old.status;
+                    cells[5] = string.IsNullOrEmpty(old.note) ? r.note : old.note;
                     for (int i = 0; i < languages.Length; i++)
                         cells[MetaHeader.Length + i] = i < old.values.Length ? old.values[i] : "";
                     kept++;
@@ -115,20 +122,25 @@ namespace EscapeProto.EditorTools
             var widths = new List<double> { 34, 7, 13, 9, 7, 18 };
             for (int i = 0; i < languages.Length; i++) widths.Add(52);
 
+            // 章ごと ＋「拾得」（拾った瞬間に出る文をまとめる）＋「共通」（その他の定型文）
             var sheets = new List<XlsxWriter.Sheet>();
             var counts = new List<string>();
-            for (int ch = 0; ch <= StoryScript.ChapterTabNames.Length; ch++)
+            int chapters = StoryScript.ChapterTabNames.Length;
+            for (int ch = 0; ch <= chapters + 1; ch++)
             {
-                bool common = ch == StoryScript.ChapterTabNames.Length;   // 最後は部屋に属さない定型文
+                bool pickupSheet = ch == chapters;
+                bool common = ch == chapters + 1;
                 var sheetRows = new List<string[]> { header.ToArray() };
                 foreach (var (row, cells) in built)
                 {
-                    int rowCh = string.IsNullOrEmpty(row.room) ? -1 : StoryScript.ChapterOf(row.room);
-                    if (common ? rowCh >= 0 : rowCh != ch) continue;
-                    sheetRows.Add(cells);
+                    bool take;
+                    if (pickupSheet) take = row.pickup;                      // 拾得は章より優先
+                    else if (common) take = !row.pickup && string.IsNullOrEmpty(row.room);
+                    else take = !row.pickup && !string.IsNullOrEmpty(row.room) && StoryScript.ChapterOf(row.room) == ch;
+                    if (take) sheetRows.Add(cells);
                 }
                 if (sheetRows.Count <= 1) continue;
-                string name = common ? "共通" : StoryScript.ChapterTabNames[ch];
+                string name = pickupSheet ? PickupSheetName : common ? "共通" : StoryScript.ChapterTabNames[ch];
                 sheets.Add(new XlsxWriter.Sheet { Name = name, Rows = sheetRows, ColumnWidths = widths.ToArray() });
                 counts.Add($"{name} {sheetRows.Count - 1}件");
             }
@@ -246,24 +258,24 @@ namespace EscapeProto.EditorTools
         /// {0} などは差し込み位置。翻訳時も同じ数だけ残すこと。
         /// ※ここを増やしたらコード側の GameText.Get(GameText.UiKey(...), 既定文) と対にする
         /// </summary>
-        private static readonly (string key, string text)[] UiTexts =
+        private static readonly (string key, string text, string note, bool pickup)[] UiTexts =
         {
-            ("pickup",            "『{0}』を手に入れた{1}"),
-            ("filed",             "『{0}』を手帳に綴じた"),
-            ("echo_seen",         "残響を見た──『{0}』を手帳に記録した"),
-            ("need_notebook",     "書き留めるものがない……手帳を探そう"),
-            ("prompt.doc",        "[E] {0}を調べる"),
-            ("prompt.doc_done",   "[E] {0}（記録済み）"),
-            ("prompt.no_notebook", "{0}（書き留めるものがない）"),
-            ("prompt.lock",       "[E] {0}を操作する"),
-            ("prompt.lock_done",  "[E] {0}（解決済み）"),
-            ("lock_done",         "{0}（解決済み）"),
-            ("lock_solved",       "{0}を解いた"),
-            ("wrong",             "違うようだ。"),
-            ("wrong.flagged",     "　──手帳に付箋を立てた。関係のある記録があるはずだ"),
-            ("wrong.reread",      "　──手帳の付箋を読み直そう"),
-            ("wrong.unread",      "　──まだ読んでいない資料があるのかもしれない"),
-            ("step_of",           "\n\n手順 {0} / {1}"),
+            ("pickup",            "『{0}』を手に入れた{1}", "拾った時のトースト（{0}=品名 {1}=ヒント）", true),
+            ("filed",             "『{0}』を手帳に綴じた", "資料を読んだ時のトースト（{0}=見出し）", true),
+            ("echo_seen",         "残響を見た──『{0}』を手帳に記録した", "", false),
+            ("need_notebook",     "書き留めるものがない……手帳を探そう", "手帳を持たずに資料を調べた時", true),
+            ("prompt.doc",        "[E] {0}を調べる", "拾う/調べる時の操作表示（{0}=品名）", true),
+            ("prompt.doc_done",   "[E] {0}（記録済み）", "", false),
+            ("prompt.no_notebook", "{0}（書き留めるものがない）", "", false),
+            ("prompt.lock",       "[E] {0}を操作する", "", false),
+            ("prompt.lock_done",  "[E] {0}（解決済み）", "", false),
+            ("lock_done",         "{0}（解決済み）", "", false),
+            ("lock_solved",       "{0}を解いた", "", false),
+            ("wrong",             "違うようだ。", "", false),
+            ("wrong.flagged",     "　──手帳に付箋を立てた。関係のある記録があるはずだ", "", false),
+            ("wrong.reread",      "　──手帳の付箋を読み直そう", "", false),
+            ("wrong.unread",      "　──まだ読んでいない資料があるのかもしれない", "", false),
+            ("step_of",           "\n\n手順 {0} / {1}", "", false),
         };
 
         // ============================== 収集 ==============================
@@ -289,10 +301,15 @@ namespace EscapeProto.EditorTools
                     if (string.IsNullOrEmpty(f.Id)) continue;
                     string k = GameText.DocKey(room.Id, f.Id);
                     string kind = f.Id == "toy" ? "toy" : "doc";
-                    Add(rows, k + ".name", kind, room.Id, "", f.DisplayName);
+                    // 拾って消えるもの（手帳・懐中電灯・思い出のおもちゃ）は、品名とヒントが
+                    // 拾った瞬間のトーストに出る → まとめて直せるよう「拾得」シートへ
+                    bool pick = f.DisappearOnPickup;
+                    Add(rows, k + ".name", kind, room.Id, "", f.DisplayName,
+                        pick ? "トーストの品名" : "調べる時の表示名", pick);
                     Add(rows, k + ".title", kind, room.Id, "", f.NoteTitle);
                     Add(rows, k + ".body", kind, room.Id, "", f.NoteBody);
-                    Add(rows, k + ".hint", kind, room.Id, "", f.PickupHint);
+                    Add(rows, k + ".hint", kind, room.Id, "", f.PickupHint,
+                        pick ? "トーストの操作ヒント" : "", pick);
                 }
 
                 // 残響（台詞は音声なのでテキストは記録文のみ）
@@ -348,16 +365,17 @@ namespace EscapeProto.EditorTools
             }
 
             // コード側の定型文
-            foreach (var (key, text) in UiTexts)
-                Add(rows, GameText.UiKey(key), "ui", "", "", text);
+            foreach (var (key, text, note, pickup) in UiTexts)
+                Add(rows, GameText.UiKey(key), "ui", "", "", text, note, pickup);
             return rows;
         }
 
-        private static void Add(List<Row> rows, string id, string kind, string room, string speaker, string text)
+        private static void Add(List<Row> rows, string id, string kind, string room, string speaker, string text,
+                                string note = "", bool pickup = false)
         {
             if (string.IsNullOrEmpty(text)) return;
             if (rows.Any(r => r.id == id)) return;   // 同IDは1回だけ
-            rows.Add(new Row { id = id, kind = kind, room = room, speaker = speaker, text = text });
+            rows.Add(new Row { id = id, kind = kind, room = room, speaker = speaker, text = text, note = note, pickup = pickup });
         }
 
         private static string SafeFileName(string id)
