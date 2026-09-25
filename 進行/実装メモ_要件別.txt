@@ -198,8 +198,17 @@
 　　再生成: python GenAssets/dim/make_textures.py
 　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_dim.py
 　　　→ Assets/Models/HQ/Dim/Dim_*.fbx、Assets/EscapePrototype/Textures/HQ/Dim/*.png
-　　Unity側: HqModel(部屋,部品) があれば外殻・扉・什器をそれに差し替え（当たり判定は箱のまま＋見えない箱を追加）。
-　　　材質は HqMat() の表（DIM_*）。残り13部屋は従来の外殻のまま
+　　済: 電車車内（train）… 昭和末期の通勤電車：クリーム色の化粧板・丸い天井・灰色のリノリウム／
+　　　　深紅のモケットのロングシート（ヒーターの羽根板）・化粧板の袖仕切りとステンレスの曲げパイプ・握り棒／
+　　　　角丸の窓（アルミ枠・上下の仕切り）・両開きの側扉（窓・ゴム・注意ステッカー・敷居）・網棚（網と受け金具）・
+　　　　白い輪の吊革・天井両脇の蛍光灯・冷房吹出口・扇風機・中吊り3枚と窓上広告・路線図・号車札・優先席／
+　　　　妻面（妻窓・通路の枠・非常通報器）・赤い車端扉（角丸の窓）・車内の配電盤とレバー
+　　　　調べる中吊り（研究所の広告）は額付きの両面ポスターに差し替え（調べる判定は元の箱）
+　　再生成: python GenAssets/train/make_textures.py →
+　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_train.py
+　　Unity側: HqModel(部屋,部品) があれば外殻・扉・什器・配電盤・レバーをそれに差し替え
+　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_*）。
+　　　テクスチャの共通部品は GenAssets/texlib.py。残り12部屋は従来の外殻のまま
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用
 　・デザインキャンバス：Material 3 のギミックUI（記憶回路・ログ照合・キーパッド・配電盤・手帳・トークン表）

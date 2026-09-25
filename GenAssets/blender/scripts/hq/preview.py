@@ -20,6 +20,8 @@ def lights(specs):
 
 def shot(path, cam_u, look_u, lens=18, res=(1280, 720), world=(0.02, 0.02, 0.022), exposure=0.0):
     sc = bpy.context.scene
+    engines = [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
+    sc.render.engine = "BLENDER_EEVEE" if "BLENDER_EEVEE" in engines else "BLENDER_EEVEE_NEXT"
     cam = bpy.data.objects.get("PCam")
     if cam is None:
         cd = bpy.data.cameras.new("PCam")

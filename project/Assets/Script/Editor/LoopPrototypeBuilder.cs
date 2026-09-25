@@ -435,6 +435,7 @@ namespace EscapeProto
                 case "kuroda_home":  color = new Color(1f, 0.85f, 0.6f);     intensity = 0.5f; range = 8f; break;
                 case "mizuno_apart": color = new Color(1f, 0.9f, 0.75f);     intensity = 0.5f; range = 7f; break;
                 case "son_room":     color = new Color(1f, 0.97f, 0.9f);     intensity = 0.7f; range = 7f; break;
+                case "train":        color = new Color(0.93f, 0.96f, 1f);    intensity = 1.3f; range = 10f; break;   // 夜の車内の蛍光灯
                 default:             color = new Color(1f, 0.96f, 0.9f);     intensity = 2.0f; range = 12f; break;
             }
 
@@ -445,9 +446,10 @@ namespace EscapeProto
                 float z = count == 1 ? 0f : -def.d * 0.5f + def.d * (i + 0.5f) / count;
                 var go = new GameObject("RoomLight");
                 go.transform.SetParent(t, false);
-                // 品質重視の外殻には天井灯の器具があるので、光源はその直下に置く
-                bool hqShell = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(def.id, "Shell")) != null;
-                go.transform.localPosition = new Vector3(0f, def.h - (hqShell ? 0.22f : 0.7f), z);
+                // 薄暗い部屋の品質重視の外殻には天井の中央に照明器具があるので、光源はその直下に置く
+                //（電車は照明が天井の両脇なので、中吊り広告の影が伸びないよう従来の高さのまま）
+                bool fixtureAbove = def.id == "dim" && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(def.id, "Shell")) != null;
+                go.transform.localPosition = new Vector3(0f, def.h - (fixtureAbove ? 0.22f : 0.7f), z);
                 var l = go.AddComponent<Light>();
                 l.type = LightType.Point;
                 l.color = color;
@@ -1039,6 +1041,23 @@ namespace EscapeProto
                 Deco(t, "DummyAd", new Vector3(0f, adY, z), new Vector3(1.0f, 0.6f, 0.02f), poster);
                 Deco(t, "DummyAdWire", new Vector3(-0.45f, adY + 0.3f + wireLen * 0.5f + 0.09f, z), new Vector3(0.015f, wireLen + 0.18f, 0.015f), chrome);
                 Deco(t, "DummyAdWire", new Vector3(0.45f, adY + 0.3f + wireLen * 0.5f + 0.09f, z), new Vector3(0.015f, wireLen + 0.18f, 0.015f), chrome);
+            }
+
+            // 品質重視モデル（ロングシート・袖仕切り・握り棒・網棚・吊革・広告）があれば箱の見た目を差し替える。
+            // 座席・袖仕切り・妻面の箱は当たり判定として残る
+            if (Visual(t, HqModel("train", "Interior"), Vector3.zero) != null)
+            {
+                HideRenderers(t, "Seat", "SeatBase", "SeatBack", "YellowLine", "SleevePanel", "SleeveRail", "SleevePipe",
+                    "Pole", "SleeveTopBar", "WindowFrame", "Window", "RackPipe", "RackBracket", "SidePoster",
+                    "StrapRail", "Strap", "StrapRing", "StrapHole", "RailHanger", "SideDoor", "SideDoorSeam",
+                    "SideDoorWindow", "RouteMap", "FluorescentTube", "TubeHousing", "Vent", "EndPanel", "EndWindow",
+                    "EndPole", "EndDoorWindow", "EndDoorWindowFrame", "EndDoorSign", "DummyAd", "DummyAdWire");
+                // 調べられる中吊り：見た目だけ額付きの両面ポスターに（調べる判定と文字は元のまま）
+                if (Visual(panel.transform, HqModel("train", "AdPanel"), Vector3.zero) != null)
+                {
+                    HideRenderers(ad.transform, "Wire_L", "Wire_R");
+                    HideRenderers(panel.transform.parent, panel.name);
+                }
             }
 
             return new[] { "ad" };
@@ -2674,8 +2693,12 @@ namespace EscapeProto
             Box(unit.transform, "Body", new Vector3(0f, 1.35f, 0f), new Vector3(0.25f, 0.8f, 0.5f), boxMat);
             var lever = Box(unit.transform, "Lever", new Vector3(-0.16f, 1.35f, 0f), new Vector3(0.1f, 0.22f, 0.12f), leverMat);
             // Blender製の分電盤（壁の受け金具・警告ラベル・電線管付き）。レバーは動くので箱のまま残す
-            if (Visual(unit.transform, "Assets/Models/Props/BreakerBox.fbx", Vector3.zero) != null)
+            if ((Visual(unit.transform, HqModel(roomId, "Breaker"), Vector3.zero)
+                 ?? Visual(unit.transform, "Assets/Models/Props/BreakerBox.fbx", Vector3.zero)) != null)
                 HideRenderers(unit.transform, "Body");
+            // 品質重視のレバー（レバーの子なので上げ下げに付いて動く）
+            if (Visual(lever.transform, HqModel(roomId, "Lever"), Vector3.zero) != null)
+                HideRenderers(unit.transform, "Lever");
             // 本体でもレバーでも視線が通るよう、コンポーネントはユニットのルートに付ける
             //（子コライダーからGetComponentInParentで解決される）
             var sw = unit.AddComponent<BreakerSwitch>();
@@ -3122,6 +3145,47 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 電車車内 ----
+                case "TRN_Melamine":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("Train/melamine"), HqTex("Train/melamine_n", true), 0.3f);
+                case "TRN_Linoleum":  return HqLit(n, Color.white, 0.35f, 0f, HqTex("Train/linoleum"), HqTex("Train/linoleum_n", true), 0.4f);
+                case "TRN_Moquette":  return HqLit(n, Color.white, 0.05f, 0f, HqTex("Train/moquette"), HqTex("Train/moquette_n", true), 0.6f);
+                case "TRN_Stainless": return HqLit(n, Color.white, 0.72f, 0.9f, HqTex("Train/stainless"), HqTex("Train/stainless_n", true), 0.3f);
+                case "TRN_Aluminum":  return HqLit(n, new Color(0.78f, 0.79f, 0.8f), 0.55f, 0.6f);
+                case "TRN_Glass":     return HqLit(n, new Color(0.02f, 0.025f, 0.03f), 0.95f, 0.3f);
+                case "TRN_Rubber":    return HqLit(n, new Color(0.04f, 0.04f, 0.04f), 0.25f);
+                case "TRN_DarkGrille":return HqLit(n, new Color(0.12f, 0.12f, 0.13f), 0.4f, 0.5f);
+                case "TRN_LightCover":return HqLit(n, new Color(0.95f, 0.95f, 0.92f), 0.6f, 0f, null, null, 1f, new Color(0.92f, 0.96f, 1f) * 1.6f);
+                case "TRN_DoorRed":   return HqLit(n, new Color(0.55f, 0.07f, 0.07f), 0.55f);
+                case "TRN_StrapWhite":return HqLit(n, new Color(0.9f, 0.89f, 0.84f), 0.45f);
+                case "TRN_StrapBelt": return HqLit(n, new Color(0.75f, 0.74f, 0.7f), 0.2f);
+                case "TRN_FanCream":  return HqLit(n, new Color(0.82f, 0.8f, 0.72f), 0.45f);
+                case "TRN_Hazard":    return HqLit(n, new Color(0.9f, 0.72f, 0.1f), 0.4f);
+                case "TRN_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "TRN_AdEikaiwa": return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/ad_eikaiwa", clamp: true));
+                case "TRN_AdTravel":  return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/ad_travel", clamp: true));
+                case "TRN_AdMedicine":return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/ad_medicine", clamp: true));
+                case "TRN_SideRealEstate": return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/side_realestate", clamp: true));
+                case "TRN_SideClinic":return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/side_clinic", clamp: true));
+                case "TRN_RouteMap":  return HqLit(n, Color.white, 0.3f, 0f, HqTex("Train/route_map", clamp: true));
+                case "TRN_DoorSticker": return HqLit(n, Color.white, 0.4f, 0f, HqTex("Train/door_sticker", clamp: true));
+                case "TRN_CarNumber": return HqLit(n, Color.white, 0.4f, 0f, HqTex("Train/car_number", clamp: true));
+                case "TRN_Priority":  return HqLit(n, Color.white, 0.4f, 0f, HqTex("Train/priority", clamp: true));
+                case "TRN_AdLab":
+                {
+                    // 調べられる研究所の広告（生成画像）。車内の暗さでも読めるよう少し自発光させる
+                    var tex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Arts/Generated/ad_poster_jp.png");
+                    return HqLit(n, Color.white, 0.2f, 0f, tex, null, 1f, Color.white * 0.4f, tex);
+                }
+                case "TRN_Net":
+                {
+                    // 網棚の網：アルファで穴を抜き、下からも見えるよう両面描画
+                    var m = HqLit(n, Color.white, 0.5f, 0.6f, HqTex("Train/rack_net", alpha: true));
+                    m.SetFloat("_AlphaClip", 1f); m.SetFloat("_Cutoff", 0.5f); m.EnableKeyword("_ALPHATEST_ON");
+                    m.SetFloat("_Cull", 0f); m.doubleSidedGI = true;
+                    m.renderQueue = (int)RenderQueue.AlphaTest;
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
                 case "DIM_Stain":
                 {
                     var m = GlassMat(n, Color.white);
@@ -3189,7 +3253,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
