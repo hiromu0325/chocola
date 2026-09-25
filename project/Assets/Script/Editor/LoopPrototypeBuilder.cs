@@ -2718,6 +2718,7 @@ namespace EscapeProto
             var cloth = GetMat("LP_Bedding", new Color(0.55f, 0.52f, 0.5f), 0.1f);
             var paper = GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f);
             var shoe = GetMat("LP_SmallShoe", new Color(0.75f, 0.3f, 0.25f), 0.2f);
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("son_room", "Interior")) != null;
 
             // 窓から差し込む柔らかい白い光
             var sun = new GameObject("WhiteLight");
@@ -2733,26 +2734,29 @@ namespace EscapeProto
             Box(bed.transform, "Frame", new Vector3(0f, 0.18f, 0f), new Vector3(0.8f, 0.36f, 1.5f), wood);
             Box(bed.transform, "Mattress", new Vector3(0f, 0.42f, 0f), new Vector3(0.75f, 0.12f, 1.4f), cloth);
             var blockColors = new[] { new Color(0.8f, 0.3f, 0.3f), new Color(0.3f, 0.5f, 0.8f), new Color(0.85f, 0.75f, 0.3f) };
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3 && !hq; i++)
                 Deco(t, $"ToyBlock_{i}", new Vector3(0.3f + i * 0.18f, 0.06f, -0.6f), new Vector3(0.12f, 0.12f, 0.12f),
                     GetMat($"LP_Toy_{i}", blockColors[i], 0.2f));
             // ラグ、東の窓（白いカーテン越しの光）、壁のクレヨン画、玩具の棚、小さな椅子
-            Rug(t, new Vector3(0.2f, 0f, 0.2f), new Vector2(1.8f, 1.6f), new Color(0.55f, 0.65f, 0.7f));
-            Window(t, new Vector3(hw - 0.08f, 1.45f, 1.4f), 90f, 1.1f, 1.0f, true, new Color(0.92f, 0.92f, 0.9f));
+            if (!hq)
+            {
+                Rug(t, new Vector3(0.2f, 0f, 0.2f), new Vector2(1.8f, 1.6f), new Color(0.55f, 0.65f, 0.7f));
+                Window(t, new Vector3(hw - 0.08f, 1.45f, 1.4f), 90f, 1.1f, 1.0f, true, new Color(0.92f, 0.92f, 0.9f));
+            }
             var crayon = GetMat("LP_Crayon", new Color(0.95f, 0.9f, 0.75f), 0.1f);
-            for (int i = 0; i < 3; i++)   // 北壁の、出口扉の左側に並ぶ
+            for (int i = 0; i < 3 && !hq; i++)   // 北壁の、出口扉の左側に並ぶ
                 Deco(t, "Drawing", new Vector3(-1.7f + i * 0.45f, 1.5f + (i % 2) * 0.1f, hd - 0.09f), new Vector3(0.3f, 0.24f, 0.01f), crayon);
             Box(t, "ToyShelf", new Vector3(-hw + 0.3f, 0.6f, -1.2f), new Vector3(0.35f, 1.2f, 1.0f), wood);
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3 && !hq; i++)
                 Deco(t, "ShelfToy", new Vector3(-hw + 0.3f, 0.3f + i * 0.4f + 0.08f, -1.4f + i * 0.2f), new Vector3(0.14f, 0.14f, 0.14f),
                     GetMat($"LP_Toy_{i}", blockColors[i], 0.2f));
             Box(t, "SmallChair", new Vector3(hw - 1.0f, 0.15f, -0.5f), new Vector3(0.3f, 0.3f, 0.3f), wood);
 
             // 机の上：丁寧に揃えられた小さな運動靴と、治療計画書
             var desk = Desk(t, "Desk", new Vector3(hw - 1.0f, 0f, -1.2f), wood);
-            foreach (float dx in new[] { -0.08f, 0.08f })
+            foreach (float dx in hq ? new float[0] : new[] { -0.08f, 0.08f })
                 Deco(desk.transform, "SmallShoe", new Vector3(-0.35f + dx, 0.78f, 0.1f), new Vector3(0.07f, 0.06f, 0.17f), shoe);
-            Findable(desk.transform, "plan", "古いファイル", new Vector3(0.3f, 0.76f, 0f), paper,
+            var planGo = Findable(desk.transform, "plan", "古いファイル", new Vector3(0.3f, 0.76f, 0f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "書きかけの治療計画書",
                 "《治療計画書（初版・手書き）》\n\n" +
@@ -2766,6 +2770,20 @@ namespace EscapeProto
                 "ここは記憶ではなく、祈りで作られた部屋。\n\n" +
                 "（試験実装はここまで。この先──娘の断片収集と\n" +
                 "　アップロードは、次の実装で続く）");
+
+            if (hq)
+            {
+                // 祈りで作られた明るい子供部屋の見た目（当たり判定・調べる判定は元の箱のまま）
+                Visual(t, HqModel("son_room", "Interior"), Vector3.zero);
+                HideRenderers(bed.transform, "Frame", "Mattress");
+                HideRenderers(t, "ToyShelf", "SmallChair");
+                if (Visual(desk.transform, HqModel("son_room", "Desk"), Vector3.zero) != null)
+                {
+                    HideRenderers(desk.transform, "Top", "Leg");
+                    Solid(desk.transform, "HutchCol", new Vector3(0f, 1.0f, -0.24f), new Vector3(1.4f, 0.5f, 0.24f));
+                }
+                if (Visual(planGo.transform, HqModel("son_room", "Plan"), Vector3.zero) != null) HideRenderers(desk.transform, planGo.name);
+            }
 
             return new[] { "plan" };
         }
@@ -3568,6 +3586,55 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 息子の部屋 ----
+                case "SON_Floor":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("SonRoom/floor"), HqTex("SonRoom/floor_n", true), 0.4f);
+                case "SON_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("SonRoom/wallpaper"), HqTex("SonRoom/wallpaper_n", true), 0.3f);
+                case "SON_Ceiling":   return HqLit(n, new Color(0.97f, 0.97f, 0.96f), 0.05f);
+                case "SON_WhiteWood": return HqLit(n, new Color(0.95f, 0.94f, 0.9f), 0.55f);
+                case "SON_Wood":      return HqLit(n, new Color(1.2f, 1.15f, 1.05f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "SON_Quilt":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("SonRoom/quilt"), HqTex("SonRoom/quilt_n", true), 0.4f);
+                case "SON_Pillow":    return HqLit(n, new Color(0.96f, 0.95f, 0.92f), 0.05f);
+                case "SON_PlushDog":  return HqLit(n, new Color(0.85f, 0.75f, 0.6f), 0.02f);
+                case "SON_Curtain":   return HqLit(n, Color.white, 0.05f, 0f, HqTex("SonRoom/curtain"), HqTex("SonRoom/curtain_n", true), 0.3f);
+                case "SON_SkyMorning":return HqLit(n, Color.black, 0f, 0f, null, null, 1f, Color.white * 1.1f, HqTex("SonRoom/sky_morning", clamp: true));
+                case "SON_WindowGlass":
+                {
+                    var m = GlassMat(n, new Color(0.85f, 0.87f, 0.9f, 0.08f));
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "SON_LightBeam":
+                {
+                    // 窓から差す光の筋：ごく薄い半透明で、両面から見える
+                    var m = GlassMat(n, new Color(1f, 0.98f, 0.92f, 0.05f));
+                    m.SetFloat("_Cull", 0f);
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    m.SetFloat("_EnvironmentReflections", 0f); m.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+                    m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", new Color(1f, 0.98f, 0.92f) * 0.08f);
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "SON_CeilingLight": return HqLit(n, new Color(1f, 0.98f, 0.94f), 0.5f, 0f, null, null, 1f, new Color(1f, 0.96f, 0.88f) * 1.3f);
+                case "SON_Playmat":   return HqLit(n, Color.white, 0.05f, 0f, HqTex("SonRoom/playmat", clamp: true), HqTex("SonRoom/playmat_n", true), 0.4f);
+                case "SON_Drawings":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("SonRoom/drawings", clamp: true));
+                case "SON_HeightChart": return HqLit(n, Color.white, 0.4f, 0f, HqTex("SonRoom/height_chart", clamp: true));
+                case "SON_Plan":      return HqLit(n, Color.white, 0.1f, 0f, HqTex("SonRoom/plan", clamp: true));
+                case "SON_ToyRed":    return HqLit(n, new Color(0.8f, 0.22f, 0.2f), 0.65f);
+                case "SON_ToyBlue":   return HqLit(n, new Color(0.2f, 0.42f, 0.8f), 0.65f);
+                case "SON_ToyYellow": return HqLit(n, new Color(0.92f, 0.76f, 0.2f), 0.65f);
+                case "SON_ToyGreen":  return HqLit(n, new Color(0.3f, 0.65f, 0.35f), 0.65f);
+                case "SON_ToyGrey":   return HqLit(n, new Color(0.62f, 0.64f, 0.68f), 0.65f, 0.4f);
+                case "SON_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "SON_Randoseru": return HqLit(n, new Color(0.05f, 0.05f, 0.06f), 0.7f);
+                case "SON_ShoeRed":   return HqLit(n, new Color(0.75f, 0.3f, 0.25f), 0.3f);
+                case "SON_ShoeSole":  return HqLit(n, new Color(0.94f, 0.93f, 0.9f), 0.4f);
+                case "SON_Globe":     return HqLit(n, new Color(0.3f, 0.55f, 0.8f), 0.7f);
+                case "SON_String":    return HqLit(n, new Color(0.9f, 0.9f, 0.9f), 0.2f);
+                case "SON_PaperPlain":return HqLit(n, new Color(0.94f, 0.93f, 0.9f), 0.1f);
+                case "SON_Aluminum":  return HqLit(n, new Color(0.8f, 0.81f, 0.82f), 0.7f, 0.9f);
+                case "SON_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "SON_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
                 // ---- MAIN CORE ROOM ----
                 case "CMN_Stone":     return HqLit(n, Color.white, 0.85f, 0f, HqTex("CoreMain/dark_stone"), HqTex("CoreMain/dark_stone_n", true), 0.3f);
                 case "CMN_WallRib":   return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreMain/wall_rib"), HqTex("CoreMain/wall_rib_n", true), 0.6f);
@@ -4205,7 +4272,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
