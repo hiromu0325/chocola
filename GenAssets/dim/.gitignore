@@ -1,0 +1,4 @@
+# make_textures.py で再生成できるもの（Unity用は project/Assets/EscapePrototype/Textures/HQ/Dim にある）
+tex/
+tex_sheet*.png
+__pycache__/

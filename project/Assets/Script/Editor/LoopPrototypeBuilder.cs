@@ -313,7 +313,9 @@ namespace EscapeProto
             // Blender製の外殻（床・壁・天井・幅木・扉枠など部屋の建築部分の見た目）。
             // あれば箱の見た目を消して置き換える。当たり判定は上の箱のBoxColliderをそのまま使うので、
             // 歩ける範囲・視線の通り方・資料の拾いやすさは外殻の有無で変わらない
-            bool shell = Visual(t, $"{ShellDir}/Shell_{def.id}.fbx", Vector3.zero) != null;
+            // 品質重視で作り直した部屋（Assets/Models/HQ/<部屋>/）があればそちらを優先する
+            bool shell = (Visual(t, HqModel(def.id, "Shell"), Vector3.zero)
+                          ?? Visual(t, $"{ShellDir}/Shell_{def.id}.fbx", Vector3.zero)) != null;
             if (shell) HideRenderers(t, "Floor", "Ceiling", "Wall_Seg", "Wall_Lintel", "Wall_E", "Wall_W");
 
             // 幅木と天井回り縁（箱だけの部屋に「建築」の輪郭を与える。外殻がある部屋は外殻側に含まれる）
@@ -443,7 +445,9 @@ namespace EscapeProto
                 float z = count == 1 ? 0f : -def.d * 0.5f + def.d * (i + 0.5f) / count;
                 var go = new GameObject("RoomLight");
                 go.transform.SetParent(t, false);
-                go.transform.localPosition = new Vector3(0f, def.h - 0.7f, z);
+                // 品質重視の外殻には天井灯の器具があるので、光源はその直下に置く
+                bool hqShell = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(def.id, "Shell")) != null;
+                go.transform.localPosition = new Vector3(0f, def.h - (hqShell ? 0.22f : 0.7f), z);
                 var l = go.AddComponent<Light>();
                 l.type = LightType.Point;
                 l.color = color;
@@ -575,11 +579,20 @@ namespace EscapeProto
             Box(bed.transform, "Frame", new Vector3(0f, 0.22f, 0f), new Vector3(1.1f, 0.44f, 2.1f), wood);
             Box(bed.transform, "Mattress", new Vector3(0f, 0.52f, 0f), new Vector3(1.0f, 0.18f, 2.0f), cloth);
             Box(bed.transform, "Pillow", new Vector3(0f, 0.66f, -0.75f), new Vector3(0.6f, 0.12f, 0.35f), cloth);
+            // 品質重視のモデル（木枠・キルトの掛け布団・枕）。当たり判定は上の箱のまま。頭板の分だけ足す
+            if (Visual(bed.transform, HqModel("dim", "Bed"), Vector3.zero) != null)
+            {
+                HideRenderers(bed.transform, "Frame", "Mattress", "Pillow");
+                Solid(bed.transform, "HeadboardCol", new Vector3(0f, 0.47f, -1.03f), new Vector3(1.14f, 0.94f, 0.08f));
+            }
 
             // 机（東壁沿い）＋ランプ
             var desk = Desk(t, "Desk", new Vector3(hw - 1.4f, 0f, 0.6f), wood);
+            if (Visual(desk.transform, HqModel("dim", "Desk"), Vector3.zero) != null)
+                HideRenderers(desk.transform, "Top", "Leg");
+            // ランプは手帳と重ならないよう机の右奥の角へ
             var lamp = new GameObject("Lamp"); lamp.transform.SetParent(desk.transform, false);
-            lamp.transform.localPosition = new Vector3(0.5f, 0.75f, 0.2f);
+            lamp.transform.localPosition = new Vector3(0.6f, 0.75f, 0.25f);
             Box(lamp.transform, "Base", new Vector3(0f, 0.03f, 0f), new Vector3(0.16f, 0.06f, 0.16f), metal);
             Box(lamp.transform, "Pole", new Vector3(0f, 0.2f, 0f), new Vector3(0.04f, 0.34f, 0.04f), metal);
             var shade = GetMat("LP_LampShade", new Color(0.95f, 0.85f, 0.6f), 0.2f);
@@ -587,20 +600,25 @@ namespace EscapeProto
             shade.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             shade.SetColor("_EmissionColor", new Color(1f, 0.88f, 0.6f) * 2.5f);
             Box(lamp.transform, "Shade", new Vector3(0f, 0.42f, 0f), new Vector3(0.24f, 0.14f, 0.24f), shade);
+            bool hqLamp = Visual(lamp.transform, HqModel("dim", "Lamp"), Vector3.zero) != null;
+            if (hqLamp) HideRenderers(lamp.transform, "Base", "Pole", "Shade");
             var ll = new GameObject("LampLight"); ll.transform.SetParent(lamp.transform, false);
-            ll.transform.localPosition = new Vector3(0f, 0.38f, 0f);
+            ll.transform.localPosition = new Vector3(0f, hqLamp ? 0.41f : 0.38f, 0f);   // 電球の位置
             var lightC = ll.AddComponent<Light>();
             lightC.type = LightType.Point; lightC.color = new Color(1f, 0.88f, 0.65f);
             lightC.intensity = 2.2f; lightC.range = 6f;
 
             // 新聞記事（机の上）
-            Findable(desk.transform, "news", "新聞記事", new Vector3(-0.28f, 0.76f, 0f), paper,
+            var newsGo = Findable(desk.transform, "news", "新聞記事", new Vector3(-0.28f, 0.76f, 0f), paper,
                 new Vector3(0.42f, 0.02f, 0.3f),
                 "新聞記事（切り抜き）",
                 "《地域面》\n小川脳神経総合研究所、臨床試験を再開\n\n" +
                 "……同研究所は「脳神経とAIの融合」を掲げ、\n記憶領域への介入実験を進めていたとされる。\n" +
                 "関係者によれば、被験者の一部に\n『眠りから覚めない』症例が報告されており……\n\n" +
                 "（記事の下半分は破り取られている）");
+            // 資料の見た目も差し替える（調べる判定は箱のトリガーのまま。拾うと子ごと消える）
+            if (Visual(newsGo.transform, HqModel("dim", "Newspaper"), Vector3.zero) != null)
+                HideRenderers(desk.transform, newsGo.name);
 
             // 懐中電灯（机の上。拾うと消える道具）
             var flGo = Findable(desk.transform, "flashlight", "懐中電灯", new Vector3(0.15f, 0.79f, -0.1f), metal,
@@ -608,6 +626,8 @@ namespace EscapeProto
             var flF = flGo.GetComponent<LoopFindable>();
             flF.DisappearOnPickup = true;
             flF.PickupHint = "F: 点灯";
+            if (Visual(flGo.transform, HqModel("dim", "Flashlight"), Vector3.zero) != null)
+                HideRenderers(desk.transform, flGo.name);
 
             // 手帳（机の上。拾うと消える道具。拾うまで資料は読めずTabも開けない）
             // 木の机に埋もれないよう、濃い緑の表紙＋白い小口＋赤い栞で見分けやすくする
@@ -622,6 +642,11 @@ namespace EscapeProto
             // 小口（表紙よりわずかに薄く短い白い束）と栞
             Deco(nbGo.transform, "Pages", new Vector3(0.008f, 0f, 0f), new Vector3(0.196f, 0.038f, 0.148f), pageMat);
             Deco(nbGo.transform, "Bookmark", new Vector3(0.045f, 0.03f, -0.055f), new Vector3(0.02f, 0.006f, 0.2f), markMat);
+            if (Visual(nbGo.transform, HqModel("dim", "Notebook"), Vector3.zero) != null)
+            {
+                HideRenderers(nbGo.transform, "Pages", "Bookmark");
+                HideRenderers(desk.transform, nbGo.name);
+            }
 
             // ---- セーブPC（記録端末。北西の隅の小さな台の上）----
             var saveMat = GetMat("LP_SavePc", new Color(0.3f, 0.32f, 0.34f), 0.4f);
@@ -632,19 +657,23 @@ namespace EscapeProto
             var savePc = new GameObject("SavePc");
             savePc.transform.SetParent(t, false);
             savePc.transform.localPosition = new Vector3(-hw + 0.9f, 0f, hd - 1.0f);
-            savePc.transform.localRotation = Quaternion.Euler(0f, 135f, 0f);
+            // 画面(-Z)を部屋の中央（南東）へ向ける。以前の135°は画面が隅の壁を向いていた
+            savePc.transform.localRotation = Quaternion.Euler(0f, -45f, 0f);
             Box(savePc.transform, "Stand", new Vector3(0f, 0.42f, 0f), new Vector3(0.62f, 0.84f, 0.5f), wood);
             Box(savePc.transform, "Body", new Vector3(0f, 1.02f, 0.02f), new Vector3(0.44f, 0.36f, 0.34f), saveMat);
             Box(savePc.transform, "Screen", new Vector3(0f, 1.02f, -0.16f), new Vector3(0.34f, 0.26f, 0.02f), screenMat);
             Box(savePc.transform, "Keyboard", new Vector3(0f, 0.86f, -0.16f), new Vector3(0.36f, 0.03f, 0.14f), saveMat);
+            if (Visual(savePc.transform, HqModel("dim", "Terminal"), Vector3.zero) != null)
+                HideRenderers(savePc.transform, "Stand", "Body", "Screen", "Keyboard");
             var saveLightGo = new GameObject("ScreenGlow");
             saveLightGo.transform.SetParent(savePc.transform, false);
             saveLightGo.transform.localPosition = new Vector3(0f, 1.05f, -0.3f);
             var saveLight = saveLightGo.AddComponent<Light>();
             saveLight.type = LightType.Point;
             saveLight.color = new Color(0.35f, 1f, 0.5f);
-            saveLight.intensity = 0.8f;
-            saveLight.range = 2.5f;
+            // 画面が部屋の方を向いたので、隅を染めないよう控えめに
+            saveLight.intensity = 0.35f;
+            saveLight.range = 2.0f;
             savePc.AddComponent<SavePoint>();
 
             // ---- 陶器人形の棚（東壁の北側。残機の数だけ人形が並ぶ）----
@@ -652,24 +681,42 @@ namespace EscapeProto
             var dollMat = GetMat("LP_Doll", new Color(0.94f, 0.93f, 0.9f), 0.55f);
             var shelfGo = new GameObject("DollShelf");
             shelfGo.transform.SetParent(t, false);
-            shelfGo.transform.localPosition = new Vector3(hw - 0.35f, 0f, 2.2f);
+            shelfGo.transform.localPosition = new Vector3(hw - 0.225f, 0f, 2.2f);   // 棚板の奥が壁に付く位置
             Box(shelfGo.transform, "Board", new Vector3(0f, 1.15f, 0f), new Vector3(0.3f, 0.05f, 1.5f), shelfMat);
             Box(shelfGo.transform, "Bracket", new Vector3(0.1f, 1.02f, -0.55f), new Vector3(0.08f, 0.24f, 0.08f), shelfMat);
             Box(shelfGo.transform, "Bracket", new Vector3(0.1f, 1.02f, 0.55f), new Vector3(0.08f, 0.24f, 0.08f), shelfMat);
+            if (Visual(shelfGo.transform, HqModel("dim", "DollShelf"), Vector3.zero) != null)
+                HideRenderers(shelfGo.transform, "Board", "Bracket");
             var dollsRoot = new GameObject("Dolls");
             dollsRoot.transform.SetParent(shelfGo.transform, false);
             for (int i = 0; i < 5; i++)
             {
-                var doll = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                doll.name = $"Doll_{i}";
+                // 人形1体 = 棚板の上に立つ空の親（DollShelf が子ごと表示／非表示にする）
+                var doll = new GameObject($"Doll_{i}");
                 doll.transform.SetParent(dollsRoot.transform, false);
-                doll.transform.localPosition = new Vector3(0f, 1.3f, -0.56f + i * 0.28f);
-                doll.transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
-                doll.GetComponent<Renderer>().sharedMaterial = dollMat;
-                Object.DestroyImmediate(doll.GetComponent<Collider>());
+                doll.transform.localPosition = new Vector3(0f, 1.175f, -0.56f + i * 0.28f);
+                if (Visual(doll.transform, HqModel("dim", "Doll"), Vector3.zero, -90f) != null) continue;   // 部屋の方(-X)を向く
+                var cap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                cap.name = "Body";
+                cap.transform.SetParent(doll.transform, false);
+                cap.transform.localPosition = new Vector3(0f, 0.125f, 0f);
+                cap.transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
+                cap.GetComponent<Renderer>().sharedMaterial = dollMat;
+                Object.DestroyImmediate(cap.GetComponent<Collider>());
             }
             var shelfComp = shelfGo.AddComponent<DollShelf>();
             shelfComp.DollsRoot = dollsRoot.transform;
+
+            // ---- 品質重視モデルで足した家具（見た目はFBX、当たり判定は見えない箱）----
+            HqProp(t, "dim", "Nightstand", new Vector3(-hw + 0.36f, 0f, -1.8f), 0f,
+                (new Vector3(0f, 0.28f, 0f), new Vector3(0.44f, 0.56f, 0.4f)));
+            HqProp(t, "dim", "Chest", new Vector3(-2.2f, 0f, -hd + 0.31f), 0f,
+                (new Vector3(0f, 0.425f, -0.005f), new Vector3(0.92f, 0.85f, 0.46f)));
+            HqProp(t, "dim", "Wardrobe", new Vector3(hw - 0.39f, 0f, -2.4f), -90f,
+                (new Vector3(0f, 0.95f, -0.005f), new Vector3(1.06f, 1.9f, 0.61f)));
+            HqProp(t, "dim", "Chair", new Vector3(hw - 1.5f, 0f, 0.02f), 8f,
+                (new Vector3(0f, 0.225f, 0f), new Vector3(0.42f, 0.45f, 0.4f)),
+                (new Vector3(0f, 0.675f, -0.175f), new Vector3(0.42f, 0.45f, 0.05f)));
 
             // ---- 起床カットシーン（ベッドから起き上がる）----
             BuildIntroCutscene(t, new Vector3(-hw + 1.2f, 0f, -1.0f), hd);
@@ -2606,8 +2653,9 @@ namespace EscapeProto
             unit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             var panel = Box(unit.transform, "Panel", new Vector3(0f, 1.05f, 0f), new Vector3(0.92f, 2.1f, 0.08f), mat);
             // 部屋の系統ごとのBlender製の扉（施設＝窓付き鋼製、コア＝防爆扉、住宅＝木製…）
-            if (!string.IsNullOrEmpty(style) &&
-                Visual(unit.transform, $"Assets/Models/Props/RoomDoor_{style}.fbx", Vector3.zero) != null)
+            if ((Visual(unit.transform, HqModel(roomId, "Door"), Vector3.zero) ??
+                 (string.IsNullOrEmpty(style) ? null
+                     : Visual(unit.transform, $"Assets/Models/Props/RoomDoor_{style}.fbx", Vector3.zero))) != null)
                 HideRenderers(unit.transform, "Panel");
             var door = panel.AddComponent<LoopRoomDoor>();
             door.RoomId = roomId;
@@ -2944,6 +2992,158 @@ namespace EscapeProto
             return go;
         }
 
+        // ---- 品質重視で作り直した部屋（GenAssets/blender/scripts/hq → Assets/Models/HQ/<部屋>/）----
+        private const string HqDir = "Assets/Models/HQ";
+        private const string HqTexDir = "Assets/EscapePrototype/Textures/HQ";
+
+        /// <summary>部屋Id・部品名 → FBXのパス（"dim","Bed" → Assets/Models/HQ/Dim/Dim_Bed.fbx）</summary>
+        private static string HqModel(string roomId, string part)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var w in roomId.Split('_'))
+                if (w.Length > 0) sb.Append(char.ToUpperInvariant(w[0])).Append(w.Substring(1));
+            string room = sb.ToString();
+            return $"{HqDir}/{room}/{room}_{part}.fbx";
+        }
+
+        /// <summary>見えない当たり判定の箱</summary>
+        private static GameObject Solid(Transform parent, string name, Vector3 pos, Vector3 size)
+        {
+            var go = Box(parent, name, pos, size, null);
+            Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+            return go;
+        }
+
+        /// <summary>品質重視モデルの家具を置き、見えない箱で当たり判定を付ける。モデルが無ければ何も置かない</summary>
+        private static GameObject HqProp(Transform parent, string roomId, string part, Vector3 pos, float yaw,
+                                         params (Vector3 center, Vector3 size)[] colliders)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(roomId, part)) == null) return null;
+            var unit = new GameObject(part);
+            unit.transform.SetParent(parent, false);
+            unit.transform.localPosition = pos;
+            unit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            Visual(unit.transform, HqModel(roomId, part), Vector3.zero);
+            for (int i = 0; i < colliders.Length; i++)
+                Solid(unit.transform, "Col" + i, colliders[i].center, colliders[i].size);
+            return unit;
+        }
+
+        /// <summary>品質重視モデル用のテクスチャ（法線マップは取り込み設定を合わせる）</summary>
+        private static Texture2D HqTex(string file, bool normal = false, bool clamp = false, bool alpha = false)
+        {
+            string path = $"{HqTexDir}/{file}.png";
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter imp)) return null;
+            bool dirty = false;
+            if (normal && imp.textureType != TextureImporterType.NormalMap) { imp.textureType = TextureImporterType.NormalMap; dirty = true; }
+            var wrap = clamp ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
+            if (imp.wrapMode != wrap) { imp.wrapMode = wrap; dirty = true; }
+            if (alpha && !imp.alphaIsTransparency) { imp.alphaIsTransparency = true; dirty = true; }
+            if (imp.anisoLevel < 4) { imp.anisoLevel = 4; dirty = true; }
+            if (dirty) imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>URP Lit の材質にテクスチャ・法線・発光を設定する</summary>
+        private static Material HqLit(string name, Color tint, float smooth, float metal = 0f,
+                                      Texture2D albedo = null, Texture2D normal = null, float bump = 1f,
+                                      Color? emission = null, Texture2D emissionMap = null)
+        {
+            var m = GetMat(name, tint, smooth);
+            m.SetTexture("_BaseMap", albedo);
+            m.mainTextureScale = Vector2.one;
+            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metal);
+            if (normal != null)
+            {
+                m.SetTexture("_BumpMap", normal); m.SetFloat("_BumpScale", bump); m.EnableKeyword("_NORMALMAP");
+            }
+            else
+            {
+                m.SetTexture("_BumpMap", null); m.DisableKeyword("_NORMALMAP");
+            }
+            if (emission.HasValue)
+            {
+                m.EnableKeyword("_EMISSION");
+                m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                m.SetColor("_EmissionColor", emission.Value);
+                m.SetTexture("_EmissionMap", emissionMap);
+            }
+            else
+            {
+                m.DisableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", Color.black);
+                m.SetTexture("_EmissionMap", null);
+            }
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>品質重視モデルの材質（Blender側の材質名 → Unityの材質）。名前は "DIM_*" など部屋の接頭辞付き</summary>
+        private static Material HqMat(Material src)
+        {
+            string n = src.name;
+            switch (n)
+            {
+                // ---- 薄暗い部屋 ----
+                case "DIM_Wallpaper": return HqLit(n, Color.white, 0.12f, 0f, HqTex("Dim/wallpaper"), HqTex("Dim/wallpaper_n", true), 0.6f);
+                case "DIM_Carpet":    return HqLit(n, Color.white, 0.02f, 0f, HqTex("Dim/carpet"), HqTex("Dim/carpet_n", true), 0.8f);
+                case "DIM_Plaster":   return HqLit(n, new Color(0.95f, 0.94f, 0.92f), 0.05f, 0f, HqTex("Dim/plaster"), HqTex("Dim/plaster_n", true), 0.4f);
+                case "DIM_Walnut":    return HqLit(n, Color.white, 0.5f, 0f, HqTex("Dim/walnut"), HqTex("Dim/walnut_n", true), 0.35f);
+                case "DIM_WalnutDark":return HqLit(n, new Color(0.7f, 0.68f, 0.66f), 0.55f, 0f, HqTex("Dim/walnut"), HqTex("Dim/walnut_n", true), 0.35f);
+                case "DIM_Trim":      return HqLit(n, new Color(0.6f, 0.58f, 0.56f), 0.5f, 0f, HqTex("Dim/walnut"), HqTex("Dim/walnut_n", true), 0.35f);
+                case "DIM_Quilt":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/quilt"), HqTex("Dim/quilt_n", true), 0.5f);
+                case "DIM_Linen":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/linen"), HqTex("Dim/linen_n", true), 0.4f);
+                case "DIM_Mattress":  return HqLit(n, new Color(0.97f, 0.97f, 0.97f), 0.05f, 0f, HqTex("Dim/linen"), HqTex("Dim/linen_n", true), 0.4f);
+                case "DIM_Newspaper": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/newspaper", clamp: true));
+                case "DIM_CrtScreen": return HqLit(n, Color.white, 0.9f, 0f, HqTex("Dim/crt_screen", clamp: true), null, 1f,
+                                                   Color.white * 1.3f, HqTex("Dim/crt_screen", clamp: true));
+                case "DIM_LampShade": return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.05f, 0f, HqTex("Dim/linen"), null, 1f,
+                                                   new Color(1f, 0.72f, 0.42f) * 1.1f, HqTex("Dim/linen"));
+                case "DIM_Bulb":      return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.3f, 0f, null, null, 1f, new Color(1f, 0.85f, 0.6f) * 3f);
+                case "DIM_FrostGlass":return HqLit(n, new Color(0.92f, 0.9f, 0.86f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.88f, 0.7f) * 0.9f);
+                case "DIM_Glass":     return HqLit(n, new Color(0.9f, 0.9f, 0.85f), 0.95f, 0f, null, null, 1f, new Color(0.3f, 0.3f, 0.28f));
+                case "DIM_Brass":     return HqLit(n, new Color(0.78f, 0.6f, 0.32f), 0.62f, 1f);
+                case "DIM_Metal":     return HqLit(n, new Color(0.55f, 0.56f, 0.58f), 0.7f, 1f);
+                case "DIM_BlackPlastic": return HqLit(n, new Color(0.03f, 0.03f, 0.03f), 0.5f);
+                case "DIM_BeigePlastic": return HqLit(n, new Color(0.70f, 0.66f, 0.56f), 0.45f);
+                case "DIM_Keycap":    return HqLit(n, new Color(0.62f, 0.58f, 0.50f), 0.4f);
+                case "DIM_Porcelain": return HqLit(n, new Color(0.94f, 0.92f, 0.88f), 0.85f);
+                case "DIM_DollDress": return HqLit(n, new Color(0.32f, 0.05f, 0.07f), 0.2f);
+                case "DIM_Lace":      return HqLit(n, new Color(0.93f, 0.91f, 0.86f), 0.1f);
+                case "DIM_DollHair":  return HqLit(n, new Color(0.04f, 0.03f, 0.03f), 0.6f);
+                case "DIM_DollEye":   return HqLit(n, new Color(0.02f, 0.02f, 0.025f), 0.95f);
+                case "DIM_DollLip":   return HqLit(n, new Color(0.55f, 0.12f, 0.14f), 0.5f);
+                case "DIM_Rubber":    return HqLit(n, new Color(0.05f, 0.05f, 0.05f), 0.2f);
+                case "DIM_NoteCover": return HqLit(n, new Color(0.10f, 0.22f, 0.16f), 0.35f);
+                case "DIM_Pages":     return HqLit(n, new Color(0.90f, 0.88f, 0.80f), 0.1f);
+                case "DIM_Ribbon":    return HqLit(n, new Color(0.60f, 0.10f, 0.10f), 0.4f);
+                case "DIM_Book1":     return HqLit(n, new Color(0.30f, 0.10f, 0.08f), 0.3f);
+                case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
+                case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
+                case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                case "DIM_Stain":
+                {
+                    var m = GlassMat(n, Color.white);
+                    m.SetTexture("_BaseMap", HqTex("Dim/stain", clamp: true, alpha: true));
+                    m.SetFloat("_Smoothness", 0f);
+                    // 透明部分に環境反射が残ると白い四角に見えるので、反射・ハイライトを切り、
+                    // 「スペキュラを保持」も外してアルファで全部消えるようにする
+                    m.SetFloat("_BlendModePreserveSpecular", 0f);
+                    m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                    m.SetFloat("_EnvironmentReflections", 0f);
+                    m.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+                    m.SetFloat("_SpecularHighlights", 0f);
+                    m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    m.SetFloat("_ReceiveShadows", 0f);
+                    m.EnableKeyword("_RECEIVE_SHADOWS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+            }
+            return GetMat(n, src.color, 0.3f);
+        }
+
         // ---- Blender製の建築部分（外殻・扉・分電盤）----
         private const string ShellDir = "Assets/Models/Rooms";
 
@@ -2989,6 +3189,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
+            if (n.StartsWith("DIM_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
