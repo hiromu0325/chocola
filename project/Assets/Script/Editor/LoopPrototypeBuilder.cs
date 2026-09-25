@@ -3243,6 +3243,10 @@ namespace EscapeProto
 
             var rts = New(root, "RoomTransition").AddComponent<RoomTransitionSystem>();
             rts.CorridorRoot = corridor;
+
+            // ブレイカー停止中は全部屋のPC・モニターの画面が砂嵐になる
+            New(root, "ScreenStatic").AddComponent<ScreenStaticOnOutage>().StaticMaterial =
+                UnlitMat("LP_ScreenStatic", Color.white);
         }
 
         private static GameObject New(GameObject parent, string name)
@@ -3326,6 +3330,40 @@ namespace EscapeProto
             m.DisableKeyword("_ALPHATEST_ON");
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>照明に左右されない材質（URP Unlit）。transparent=true でアルファ合成</summary>
+        private static Material UnlitMat(string name, Color color, bool transparent = false)
+        {
+            string path = $"{MatDir}/{name}.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            var sh = Shader.Find("Universal Render Pipeline/Unlit");
+            if (m == null) { m = new Material(sh); AssetDatabase.CreateAsset(m, path); }
+            else if (m.shader != sh) m.shader = sh;
+            m.color = color;
+            if (transparent)
+            {
+                m.SetFloat("_Surface", 1f);
+                m.SetFloat("_Blend", 0f);
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                m.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                m.SetInt("_ZWrite", 0);
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.renderQueue = (int)RenderQueue.Transparent;
+            }
+            else
+            {
+                m.SetFloat("_Surface", 0f);
+                m.SetOverrideTag("RenderType", "Opaque");
+                m.SetInt("_SrcBlend", (int)BlendMode.One);
+                m.SetInt("_DstBlend", (int)BlendMode.Zero);
+                m.SetInt("_ZWrite", 1);
+                m.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.renderQueue = -1;
+            }
             EditorUtility.SetDirty(m);
             return m;
         }

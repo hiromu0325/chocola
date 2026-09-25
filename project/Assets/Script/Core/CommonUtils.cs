@@ -247,6 +247,30 @@ namespace EscapeProto
             return _dialBuzz;
         }
 
+        private static AudioClip _staticHiss;
+
+        /// <summary>
+        /// 砂嵐の音（2秒ループ）。高域寄りのザーッというノイズ＋電源のうなり＋ときどきのプチッ。
+        /// 変調の周期は2秒の約数にしてあり、切れ目なくループする。
+        /// </summary>
+        public static AudioClip StaticHiss()
+        {
+            if (_staticHiss != null) return _staticHiss;
+            float prevIn = 0f, hp = 0f;
+            _staticHiss = Generate("statichiss", 2.0f, (t, dur) =>
+            {
+                float w = Random.value * 2f - 1f;
+                hp = 0.93f * (hp + w - prevIn);     // 低音を落として「ザー」に寄せる
+                prevIn = w;
+                float mod = 0.85f + 0.15f * Mathf.Sin(2f * Mathf.PI * 1.5f * t);
+                float hum = Mathf.Sin(2f * Mathf.PI * 50f * t) * 0.035f
+                          + Mathf.Sin(2f * Mathf.PI * 100f * t) * 0.02f;
+                float crackle = Random.value < 0.0006f ? (Random.value * 2f - 1f) * 0.7f : 0f;
+                return hp * 0.32f * mod + hum + crackle;
+            });
+            return _staticHiss;
+        }
+
         private delegate float SampleFunc(float time, float duration);
 
         private static AudioClip Generate(string name, float duration, SampleFunc func)
