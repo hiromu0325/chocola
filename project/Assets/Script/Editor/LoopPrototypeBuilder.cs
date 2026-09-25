@@ -1919,6 +1919,7 @@ namespace EscapeProto
             var fusuma = GetMat("LP_Fusuma", new Color(0.85f, 0.8f, 0.68f), 0.15f);
 
             float split = 1.0f;   // ここから奥が「病室」に変わる
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("mizuno_apart", "Interior")) != null;
 
             // ---- 手前: 生活感のあるワンルーム（暖色） ----
             var warm = new GameObject("WarmLight");
@@ -1942,8 +1943,11 @@ namespace EscapeProto
             // 小さなチェストの上に写真立て、東の窓にカーテン、床にラグ、壁にコルクボード
             Box(t, "Chest", new Vector3(hw - 0.45f, 0.3f, -2.2f), new Vector3(0.6f, 0.6f, 0.4f), wood);
             Deco(t, "PhotoStand", new Vector3(hw - 0.55f, 0.7f, -2.2f), new Vector3(0.14f, 0.18f, 0.04f), paper);
-            Window(t, new Vector3(hw - 0.08f, 1.5f, -1.2f), 90f, 1.0f, 1.1f, true, new Color(0.85f, 0.75f, 0.7f));
-            Rug(t, new Vector3(0.4f, 0f, -1.6f), new Vector2(1.6f, 1.3f), new Color(0.6f, 0.5f, 0.45f));
+            if (!hq)
+            {
+                Window(t, new Vector3(hw - 0.08f, 1.5f, -1.2f), 90f, 1.0f, 1.1f, true, new Color(0.85f, 0.75f, 0.7f));
+                Rug(t, new Vector3(0.4f, 0f, -1.6f), new Vector2(1.6f, 1.3f), new Color(0.6f, 0.5f, 0.45f));
+            }
             Deco(t, "CorkBoard", new Vector3(-hw + 0.09f, 1.6f, -2.0f), new Vector3(0.03f, 0.5f, 0.7f),
                 GetMat("LP_Cork", new Color(0.7f, 0.55f, 0.35f), 0.1f));
             foreach (float dz in new[] { -0.2f, 0.15f })
@@ -1956,7 +1960,7 @@ namespace EscapeProto
             lowT.transform.localPosition = new Vector3(1.3f, 0f, -1.6f);
             Box(lowT.transform, "Top", new Vector3(0f, 0.34f, 0f), new Vector3(0.9f, 0.05f, 0.6f), wood);
             Box(lowT.transform, "Legs", new Vector3(0f, 0.17f, 0f), new Vector3(0.8f, 0.34f, 0.5f), wood);
-            Findable(lowT.transform, "diary", "日記帳", new Vector3(-0.15f, 0.38f, 0f), paper,
+            var diaryGo = Findable(lowT.transform, "diary", "日記帳", new Vector3(-0.15f, 0.38f, 0f), paper,
                 new Vector3(0.24f, 0.02f, 0.18f),
                 "水野の日記",
                 "《日記》\n\n" +
@@ -1995,7 +1999,7 @@ namespace EscapeProto
                 "この鍵で、SYSTEM ROOM に入れる。";
             Deco(laptop.transform, "Lid", new Vector3(0f, 0.11f, 0.11f), new Vector3(0.32f, 0.22f, 0.015f),
                 EmissiveMat("LP_LaptopScreen", new Color(0.15f, 0.2f, 0.3f), new Color(0.4f, 0.55f, 0.9f) * 0.6f));
-            Findable(counter.transform, "recorder", "ボイスレコーダー", new Vector3(0.1f, 0.91f, 0.1f),
+            var recGo = Findable(counter.transform, "recorder", "ボイスレコーダー", new Vector3(0.1f, 0.91f, 0.1f),
                 GetMat("LP_Recorder", new Color(0.2f, 0.2f, 0.22f), 0.5f),
                 new Vector3(0.05f, 0.02f, 0.12f),
                 "最後の録音",
@@ -2032,23 +2036,34 @@ namespace EscapeProto
                     new Vector3(0.02f, h - 0.02f, backLen), hwall);
             var hbed = new GameObject("HospitalBedUnit"); hbed.transform.SetParent(t, false);
             hbed.transform.localPosition = new Vector3(0.8f, 0f, hd - 1.7f);
+            if (hq)
+            {
+                // 品質重視：病室のベッド・点滴・床頭台・モニター・カーテンは MizunoApart_Interior にある（頭 = 北）
+                Solid(hbed.transform, "FrameCol", new Vector3(0f, 0.36f, 0f), new Vector3(1.0f, 0.72f, 2.1f));
+                Solid(hbed.transform, "HeadCol", new Vector3(0f, 0.85f, 1.02f), new Vector3(1.0f, 0.3f, 0.06f));
+                Solid(hbed.transform, "FootCol", new Vector3(0f, 0.8f, -1.02f), new Vector3(1.0f, 0.2f, 0.06f));
+                Solid(t, "BedsideCabinet", new Vector3(-0.6f, 0.55f, hd - 0.6f), new Vector3(0.47f, 1.1f, 0.47f));
+            }
             // 頭側を奥（北）へ向ける＝180度回転
-            if (Prop(hbed.transform, "HospitalBed", Vector3.zero, 180f) == null)
+            else if (Prop(hbed.transform, "HospitalBed", Vector3.zero, 180f) == null)
             {
                 Box(hbed.transform, "Frame", new Vector3(0f, 0.3f, 0f), new Vector3(1.0f, 0.6f, 2.1f), frameM);
                 Box(hbed.transform, "Sheet", new Vector3(0f, 0.66f, 0f), new Vector3(0.95f, 0.12f, 2.0f), sheet);
                 Deco(hbed.transform, "HeadBoard", new Vector3(0f, 0.85f, 1.02f), new Vector3(1.0f, 0.5f, 0.04f), frameM);
             }
-            if (Prop(hbed.transform, "IVStand", new Vector3(-0.72f, 0f, 0.7f), 0f, false) == null)
+            if (!hq && Prop(hbed.transform, "IVStand", new Vector3(-0.72f, 0f, 0.7f), 0f, false) == null)
             {
                 Deco(hbed.transform, "IvPole", new Vector3(-0.6f, 0.9f, 0.7f), new Vector3(0.03f, 1.8f, 0.03f), frameM);
                 Deco(hbed.transform, "IvBag", new Vector3(-0.6f, 1.6f, 0.7f), new Vector3(0.1f, 0.18f, 0.05f), sheet);
             }
-            Deco(hbed.transform, "CurtainRail", new Vector3(-0.75f, h - 0.25f, 0f), new Vector3(0.03f, 0.03f, 2.4f), frameM);
-            Deco(hbed.transform, "Curtain", new Vector3(-0.75f, (h - 0.3f + 0.4f) * 0.5f, -0.6f), new Vector3(0.05f, h - 0.7f, 1.0f),
-                GetMat("LP_WardCurtain", new Color(0.72f, 0.82f, 0.76f), 0.05f));
-            Window(t, new Vector3(hw - 0.08f, 1.6f, hd - 1.7f), 90f, 1.2f, 1.0f, false);
-            Deco(t, "BedsideCabinet", new Vector3(-0.6f, 0.3f, hd - 0.6f), new Vector3(0.5f, 0.6f, 0.45f), frameM);
+            if (!hq)
+            {
+                Deco(hbed.transform, "CurtainRail", new Vector3(-0.75f, h - 0.25f, 0f), new Vector3(0.03f, 0.03f, 2.4f), frameM);
+                Deco(hbed.transform, "Curtain", new Vector3(-0.75f, (h - 0.3f + 0.4f) * 0.5f, -0.6f), new Vector3(0.05f, h - 0.7f, 1.0f),
+                    GetMat("LP_WardCurtain", new Color(0.72f, 0.82f, 0.76f), 0.05f));
+                Window(t, new Vector3(hw - 0.08f, 1.6f, hd - 1.7f), 90f, 1.2f, 1.0f, false);
+                Deco(t, "BedsideCabinet", new Vector3(-0.6f, 0.3f, hd - 0.6f), new Vector3(0.5f, 0.6f, 0.45f), frameM);
+            }
 
             // 残響〈叔父の病室〉幼い水野
             Echo(t, "mizuno_uncle", "残響：病室（幼い水野の記憶）",
@@ -2069,7 +2084,28 @@ namespace EscapeProto
                 "なのに、どうして。彼女はこんなに、怯えている。",
                 2.6f, 0.6f, 0.22f,
                 (new Vector3(1.7f, 0f, -2.9f), -15f, 0.92f, -3f, 1f, false),
-                (new Vector3(1.4f, 0f, -1.5f), 170f, 1.12f, 2f, 0.15f, true));
+                (new Vector3(1.5f, 0f, -0.95f), 170f, 1.12f, 2f, 0.15f, true));   // 以前は (1.4, -1.5) でローテーブルに埋まっていた
+
+            if (hq)
+            {
+                // 品質重視の見た目に差し替え（当たり判定・調べる判定・ノートPCの鍵は元の箱のまま）
+                Visual(t, HqModel("mizuno_apart", "Interior"), Vector3.zero);
+                HideRenderers(bed.transform, "Frame", "Blanket");
+                HideRenderers(t, "PlantPot", "Plant", "Chest", "PhotoStand", "CorkBoard", "Pin",
+                    "FusumaWall_L", "FusumaWall_R", "FusumaLintel", "FusumaOpen", "TileFloor", "HospitalWallSkin");
+                HideRenderers(lowT.transform, "Top", "Legs");
+                HideRenderers(counter.transform, "Top", "Base");
+                Solid(t, "PlantCol", new Vector3(hw - 0.5f, 0.4f, -3.6f), new Vector3(0.4f, 0.8f, 0.4f));
+                Solid(t, "Fridge", new Vector3(-hw + 0.35f, 0.6f, 0.62f), new Vector3(0.5f, 1.2f, 0.54f));
+                Solid(t, "Bag", new Vector3(-0.95f, 0.2f, -3.95f), new Vector3(0.55f, 0.4f, 0.3f));
+                if (Visual(laptop.transform, HqModel("mizuno_apart", "Laptop"), Vector3.zero) != null)
+                {
+                    HideRenderers(laptop.transform, "Lid");
+                    HideRenderers(counter.transform, "Laptop");
+                }
+                if (Visual(diaryGo.transform, HqModel("mizuno_apart", "Diary"), Vector3.zero) != null) HideRenderers(lowT.transform, diaryGo.name);
+                if (Visual(recGo.transform, HqModel("mizuno_apart", "Recorder"), Vector3.zero) != null) HideRenderers(counter.transform, recGo.name);
+            }
 
             return new[] { "diary", "recorder", "pcfile" };
         }
@@ -3411,6 +3447,98 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 水野のアパート ----
+                case "MZA_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("MizunoApart/flooring"), HqTex("MizunoApart/flooring_n", true), 0.4f);
+                case "MZA_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/wallpaper"), HqTex("MizunoApart/wallpaper_n", true), 0.4f);
+                case "MZA_Ceiling":   return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.05f);
+                case "MZA_TrimWhite": return HqLit(n, new Color(0.92f, 0.91f, 0.88f), 0.45f);
+                case "MZA_WoodLight": return HqLit(n, new Color(1.05f, 1f, 0.95f), 0.45f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "MZA_WoodMid":   return HqLit(n, new Color(0.7f, 0.6f, 0.5f), 0.45f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "MZA_Duvet":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("MizunoApart/duvet"), HqTex("MizunoApart/duvet_n", true), 0.4f);
+                case "MZA_PillowCase":return HqLit(n, new Color(0.95f, 0.93f, 0.9f), 0.05f);
+                case "MZA_Plush":     return HqLit(n, new Color(0.92f, 0.88f, 0.84f), 0.02f);
+                case "MZA_Rug":       return HqLit(n, Color.white, 0.02f, 0f, HqTex("MizunoApart/rug"), HqTex("MizunoApart/rug_n", true), 0.6f);
+                case "MZA_Drape":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("MizunoApart/drape"), HqTex("MizunoApart/drape_n", true), 0.4f);
+                case "MZA_Cushion":   return HqLit(n, Color.white, 0.05f, 0f, HqTex("MizunoApart/cushion"), HqTex("MizunoApart/cushion_n", true), 0.4f);
+                case "MZA_Lace":
+                {
+                    // レースのカーテン：半透明で両面描画（抜きにすると細かい網目がミップで消える）
+                    var m = HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/lace", alpha: true));
+                    m.SetFloat("_Surface", 1f); m.SetFloat("_Blend", 0f);
+                    m.SetOverrideTag("RenderType", "Transparent");
+                    m.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); m.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                    m.SetInt("_ZWrite", 0); m.SetFloat("_AlphaClip", 0f); m.DisableKeyword("_ALPHATEST_ON"); m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                    m.SetFloat("_BlendModePreserveSpecular", 0f);
+                    m.SetFloat("_Cull", 0f); m.doubleSidedGI = true;
+                    m.renderQueue = (int)RenderQueue.Transparent;
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "MZA_FusumaPaper": return HqLit(n, Color.white, 0.15f, 0f, HqTex("MizunoApart/fusuma_paper"), HqTex("MizunoApart/fusuma_paper_n", true), 0.3f);
+                case "MZA_Lacquer":   return HqLit(n, new Color(0.08f, 0.05f, 0.04f), 0.8f);
+                case "MZA_Brass":     return HqLit(n, new Color(0.75f, 0.58f, 0.32f), 0.7f, 1f);
+                case "MZA_NightCity": return HqLit(n, Color.black, 0f, 0f, null, null, 1f, Color.white, HqTex("MizunoApart/night_city", clamp: true));
+                case "MZA_HospSky":   return HqLit(n, Color.black, 0f, 0f, null, null, 1f, Color.white, HqTex("Ward/sky_day", clamp: true));
+                case "MZA_WindowGlass":
+                {
+                    var m = GlassMat(n, new Color(0.7f, 0.72f, 0.76f, 0.1f));
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "MZA_IvBag":
+                {
+                    var m = GlassMat(n, new Color(0.85f, 0.9f, 0.92f, 0.35f));
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "MZA_Aluminum":  return HqLit(n, new Color(0.78f, 0.79f, 0.8f), 0.7f, 0.9f);
+                case "MZA_CeilingLight": return HqLit(n, new Color(1f, 0.96f, 0.9f), 0.5f, 0f, null, null, 1f, new Color(1f, 0.88f, 0.7f) * 1.3f);
+                case "MZA_CorkBoard": return HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/cork_board", clamp: true));
+                case "MZA_Calendar":  return HqLit(n, Color.white, 0.2f, 0f, HqTex("MizunoApart/calendar", clamp: true));
+                case "MZA_Photo":     return HqLit(n, Color.white, 0.5f, 0f, HqTex("MizunoApart/photo", clamp: true));
+                case "MZA_Diary":     return HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/diary", clamp: true));
+                case "MZA_DiaryCover":return HqLit(n, new Color(0.55f, 0.22f, 0.24f), 0.3f);
+                case "MZA_LaptopScreen": return HqLit(n, Color.white, 0.85f, 0f, HqTex("MizunoApart/laptop_screen", clamp: true), null, 1f, Color.white * 0.9f, HqTex("MizunoApart/laptop_screen", clamp: true));
+                case "MZA_Silver":    return HqLit(n, new Color(0.72f, 0.73f, 0.75f), 0.65f, 0.8f);
+                case "MZA_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "MZA_WhitePlastic": return HqLit(n, new Color(0.93f, 0.93f, 0.91f), 0.6f);
+                case "MZA_Stainless": return HqLit(n, new Color(0.8f, 0.81f, 0.83f), 0.45f, 0.8f);   // 天板が空を映さないよう、つやを抑える
+                case "MZA_Mug":       return HqLit(n, new Color(0.86f, 0.72f, 0.62f), 0.75f);
+                case "MZA_Kettle":    return HqLit(n, new Color(0.72f, 0.2f, 0.18f), 0.7f);
+                case "MZA_LabCoat":   return HqLit(n, new Color(0.94f, 0.94f, 0.93f), 0.05f);
+                case "MZA_BagCanvas": return HqLit(n, new Color(0.25f, 0.3f, 0.38f), 0.1f);
+                case "MZA_Leather":   return HqLit(n, new Color(0.35f, 0.22f, 0.14f), 0.5f);
+                case "MZA_Clothes":   return HqLit(n, new Color(0.8f, 0.72f, 0.6f), 0.05f);
+                case "MZA_Mirror":    return HqLit(n, new Color(0.9f, 0.9f, 0.92f), 0.97f, 1f);
+                case "MZA_Bottle":    return HqLit(n, new Color(0.7f, 0.85f, 0.9f), 0.9f);
+                case "MZA_Pot":       return HqLit(n, new Color(0.9f, 0.9f, 0.88f), 0.5f);
+                case "MZA_Soil":      return HqLit(n, new Color(0.12f, 0.08f, 0.05f), 0.05f);
+                case "MZA_Stem":      return HqLit(n, new Color(0.3f, 0.24f, 0.16f), 0.2f);
+                case "MZA_Leaf":      return HqLit(n, new Color(0.14f, 0.32f, 0.12f), 0.55f);
+                case "MZA_Flower":    return HqLit(n, new Color(0.95f, 0.9f, 0.5f), 0.3f);
+                case "MZA_HospVinyl": return HqLit(n, Color.white, 0.55f, 0f, HqTex("Ward/vinyl_floor"), HqTex("Ward/vinyl_floor_n", true), 0.3f);
+                case "MZA_HospPaint": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Ward/paint"), HqTex("Ward/paint_n", true), 0.3f);
+                case "MZA_HospWainscot": return HqLit(n, Color.white, 0.35f, 0f, HqTex("Ward/wainscot"), HqTex("Ward/wainscot_n", true), 0.5f);
+                case "MZA_HospCeiling": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Lab/ceiling_tile"), HqTex("Lab/ceiling_tile_n", true), 0.5f);
+                case "MZA_HospLed":   return HqLit(n, new Color(0.95f, 0.97f, 1f), 0.5f, 0f, null, null, 1f, new Color(0.9f, 0.95f, 1f) * 1.4f);
+                case "MZA_HospCurtain": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Ward/curtain"), HqTex("Ward/curtain_n", true), 0.4f);
+                case "MZA_HospCove":  return HqLit(n, new Color(0.42f, 0.44f, 0.42f), 0.4f);
+                case "MZA_Blind":     return HqLit(n, new Color(0.88f, 0.88f, 0.86f), 0.5f, 0.3f);
+                case "MZA_HospGrey":  return HqLit(n, new Color(0.55f, 0.57f, 0.58f), 0.5f);
+                case "MZA_HospIvory": return HqLit(n, new Color(0.9f, 0.89f, 0.84f), 0.55f);
+                case "MZA_Chrome":    return HqLit(n, new Color(0.9f, 0.9f, 0.9f), 0.9f, 1f);
+                case "MZA_Rubber":    return HqLit(n, new Color(0.05f, 0.05f, 0.05f), 0.2f);
+                case "MZA_HospLaminate": return HqLit(n, new Color(1.15f, 1.1f, 1.05f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "MZA_HospMattress": return HqLit(n, new Color(0.55f, 0.66f, 0.74f), 0.5f);
+                case "MZA_HospSheet": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Ward/sheet"), HqTex("Ward/sheet_n", true), 0.4f);
+                case "MZA_HospBlanket": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Ward/blanket"), HqTex("Ward/blanket_n", true), 0.5f);
+                case "MZA_TvScreen":  return HqLit(n, new Color(0.02f, 0.025f, 0.03f), 0.9f);
+                case "MZA_Tissue":    return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.05f);
+                case "MZA_Towel":     return HqLit(n, new Color(0.9f, 0.92f, 0.94f), 0.02f);
+                case "MZA_ScreenVitals": return HqLit(n, Color.white, 0.85f, 0f, HqTex("Ward/screen_vitals", clamp: true), null, 1f, Color.white, HqTex("Ward/screen_vitals", clamp: true));
+                case "MZA_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "MZA_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
                 // ---- CORE前室 ----
                 case "CAN_Epoxy":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("CoreAnte/epoxy_floor"), HqTex("CoreAnte/epoxy_floor_n", true), 0.5f);
                 case "CAN_Hazard":    return HqLit(n, Color.white, 0.3f, 0f, HqTex("CoreAnte/hazard"), HqTex("CoreAnte/hazard_n", true), 0.3f);
@@ -3778,7 +3906,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
