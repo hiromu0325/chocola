@@ -148,6 +148,11 @@ namespace EscapeProto
             // 内側ブロック（ロの中央の詰まった部分。面が内周壁になる）
             Box(t, "InnerBlock", new Vector3(0f, H * 0.5f, 0f), new Vector3(i * 2f, H, i * 2f), white);
 
+            // Blender製の外殻（腰壁・幅木・回り縁・天井灯）があれば、箱は当たり判定だけ残して見た目を差し替える
+            if (Visual(t, $"{ShellDir}/Shell_corridor.fbx", Vector3.zero) != null)
+                HideRenderers(t, "Floor", "Ceiling", "Wall_Out_N", "Wall_Out_S", "Wall_Out_E", "Wall_Out_W",
+                              "CornerPost", "InnerBlock");
+
             // 内周の扉 各辺10枚（部屋割当はRoomDefsから。それ以外はダミー）
             var doorMap = BuildDoorMap();
             var doorsRoot = new GameObject("Doors").transform;
@@ -191,6 +196,8 @@ namespace EscapeProto
             Box(ut, "Jamb_R", new Vector3(0.5f, 1.1f, 0.09f), new Vector3(0.08f, 2.2f, 0.1f), frame);
             Box(ut, "Lintel", new Vector3(0f, 2.24f, 0.09f), new Vector3(1.08f, 0.09f, 0.1f), frame);
             Box(ut, "Knob", new Vector3(0.32f, 1.02f, 0.14f), new Vector3(0.05f, 0.12f, 0.05f), frame);
+            if (Visual(ut, "Assets/Models/Props/CorridorDoor.fbx", Vector3.zero) != null)
+                HideRenderers(ut, "Panel", "Jamb_L", "Jamb_R", "Lintel", "Knob");
 
             // パネル・ノブ・枠のどこに視線が当たっても反応するようルートに付ける
             var ld = unit.AddComponent<LoopDoor>();
@@ -303,8 +310,14 @@ namespace EscapeProto
             Box(t, "Wall_E", new Vector3(hw, h * 0.5f, 0f), new Vector3(0.15f, h, def.d), wall);
             Box(t, "Wall_W", new Vector3(-hw, h * 0.5f, 0f), new Vector3(0.15f, h, def.d), wall);
 
-            // 幅木と天井回り縁（箱だけの部屋に「建築」の輪郭を与える）
-            if (IsFacility(def.id) || IsCore(def.id) || IsHome(def.id))
+            // Blender製の外殻（床・壁・天井・幅木・扉枠など部屋の建築部分の見た目）。
+            // あれば箱の見た目を消して置き換える。当たり判定は上の箱のBoxColliderをそのまま使うので、
+            // 歩ける範囲・視線の通り方・資料の拾いやすさは外殻の有無で変わらない
+            bool shell = Visual(t, $"{ShellDir}/Shell_{def.id}.fbx", Vector3.zero) != null;
+            if (shell) HideRenderers(t, "Floor", "Ceiling", "Wall_Seg", "Wall_Lintel", "Wall_E", "Wall_W");
+
+            // 幅木と天井回り縁（箱だけの部屋に「建築」の輪郭を与える。外殻がある部屋は外殻側に含まれる）
+            if (!shell && (IsFacility(def.id) || IsCore(def.id) || IsHome(def.id)))
             {
                 var trim = IsHome(def.id)
                     ? GetMat("LP_HomeTrim", new Color(0.5f, 0.38f, 0.26f), 0.3f)
@@ -316,8 +329,13 @@ namespace EscapeProto
 
             // 入口扉（南）／出口扉（北）
             bool startRoom = def.id == LoopProgress.StartRoomId;
-            RoomDoor(t, "EntryDoor", new Vector3(0f, 0f, -hd + 0.1f), 0f, def.id, false, startRoom, doorMat);
-            RoomDoor(t, "ExitDoor", new Vector3(0f, 0f, hd - 0.1f), 180f, def.id, true, startRoom, doorMat);
+            string doorStyle = def.id == "train" ? "train"
+                : IsFacility(def.id) ? "facility"
+                : IsCore(def.id) ? "core"
+                : IsHome(def.id) ? "home"
+                : "plain";
+            RoomDoor(t, "EntryDoor", new Vector3(0f, 0f, -hd + 0.1f), 0f, def.id, false, startRoom, doorMat, doorStyle);
+            RoomDoor(t, "ExitDoor", new Vector3(0f, 0f, hd - 0.1f), 180f, def.id, true, startRoom, doorMat, doorStyle);
 
             // スポーン地点（扉のすぐ内側）
             // スポーンの向き＝入った直後に見る方向。どちらの扉から入っても部屋の奥を向く
@@ -2579,13 +2597,18 @@ namespace EscapeProto
         }
 
         private static GameObject RoomDoor(Transform parent, string name, Vector3 pos, float yaw,
-                                           string roomId, bool isExit, bool requiresBreaker, Material mat)
+                                           string roomId, bool isExit, bool requiresBreaker, Material mat,
+                                           string style = null)
         {
             var unit = new GameObject(name);
             unit.transform.SetParent(parent, false);
             unit.transform.localPosition = pos;
             unit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             var panel = Box(unit.transform, "Panel", new Vector3(0f, 1.05f, 0f), new Vector3(0.92f, 2.1f, 0.08f), mat);
+            // 部屋の系統ごとのBlender製の扉（施設＝窓付き鋼製、コア＝防爆扉、住宅＝木製…）
+            if (!string.IsNullOrEmpty(style) &&
+                Visual(unit.transform, $"Assets/Models/Props/RoomDoor_{style}.fbx", Vector3.zero) != null)
+                HideRenderers(unit.transform, "Panel");
             var door = panel.AddComponent<LoopRoomDoor>();
             door.RoomId = roomId;
             door.IsExitDoor = isExit;
@@ -2602,6 +2625,9 @@ namespace EscapeProto
             unit.transform.localPosition = pos;
             Box(unit.transform, "Body", new Vector3(0f, 1.35f, 0f), new Vector3(0.25f, 0.8f, 0.5f), boxMat);
             var lever = Box(unit.transform, "Lever", new Vector3(-0.16f, 1.35f, 0f), new Vector3(0.1f, 0.22f, 0.12f), leverMat);
+            // Blender製の分電盤（壁の受け金具・警告ラベル・電線管付き）。レバーは動くので箱のまま残す
+            if (Visual(unit.transform, "Assets/Models/Props/BreakerBox.fbx", Vector3.zero) != null)
+                HideRenderers(unit.transform, "Body");
             // 本体でもレバーでも視線が通るよう、コンポーネントはユニットのルートに付ける
             //（子コライダーからGetComponentInParentで解決される）
             var sw = unit.AddComponent<BreakerSwitch>();
@@ -2916,6 +2942,73 @@ namespace EscapeProto
                 }
             }
             return go;
+        }
+
+        // ---- Blender製の建築部分（外殻・扉・分電盤）----
+        private const string ShellDir = "Assets/Models/Rooms";
+
+        /// <summary>
+        /// 見た目だけのBlender製モデルを置く（コライダーは付けない。当たり判定は既存の箱が受け持つ）。
+        /// モデルが無ければnull（呼び出し側は箱の見た目のまま）
+        /// </summary>
+        private static GameObject Visual(Transform parent, string path, Vector3 pos, float yaw = 0f)
+        {
+            var go = Place(path, parent, pos, yaw);
+            if (go == null) return null;
+            go.name = System.IO.Path.GetFileNameWithoutExtension(path);
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            {
+                var mats = r.sharedMaterials;
+                for (int k = 0; k < mats.Length; k++)
+                    if (mats[k] != null) mats[k] = ShellMat(mats[k]);
+                r.sharedMaterials = mats;
+            }
+            foreach (var c in go.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            return go;
+        }
+
+        /// <summary>指定した名前の直下の箱から見た目だけを外す（BoxColliderは残す）</summary>
+        private static void HideRenderers(Transform parent, params string[] names)
+        {
+            var set = new HashSet<string>(names);
+            foreach (Transform c in parent)
+            {
+                if (!set.Contains(c.name)) continue;
+                var mr = c.GetComponent<MeshRenderer>();
+                if (mr != null) Object.DestroyImmediate(mr);
+                var mf = c.GetComponent<MeshFilter>();
+                if (mf != null) Object.DestroyImmediate(mf);
+            }
+        }
+
+        /// <summary>
+        /// 外殻の材質名 → Unityの材質。Blender側の材質名は既存のLP_*と同じ名前にしてあるので、
+        /// 既存の材質（部屋の生成で色・テクスチャ・金属感を設定済み）をそのまま使う。
+        /// 外殻で新しく増えた部材だけここで作る
+        /// </summary>
+        private static Material ShellMat(Material src)
+        {
+            string n = src.name;
+            switch (n)
+            {
+                case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
+                case "LP_ShellRail":        return GetMat(n, new Color(0.62f, 0.66f, 0.66f), 0.45f);   // ストレッチャー除けの手すり
+                case "LP_ShellCove":        return GetMat(n, new Color(0.22f, 0.24f, 0.25f), 0.3f);    // ソフト幅木
+                case "LP_ShellGrid":        return GetMat(n, new Color(0.8f, 0.8f, 0.8f), 0.3f);       // 天井の吊り格子
+                case "LP_ShellSeam":        return GetMat(n, new Color(0.3f, 0.3f, 0.31f), 0.1f);      // コンクリートの目地・セパ穴
+                case "LP_ShellBolt":        return MetalMat(n, new Color(0.45f, 0.46f, 0.48f), 0.5f, 0.7f);
+                case "LP_ShellStain":       return GetMat(n, new Color(0.55f, 0.53f, 0.48f), 0.05f);   // 薄暗い部屋の染み
+                case "LP_StudyPanel":       return GetMat(n, new Color(0.28f, 0.18f, 0.11f), 0.35f);   // 書斎の板張り
+                case "LP_StudyPanelDark":   return GetMat(n, new Color(0.2f, 0.12f, 0.07f), 0.3f);
+                case "LP_KidBand":          return GetMat(n, new Color(0.55f, 0.72f, 0.82f), 0.2f);    // 子ども部屋の壁紙帯
+                case "LP_CorridorWainscot": return GetMat(n, new Color(0.62f, 0.6f, 0.55f), 0.3f);
+                case "LP_DoorGlass":        return MetalMat(n, new Color(0.12f, 0.14f, 0.16f), 0.9f, 0.3f);
+                case "LP_Brass":            return MetalMat(n, new Color(0.7f, 0.55f, 0.3f), 0.6f, 0.9f);
+                case "LP_TrainLightStrip":  return EmissiveMat(n, new Color(1f, 0.97f, 0.9f), new Color(1f, 0.95f, 0.85f) * 1.2f);
+                case "LP_CorridorLamp":     return EmissiveMat(n, new Color(1f, 0.97f, 0.9f), new Color(1f, 0.96f, 0.9f) * 1.5f);
+            }
+            var existing = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat");
+            return existing != null ? existing : GetMat(n, src.color, 0.3f);
         }
 
         /// <summary>FBX埋め込みマテリアル名 → URPの調整済みマテリアル（色・質感・発光を意図通りに）</summary>

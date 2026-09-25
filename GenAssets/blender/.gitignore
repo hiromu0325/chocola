@@ -1,0 +1,4 @@
+# build_all.py で再生成できるもの
+*.blend
+*.blend1
+__pycache__/

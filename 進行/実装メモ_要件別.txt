@@ -178,6 +178,17 @@
 ================================================================
 　・Blender MCP：lowpoly_builder で角張りスタイル → Assets/Models/Props/*.fbx → Prop() で配置
 　　（埋め込み材質はsRGBで明るくなるため PropMat() で名前ベースに差し替え）
+　・部屋の外殻（2026/09/25）：14部屋＋回廊の床・壁・天井・造作と、回廊扉・部屋扉5系統・ブレイカーをBlenderで作り直し
+　　　施設＝システム天井・腰壁・手すり・ゴム巾木／コア＝打ち放しの目地とセパ穴・鋼板床・鉄骨梁・厚い鉄枠
+　　　住宅＝巾木・回り縁・扉枠（佐伯は腰板、黒田は長押、息子の部屋は壁紙の帯、水野は手前だけ）
+　　　書斎＝板張りと格天井／薄暗い部屋＝染み／研究室＝事務所の天井／電車＝面取り天井と照明帯
+　　　回廊＝腰壁・天井灯・4枚パネルの扉と欄間
+　　再生成: blender --background --factory-startup --python GenAssets/blender/scripts/build_all.py
+　　　→ Assets/Models/Rooms/Shell_*.fbx、Assets/Models/Props/{CorridorDoor,BreakerBox,RoomDoor_*}.fbx
+　　Unity側: 当たり判定は従来の箱をそのまま作り、見た目だけ外殻に差し替える（Visual()／HideRenderers()）。
+　　　→ 歩ける範囲・資料への視線は変わらない。FBXを消せば箱の見た目に戻る
+　　材質: Blender側の材質名＝既存の LP_* と同名。新しく増えた部材の色は ShellMat() の表
+　　穴: 部屋の中の什器（机・棚など186種類の箱）はまだ箱のまま → Todo 7-1
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用
 　・デザインキャンバス：Material 3 のギミックUI（記憶回路・ログ照合・キーパッド・配電盤・手帳・トークン表）
