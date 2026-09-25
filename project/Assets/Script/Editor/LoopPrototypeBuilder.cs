@@ -149,7 +149,9 @@ namespace EscapeProto
             Box(t, "InnerBlock", new Vector3(0f, H * 0.5f, 0f), new Vector3(i * 2f, H, i * 2f), white);
 
             // Blender製の外殻（腰壁・幅木・回り縁・天井灯）があれば、箱は当たり判定だけ残して見た目を差し替える
-            if (Visual(t, $"{ShellDir}/Shell_corridor.fbx", Vector3.zero) != null)
+            // 品質重視で作り直した回廊（hq/corridor.py：内周に扉の開口がある）を優先する
+            bool hq = Visual(t, HqModel("corridor", "Shell"), Vector3.zero) != null;
+            if (hq || Visual(t, $"{ShellDir}/Shell_corridor.fbx", Vector3.zero) != null)
                 HideRenderers(t, "Floor", "Ceiling", "Wall_Out_N", "Wall_Out_S", "Wall_Out_E", "Wall_Out_W",
                               "CornerPost", "InnerBlock");
 
@@ -161,10 +163,52 @@ namespace EscapeProto
                 for (int slot = 0; slot < DoorsPerSide; slot++)
                 {
                     doorMap.TryGetValue((side, slot), out var assign);
-                    BuildCorridorDoor(doorsRoot, side, slot, assign.roomId, assign.exitSide, doorMat, frameMat);
+                    BuildCorridorDoor(doorsRoot, side, slot, assign.roomId, assign.exitSide, doorMat, frameMat, hq);
                 }
 
+            // 扉の奥の暗い廊下（1つだけ。開く扉の裏へ RoomTransitionSystem が動かす）。
+            // 中央の塊の当たり判定の中に入るが、見た目だけなので歩ける範囲は変わらない
+            if (hq)
+            {
+                var passage = new GameObject("Passage");
+                passage.transform.SetParent(t, false);
+                Passage(passage.transform);
+                passage.SetActive(false);
+            }
+
             return root;
+        }
+
+        /// <summary>扉の奥の、奥へ行くほど暗くなる廊下（原点 = 壁の裏の開口の中心、+Z = 扉の側）</summary>
+        private static void Passage(Transform parent)
+        {
+            Visual(parent, HqModel("corridor", "Hallway"), Vector3.zero);
+            var fog = Visual(parent, HqModel("corridor", "HallwayFog"), Vector3.zero);
+            if (fog != null)
+                foreach (var r in fog.GetComponentsInChildren<Renderer>())
+                {
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                }
+        }
+
+        /// <summary>
+        /// 部屋の扉の蝶番（扉ユニットの座標）。扉板のモデルごとに吊り元が違う。部屋の扉は引いて室内（+Z）へ開く。
+        /// angle の符号＝開く向き。電車の車端扉は引き戸
+        /// </summary>
+        private static (Vector3 pivot, float angle, bool sliding, Vector3 slide) RoomDoorHinge(string roomId)
+        {
+            switch (roomId)
+            {
+                case "train":
+                    return (Vector3.zero, 0f, true, new Vector3(-0.9f, 0f, 0f));
+                case "lab": case "data_room": case "ward": case "analysis":
+                    return (new Vector3(0.462f, 0f, 0.02f), 80f, false, Vector3.zero);     // 右吊りの施設の扉
+                case "core_ante": case "core_main": case "system_room":
+                    return (new Vector3(0.466f, 0f, 0.035f), 75f, false, Vector3.zero);    // 右吊りの重い鋼の扉
+                default:
+                    return (new Vector3(-0.462f, 0f, 0.02f), -80f, false, Vector3.zero);   // 左吊りの木の扉
+            }
         }
 
         /// <summary>(side,slot) → (roomId, exitSide)。入口はRoomDefs、出口は反対側の辺の同スロット</summary>
@@ -180,7 +224,7 @@ namespace EscapeProto
         }
 
         private static void BuildCorridorDoor(Transform parent, int side, int slot,
-                                              string roomId, bool exitSide, Material door, Material frame)
+                                              string roomId, bool exitSide, Material door, Material frame, bool hq)
         {
             Vector3 pos = LoopCorridorLayout.DoorPosition(side, slot);
             float yaw = LoopCorridorLayout.DoorYaw(side);
@@ -189,6 +233,48 @@ namespace EscapeProto
             unit.transform.localPosition = pos;
             unit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             var ut = unit.transform;
+
+            if (hq)
+            {
+                // 品質重視の扉：内周の壁の開口に枠・額縁・冠・沓摺、蝶番の軸で回る扉板、上に表示灯。
+                // 扉はすべて押して奥の暗い廊下へ開く。調べる当たり判定は扉と額縁の全面を覆う薄い箱
+                //（壁の面より手前に置く。中央の塊の当たり判定より先に視線が当たるように）
+                Solid(ut, "Panel", new Vector3(0f, 1.15f, 0.02f), new Vector3(1.2f, 2.3f, 0.03f));
+                Visual(ut, HqModel("corridor", "DoorFrame"), Vector3.zero);
+                var leaf = new GameObject("Leaf").transform;
+                leaf.SetParent(ut, false);
+                leaf.localPosition = new Vector3(-0.47f, 0f, -0.09f);         // 蝶番の軸（奥の廊下の側）
+                Visual(leaf, HqModel("corridor", "DoorLeaf"), new Vector3(0.47f, 0f, 0.09f));
+                var lens = Visual(ut, HqModel("corridor", "Signal"), Vector3.zero);
+                var glowGo = new GameObject("SignalLight");
+                glowGo.transform.SetParent(ut, false);
+                glowGo.transform.localPosition = new Vector3(0f, 2.45f, 0.35f);
+                var glow = glowGo.AddComponent<Light>();
+                glow.type = LightType.Point;
+                glow.color = new Color(1f, 0.78f, 0.5f);
+                glow.intensity = 0.9f;
+                glow.range = 2.6f;
+                glow.shadows = LightShadows.None;
+                glow.enabled = false;
+
+                var swing = unit.AddComponent<DoorSwing>();
+                swing.Leaf = leaf;
+                swing.OpenAngle = 80f;                                          // +: 奥（-Z）へ押して開く
+                var signal = unit.AddComponent<DoorSignal>();
+                signal.RoomId = roomId ?? "";
+                signal.Lens = lens != null ? lens.GetComponentInChildren<Renderer>() : null;
+                signal.Glow = glow;
+                signal.OffMaterial = signal.Lens != null ? signal.Lens.sharedMaterial : null;
+                signal.OnMaterial = HqLit("COR_SignalOn", new Color(1f, 0.86f, 0.62f), 0.85f, 0f, null, null, 1f,
+                                          new Color(1f, 0.72f, 0.38f) * 2.4f);
+                signal.AlarmMaterial = HqLit("COR_SignalAlarm", new Color(0.9f, 0.2f, 0.15f), 0.85f, 0f, null, null, 1f,
+                                             new Color(1f, 0.12f, 0.08f) * 2.8f);
+                var hqDoor = unit.AddComponent<LoopDoor>();
+                hqDoor.RoomId = roomId ?? "";
+                hqDoor.ExitSide = exitSide;
+                hqDoor.Swing = swing;
+                return;
+            }
 
             // 内壁からわずかに回廊側へ出す（+Z=回廊側になるようyaw済み）
             Box(ut, "Panel", new Vector3(0f, 1.05f, 0.09f), new Vector3(0.92f, 2.1f, 0.06f), door);
@@ -3089,15 +3175,35 @@ namespace EscapeProto
             unit.transform.localPosition = pos;
             unit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             var panel = Box(unit.transform, "Panel", new Vector3(0f, 1.05f, 0f), new Vector3(0.92f, 2.1f, 0.08f), mat);
+            // 扉板は蝶番の軸に置いた Leaf の子にして、開閉で回す（当たり判定の Panel は動かさない）
+            var hinge = RoomDoorHinge(roomId);
+            var leaf = new GameObject("Leaf").transform;
+            leaf.SetParent(unit.transform, false);
+            leaf.localPosition = hinge.pivot;
             // 部屋の系統ごとのBlender製の扉（施設＝窓付き鋼製、コア＝防爆扉、住宅＝木製…）
-            if ((Visual(unit.transform, HqModel(roomId, "Door"), Vector3.zero) ??
+            if ((Visual(leaf, HqModel(roomId, "Door"), -hinge.pivot) ??
                  (string.IsNullOrEmpty(style) ? null
-                     : Visual(unit.transform, $"Assets/Models/Props/RoomDoor_{style}.fbx", Vector3.zero))) != null)
+                     : Visual(leaf, $"Assets/Models/Props/RoomDoor_{style}.fbx", -hinge.pivot))) != null)
                 HideRenderers(unit.transform, "Panel");
+            var swing = unit.AddComponent<DoorSwing>();
+            swing.Leaf = leaf;
+            swing.OpenAngle = hinge.angle;
+            swing.Sliding = hinge.sliding;
+            swing.SlideOffset = hinge.slide;
             var door = panel.AddComponent<LoopRoomDoor>();
             door.RoomId = roomId;
             door.IsExitDoor = isExit;
             door.RequiresBreakerUp = requiresBreaker;   // チュートリアルは両扉ともブレイカー必須
+            door.Swing = swing;
+
+            // 扉の外には、奥へ行くほど暗くなる廊下が必ず続いている（壁の裏 = 扉のユニットから -0.175）
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("corridor", "Hallway")) != null)
+            {
+                var passage = new GameObject("Passage");
+                passage.transform.SetParent(unit.transform, false);
+                passage.transform.localPosition = new Vector3(0f, 0f, -0.175f);
+                Passage(passage.transform);
+            }
             return unit;
         }
 
@@ -3243,6 +3349,8 @@ namespace EscapeProto
 
             var rts = New(root, "RoomTransition").AddComponent<RoomTransitionSystem>();
             rts.CorridorRoot = corridor;
+            var passage = corridor.transform.Find("Passage");
+            rts.CorridorPassage = passage != null ? passage.gameObject : null;
 
             // ブレイカー停止中は全部屋のPC・モニターの画面が砂嵐になる
             New(root, "ScreenStatic").AddComponent<ScreenStaticOnOutage>().StaticMaterial =
@@ -3624,6 +3732,28 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 回廊と扉・扉の奥の暗い廊下 ----
+                case "COR_Floor":     return HqLit(n, new Color(1.15f, 0.98f, 0.86f), 0.16f, 0f, HqTex("Corridor/floor"), HqTex("Corridor/floor_n", true), 0.5f);
+                case "COR_Plaster":   return HqLit(n, Color.white, 0.12f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.25f);
+                case "COR_Ceiling":   return HqLit(n, new Color(0.98f, 0.98f, 0.97f), 0.05f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.15f);
+                case "COR_Wainscot":  return HqLit(n, new Color(0.74f, 0.72f, 0.66f), 0.4f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_Trim":      return HqLit(n, new Color(0.5f, 0.46f, 0.41f), 0.4f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_Door":      return HqLit(n, new Color(0.88f, 0.85f, 0.78f), 0.42f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_Brass":     return HqLit(n, new Color(0.6f, 0.48f, 0.28f), 0.55f, 1f);
+                case "COR_Steel":     return HqLit(n, new Color(0.3f, 0.3f, 0.31f), 0.55f, 0.8f);
+                case "COR_Black":     return HqLit(n, new Color(0.02f, 0.02f, 0.02f), 0.3f);
+                case "COR_Oak":       return HqLit(n, new Color(0.8f, 0.7f, 0.55f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "COR_LampGlass": return HqLit(n, new Color(1f, 0.98f, 0.94f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.95f, 0.85f) * 1.6f);
+                case "COR_Signal":    return HqLit(n, new Color(0.3f, 0.26f, 0.2f), 0.85f);   // 消えた表示灯（煙った琥珀のガラス）
+                case "COR_OldPlaster":return HqLit(n, new Color(0.72f, 0.7f, 0.66f), 0.05f, 0f, HqTex("Corridor/old_plaster"), HqTex("Corridor/old_plaster_n", true), 0.5f);
+                case "COR_OldFloor":  return HqLit(n, new Color(0.8f, 0.8f, 0.8f), 0.2f, 0f, HqTex("Corridor/old_floor"), HqTex("Corridor/old_floor_n", true), 0.5f);
+                case "COR_OldWainscot": return HqLit(n, new Color(0.4f, 0.38f, 0.33f), 0.25f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_OldCeiling":return HqLit(n, new Color(0.6f, 0.58f, 0.55f), 0.05f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.2f);
+                case "COR_OldDoor":   return HqLit(n, new Color(0.6f, 0.57f, 0.5f), 0.3f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_OldShade":  return HqLit(n, new Color(0.62f, 0.6f, 0.55f), 0.6f);
+                case "COR_Cord":      return HqLit(n, new Color(0.05f, 0.05f, 0.05f), 0.3f);
+                case "COR_Fog":       return UnlitMat(n, new Color(0f, 0f, 0f, 0.2f), true);   // 奥へ重ねる闇の板
+                case "COR_Void":      return UnlitMat(n, Color.black);                        // 光の届かない突き当たり
                 // ---- 息子の部屋 ----
                 case "SON_Floor":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("SonRoom/floor"), HqTex("SonRoom/floor_n", true), 0.4f);
                 case "SON_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("SonRoom/wallpaper"), HqTex("SonRoom/wallpaper_n", true), 0.3f);
@@ -4310,7 +4440,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁

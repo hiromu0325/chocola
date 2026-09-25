@@ -271,6 +271,85 @@ namespace EscapeProto
             return _staticHiss;
         }
 
+        private static AudioClip _doorLatch, _doorCreak, _doorShut, _doorRattle;
+
+        /// <summary>金属の短い「カチャ」（t0 秒から）。ノブの空転とラッチが受けから外れる音</summary>
+        private static float LatchClick(float t, float t0, float gain)
+        {
+            float u = t - t0;
+            if (u < 0f) return 0f;
+            float ping = Mathf.Sin(2f * Mathf.PI * 2350f * u) * 0.6f + Mathf.Sin(2f * Mathf.PI * 3900f * u) * 0.4f;
+            return ((Random.value * 2f - 1f) * Mathf.Exp(-160f * u) + ping * Mathf.Exp(-60f * u) * 0.5f) * gain;
+        }
+
+        /// <summary>扉のラッチを外す音（ノブを回す→ラッチが抜ける）</summary>
+        public static AudioClip DoorLatch()
+        {
+            if (_doorLatch != null) return _doorLatch;
+            _doorLatch = Generate("doorlatch", 0.25f, (t, dur) =>
+                LatchClick(t, 0f, 0.35f) + LatchClick(t, 0.075f, 0.55f));
+            return _doorLatch;
+        }
+
+        /// <summary>
+        /// 蝶番のきしみ（約1秒）。張り付いては滑る摩擦の連打を、木の扉の響き（共振）に通す。
+        /// 回る速さに合わせて音程が上がって下がる
+        /// </summary>
+        public static AudioClip DoorCreak()
+        {
+            if (_doorCreak != null) return _doorCreak;
+            float phase = 0f, y1 = 0f, y2 = 0f, z1 = 0f, z2 = 0f;
+            const float r = 0.994f;
+            float c1 = 2f * r * Mathf.Cos(2f * Mathf.PI * 820f / SampleRate);
+            float c2 = 2f * r * Mathf.Cos(2f * Mathf.PI * 1640f / SampleRate);
+            _doorCreak = Generate("doorcreak", 1.05f, (t, dur) =>
+            {
+                float u = t / dur;
+                float f = 120f + 260f * Mathf.Sin(Mathf.PI * Mathf.Pow(u, 0.8f)) + 25f * Mathf.Sin(2f * Mathf.PI * 7f * t);
+                phase += f / SampleRate;
+                float x = 0f;
+                if (phase >= 1f) { phase -= 1f; x = 0.6f + Random.value * 0.4f; }
+                x += (Random.value * 2f - 1f) * 0.02f;
+                float y = x + c1 * y1 - r * r * y2; y2 = y1; y1 = y;
+                float z = x + c2 * z1 - r * r * z2; z2 = z1; z1 = z;
+                float env = Mathf.Clamp01(u * 8f) * Mathf.Clamp01((1f - u) * 5f);
+                return (y * 0.035f + z * 0.02f) * env;
+            });
+            return _doorCreak;
+        }
+
+        /// <summary>扉が閉まる音（木の「ドン」＋ラッチが受けに収まる「カチャン」）</summary>
+        public static AudioClip DoorShut()
+        {
+            if (_doorShut != null) return _doorShut;
+            _doorShut = Generate("doorshut", 0.5f, (t, dur) =>
+            {
+                float thump = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(90f, 48f, t / 0.25f) * t) * Mathf.Exp(-16f * t) * 0.8f;
+                float body = (Random.value * 2f - 1f) * Mathf.Exp(-45f * t) * 0.35f;
+                return thump + body + LatchClick(t, 0.018f, 0.5f);
+            });
+            return _doorShut;
+        }
+
+        /// <summary>鍵の掛かった扉を揺する音（ラッチが受けに当たる「ガチャガチャ」）</summary>
+        public static AudioClip DoorRattle()
+        {
+            if (_doorRattle != null) return _doorRattle;
+            _doorRattle = Generate("doorrattle", 0.4f, (t, dur) =>
+            {
+                float s = 0f;
+                for (int i = 0; i < 3; i++)
+                {
+                    float t0 = i * 0.095f;
+                    s += LatchClick(t, t0, 0.45f);
+                    float u = t - t0;
+                    if (u >= 0f) s += Mathf.Sin(2f * Mathf.PI * 120f * u) * Mathf.Exp(-40f * u) * 0.3f;
+                }
+                return s;
+            });
+            return _doorRattle;
+        }
+
         private delegate float SampleFunc(float time, float duration);
 
         private static AudioClip Generate(string name, float duration, SampleFunc func)

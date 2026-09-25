@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using StarterAssets;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,11 @@ namespace EscapeProto
     /// 暗転中に「回廊モデルを非表示→部屋モデルを表示＋プレイヤーをワープ」する
     /// （部屋は回廊の物理配置を無視した別位置に存在する）。
     /// 出口扉は入った扉と反対側の辺((side+2)%4)の同スロットの回廊扉へ繋がる。
+    ///
+    /// 扉を開けると扉板が動き出し（回廊の扉は押して奥へ、部屋の扉は引いて手前へ）、
+    /// 開いていく扉の向こうに「奥へ行くほど暗くなる廊下」が一瞬見えたところで暗転する。
+    /// 着いた側では開いた扉が背後で閉まる。回廊の扉の奥の廊下は1つだけで、開く扉の裏へ動かして使う
+    /// （部屋の扉の外の廊下は部屋ごとに固定で置いてある）。
     /// </summary>
     public class RoomTransitionSystem : MonoBehaviour
     {
@@ -17,9 +23,25 @@ namespace EscapeProto
 
         [Tooltip("回廊全体のルート")]
         public GameObject CorridorRoot;
+        [Tooltip("回廊の扉の奥に見せる暗い廊下（1つだけ。開く扉の裏へ動かして使う）")]
+        public GameObject CorridorPassage;
+
+        // 扉の開閉と暗転の時間（扉が動き出してから暗転し始めるまでの間に、奥の暗い廊下が見える）
+        private const float OpenSeconds = 1.05f;
+        private const float FadeDelay = 0.3f;
+        private const float FadeOutSeconds = 0.7f;
+        private const float HoldSeconds = 0.25f;
+        private const float FadeInSeconds = 0.5f;
+        private const float CloseDelay = 0.15f;
+        private const float CloseSeconds = 0.85f;
+        private const float ArriveOpen = 0.8f;       // 着いた側の扉は、この開き具合から背後で閉まる
+        private const float WallDepth = 0.15f;       // 回廊の内周の壁の厚み（奥の廊下は壁の裏から始まる）
 
         private CanvasGroup _fade;
         private bool _busy;
+        private FirstPersonController _frozen;
+        private readonly List<LoopDoor> _corridorDoors = new List<LoopDoor>();
+        private readonly List<LoopRoomDoor> _roomDoors = new List<LoopRoomDoor>();
 
         private void Awake()
         {
@@ -40,6 +62,10 @@ namespace EscapeProto
             StopAllCoroutines();
             _busy = false;
             if (_fade != null) { _fade.alpha = 0f; _fade.blocksRaycasts = false; }
+            if (_frozen != null) { _frozen.enabled = true; _frozen = null; }
+            foreach (var d in _corridorDoors) if (d != null && d.Swing != null) d.Swing.Set(0f);
+            foreach (var d in _roomDoors) if (d != null && d.Swing != null) d.Swing.Set(0f);
+            PlacePassage(null);
             var home = LoopRooms.Get(LoopProgress.StartRoomId);
             foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == home);
             if (CorridorRoot != null) CorridorRoot.SetActive(home == null);
@@ -68,6 +94,9 @@ namespace EscapeProto
             foreach (var r in FindObjectsByType<LoopRoomRoot>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 LoopRooms.Register(r);
+            _corridorDoors.AddRange(FindObjectsByType<LoopDoor>(FindObjectsInactive.Include, FindObjectsSortMode.None));
+            _roomDoors.AddRange(FindObjectsByType<LoopRoomDoor>(FindObjectsInactive.Include, FindObjectsSortMode.None));
+            PlacePassage(null);
 
             // 開始時は最初の部屋（薄暗い部屋）の中。回廊は非表示
             var tutorial = LoopRooms.Get(LoopProgress.StartRoomId);
@@ -85,7 +114,9 @@ namespace EscapeProto
         {
             var room = LoopRooms.Get(roomId);
             if (room == null || _busy) return;
-            StartCoroutine(Transition(() =>
+            var from = FindCorridorDoor(roomId, exitSide);
+            var to = FindRoomDoor(roomId, exitSide);
+            StartCoroutine(DoorTransition(from != null ? from.Swing : null, true, () =>
             {
                 if (CorridorRoot != null) CorridorRoot.SetActive(false);
                 foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == room);
@@ -98,7 +129,7 @@ namespace EscapeProto
                 // 初入室：部屋名タイトル（ダークソウル風）＋章節ラベル
                 if (StoryProgress.MarkVisited(roomId))
                     RoomTitleUI.Instance?.Show(room.Name, room.ChapterLabel);
-            }));
+            }, to != null ? to.Swing : null, false));
         }
 
         /// <summary>部屋の扉から回廊へ出る（exitDoor=trueなら反対側の辺の回廊扉へ）</summary>
@@ -108,7 +139,9 @@ namespace EscapeProto
             if (room == null || _busy) return;
             int side = exitDoor ? (room.Side + 2) % 4 : room.Side;
             Vector3 pos = LoopCorridorLayout.DoorFrontPosition(side, room.Slot);
-            StartCoroutine(Transition(() =>
+            var from = FindRoomDoor(roomId, exitDoor);
+            var to = FindCorridorDoor(roomId, exitDoor);
+            StartCoroutine(DoorTransition(from != null ? from.Swing : null, false, () =>
             {
                 foreach (var r in LoopRooms.All) r.gameObject.SetActive(false);
                 if (CorridorRoot != null) CorridorRoot.SetActive(true);
@@ -122,32 +155,133 @@ namespace EscapeProto
                 // 初めて回廊に出た時もタイトルを出す
                 if (StoryProgress.MarkVisited("corridor"))
                     RoomTitleUI.Instance?.Show("回廊", null);
-            }));
+            }, to != null ? to.Swing : null, true));
         }
 
-        private IEnumerator Transition(System.Action swap)
+        private LoopDoor FindCorridorDoor(string roomId, bool exitSide)
+        {
+            foreach (var d in _corridorDoors)
+                if (d != null && d.RoomId == roomId && d.ExitSide == exitSide) return d;
+            return null;
+        }
+
+        private LoopRoomDoor FindRoomDoor(string roomId, bool exitDoor)
+        {
+            foreach (var d in _roomDoors)
+                if (d != null && d.RoomId == roomId && d.IsExitDoor == exitDoor) return d;
+            return null;
+        }
+
+        /// <summary>回廊の扉の奥の暗い廊下を、その扉の裏へ置く（null で片付ける）</summary>
+        private void PlacePassage(DoorSwing door)
+        {
+            if (CorridorPassage == null) return;
+            if (door == null) { CorridorPassage.SetActive(false); return; }
+            var t = door.transform;
+            CorridorPassage.transform.SetPositionAndRotation(t.TransformPoint(0f, 0f, -WallDepth), t.rotation);
+            CorridorPassage.SetActive(true);
+        }
+
+        /// <summary>
+        /// 扉を開けて暗転し、向こう側で扉が背後に閉まる。
+        /// from=開ける扉（押す＝回廊の扉 / 引く＝部屋の扉）、to=着いた側の扉
+        /// </summary>
+        private IEnumerator DoorTransition(DoorSwing from, bool fromCorridor, System.Action swap,
+                                           DoorSwing to, bool toCorridor)
         {
             _busy = true;
-            yield return Fade(1f, 0.35f);
+            _fade.blocksRaycasts = true;
+            var player = GameObject.FindGameObjectWithTag("Player");
+            var cc = player != null ? player.GetComponent<CharacterController>() : null;
+            var fpc = player != null ? player.GetComponent<FirstPersonController>() : null;
+            if (fpc != null && fpc.enabled) { fpc.enabled = false; _frozen = fpc; }   // 扉を開ける間は立ち止まる
+
+            Vector3 start = player != null ? player.transform.position : Vector3.zero, goal = start;
+            if (from != null)
+            {
+                if (fromCorridor) PlacePassage(from);
+                Vector3 at = from.transform.position + Vector3.up * 1.0f;
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), at, 0.8f);
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorCreak(), at, 0.5f);
+                if (player != null) goal = StepTarget(from, start, fromCorridor);
+            }
+
+            // 扉が開いていく。少し遅れて暗転が始まり、その間だけ奥の暗い廊下が見える
+            float t = 0f, total = FadeDelay + FadeOutSeconds;
+            while (t < total)
+            {
+                t += Time.deltaTime;
+                if (from != null) from.Set(EaseOut(t / OpenSeconds));
+                if (cc != null && cc.enabled && goal != start)
+                {
+                    // 引いて開ける扉は扉板が当たらない所まで下がり、押して開ける扉は奥へ半歩踏み出す
+                    float k = fromCorridor ? Smooth((t - FadeDelay * 0.5f) / FadeOutSeconds) : Smooth(t / 0.45f);
+                    Vector3 d = Vector3.Lerp(start, goal, k) - player.transform.position;
+                    d.y = 0f;
+                    if (d.sqrMagnitude > 1e-8f) cc.Move(d);
+                }
+                _fade.alpha = Mathf.Clamp01((t - FadeDelay) / FadeOutSeconds);
+                yield return null;
+            }
+            _fade.alpha = 1f;
+
             swap();
-            yield return new WaitForSeconds(0.25f);   // 暗転の「間」
-            yield return Fade(0f, 0.45f);
+            if (from != null) from.Set(0f);                   // 置いてきた扉は閉じておく
+            PlacePassage(null);
+            if (to != null)
+            {
+                if (toCorridor) PlacePassage(to);
+                to.Set(ArriveOpen);
+            }
+            if (_frozen != null) { _frozen.enabled = true; _frozen = null; }
+            yield return new WaitForSeconds(HoldSeconds);        // 暗転の「間」
+
+            // 明けていく間に、通ってきた扉が背後で閉まる
+            float t2 = 0f, end = Mathf.Max(FadeInSeconds, CloseDelay + CloseSeconds);
+            while (t2 < end)
+            {
+                t2 += Time.deltaTime;
+                _fade.alpha = 1f - Mathf.Clamp01(t2 / FadeInSeconds);
+                if (t2 >= FadeInSeconds) _fade.blocksRaycasts = false;
+                if (to != null) to.Set(ArriveOpen * (1f - EaseIn((t2 - CloseDelay) / CloseSeconds)));
+                yield return null;
+            }
+            _fade.alpha = 0f;
+            _fade.blocksRaycasts = false;
+            if (to != null)
+            {
+                to.Set(0f);
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), to.transform.position + Vector3.up * 1.0f, 0.8f);
+            }
+            PlacePassage(null);
             _busy = false;
         }
 
-        private IEnumerator Fade(float target, float dur)
+        /// <summary>扉を開ける時の立ち位置（扉のユニットの +Z が手前＝プレイヤーの側）</summary>
+        private static Vector3 StepTarget(DoorSwing door, Vector3 pos, bool pushing)
         {
-            float from = _fade.alpha, t = 0f;
-            _fade.blocksRaycasts = true;
-            while (t < dur)
+            var t = door.transform;
+            Vector3 local = t.InverseTransformPoint(pos);
+            // 扉から離れている（デバッグの移動など）なら動かさない
+            if (local.z < 0f || local.z > 3.2f || Mathf.Abs(local.x) > 1.6f) return pos;
+            if (pushing)
             {
-                t += Time.deltaTime;
-                _fade.alpha = Mathf.Lerp(from, target, t / dur);
-                yield return null;
+                if (local.z <= 0.8f) return pos;
+                local.z = Mathf.Max(0.8f, local.z - 0.4f);
             }
-            _fade.alpha = target;
-            _fade.blocksRaycasts = target > 0.01f;
+            else
+            {
+                if (local.z >= 1.3f) return pos;
+                local.z = 1.3f;
+            }
+            Vector3 w = t.TransformPoint(local);
+            w.y = pos.y;
+            return w;
         }
+
+        private static float EaseOut(float x) { x = Mathf.Clamp01(x); return 1f - (1f - x) * (1f - x); }
+        private static float EaseIn(float x) { x = Mathf.Clamp01(x); return x * x; }
+        private static float Smooth(float x) { x = Mathf.Clamp01(x); return x * x * (3f - 2f * x); }
 
         /// <summary>
         /// プレイヤーを移動させる。yawを渡すと視点の向きもそこへ揃える

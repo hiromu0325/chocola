@@ -7,11 +7,14 @@ namespace EscapeProto
     /// 回廊側の扉。部屋が割り当てられていれば（解錠済みのとき）暗転遷移で部屋へ入る。
     /// ExitSide=true の扉は部屋の「出口側」（反対側の辺）で、入ると出口付近に出現する。
     /// 部屋未割り当てのダミー扉は開かない。
+    /// 扉はすべて押して奥の暗い廊下へ開く（開閉の動きは DoorSwing、上の表示灯は DoorSignal）。
     /// </summary>
     public class LoopDoor : MonoBehaviour, IInteractable, IPromptProvider
     {
         public string RoomId;
         public bool ExitSide;
+        [Tooltip("扉板の開閉（押して奥へ開く）")]
+        public DoorSwing Swing;
 
         private float _lastCallTime = -10f;
 
@@ -25,7 +28,9 @@ namespace EscapeProto
 
             if (string.IsNullOrEmpty(RoomId) || !LoopRooms.CanPlayerEnter(RoomId))
             {
-                ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.6f);
+                // 開かない扉は、押すとラッチが受けに当たってガチャッと揺れるだけ
+                if (Swing != null) Swing.Rattle();
+                else ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.6f);
                 return;
             }
             RoomTransitionSystem.Instance?.EnterRoom(RoomId, ExitSide);
