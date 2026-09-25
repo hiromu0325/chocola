@@ -244,11 +244,22 @@
 　　　　　　　東の中央の窓が配電盤と重なっていた → 窓を細くして配電盤を避けた
 　　再生成: python GenAssets/ward/make_textures.py →
 　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_ward.py
+　　済: CORE前室（core_ante）… エポキシの床と注意の縞・塗装したブロック壁・コンクリートの天井／
+　　　　亜鉛めっきの角ダクト2本（フランジ・吊りボルト・吹出口）・西の壁のケーブルラダー・消火配管・
+　　　　消えた蛍光灯（1本は外れて垂れる）・赤い非常灯（金網付き）・冷却水の縦配管と仕切弁／
+　　　　MAIN CORE への隔壁（リブ・ボルト・内側の縞・縞鋼板の敷居・警告灯・札・カード読取機とテンキー）・
+　　　　重い鋼製扉（網入りガラス・押し棒）・暗転した制御卓3台（傾斜盤のボタンとトグル・割れた画面）・
+　　　　壁の表示器2台（非常電源の登録一覧／送信トレイ）・系統別給電盤・倒れた椅子・区画表示
+　　　　修正: 給電盤のランプと系統名が壁側を向いて見えなかった → 部屋側へ／
+　　　　　　　給電盤が3台目の制御卓の真後ろに隠れ、未送信メッセージの画面と重なっていた → 給電盤を北へ、
+　　　　　　　画面を南の壁寄りへ移した
+　　再生成: python GenAssets/core_ante/make_textures.py →
+　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_core_ante.py
 　　Unity側: HqModel(部屋,部品) があれば外殻・扉・什器・配電盤・レバーをそれに差し替え
-　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_* / LAB_* / STD_* / ANA_* / SAE_* / WRD_*）。
+　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_* / LAB_* / STD_* / ANA_* / SAE_* / WRD_* / CAN_*）。
 　　　テクスチャの共通部品は GenAssets/texlib.py（fbm・板張り・木目・織物など）。
 　　　座標の注意: ビルダーの hw/hd は壁の中心基準。壁の内面は hw-0.075（Blender側は HW0/HD0 で写す）
-　　　残り7部屋（core_ante / mizuno_apart / data_room / system_room / kuroda_home / core_main / son_room）は
+　　　残り6部屋（mizuno_apart / data_room / system_room / kuroda_home / core_main / son_room）は
 　　　従来の外殻のまま。全部屋の作り直しが終わるまで通しプレイの確認は行わない
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用

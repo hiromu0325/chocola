@@ -1718,13 +1718,20 @@ namespace EscapeProto
             var deadScreen = GetMat("LP_DeadScreen", new Color(0.05f, 0.05f, 0.07f), 0.6f);
             var paper = GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f);
             var warn = EmissiveMat("LP_CoreWarn", new Color(0.6f, 0.15f, 0.12f), new Color(1f, 0.2f, 0.15f) * 1.2f);
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("core_ante", "Interior")) != null;
 
             // 正面（北壁）: MAIN COREへ続く分厚い隔壁（出口扉を枠のように囲む。通行は塞がない）
             foreach (float xs in new[] { -1.2f, 1.2f })
                 Box(t, "BulkheadPillar", new Vector3(xs, 1.5f, hd - 0.45f), new Vector3(1.0f, 3.0f, 0.5f), metal);
             Box(t, "BulkheadLintel", new Vector3(0f, 2.85f, hd - 0.45f), new Vector3(3.4f, 0.5f, 0.5f), metal);
-            Deco(t, "BulkheadLamp", new Vector3(0f, 2.55f, hd - 0.68f), new Vector3(0.5f, 0.12f, 0.05f), warn);
-            TextPlate(t, "MAIN CORE", new Vector3(0f, 2.35f, hd - 0.72f), 180f, new Color(0.9f, 0.3f, 0.25f), 0.04f);
+            if (hq)
+                // 品質重視の外殻に隔壁（ボルト・縞・警告灯・MAIN CORE の札）がある。当たり判定は箱のまま
+                HideRenderers(t, "BulkheadPillar", "BulkheadLintel");
+            else
+            {
+                Deco(t, "BulkheadLamp", new Vector3(0f, 2.55f, hd - 0.68f), new Vector3(0.5f, 0.12f, 0.05f), warn);
+                TextPlate(t, "MAIN CORE", new Vector3(0f, 2.35f, hd - 0.72f), 180f, new Color(0.9f, 0.3f, 0.25f), 0.04f);
+            }
 
             // 非常灯の赤だけが壁を舐める（器具は壁の高い位置に）
             foreach (float z in new[] { -2.0f, 2.0f })
@@ -1735,10 +1742,13 @@ namespace EscapeProto
                 var el = em.AddComponent<Light>();
                 el.type = LightType.Point; el.color = new Color(1f, 0.25f, 0.18f);
                 el.intensity = 1.6f; el.range = 8f;
+                if (hq) continue;
                 Deco(t, "EmergencyLamp", new Vector3(hw - 0.12f, h - 0.5f, z), new Vector3(0.12f, 0.16f, 0.3f), warn);
                 Deco(t, "EmergencyLampBase", new Vector3(hw - 0.09f, h - 0.5f, z), new Vector3(0.06f, 0.22f, 0.4f), dark);
             }
-            // 天井のダクト2本と壁面のケーブルトレイ、床の注意ライン、隅の配管
+            // 天井のダクト2本と壁面のケーブルトレイ、床の注意ライン、隅の配管（品質重視の外殻に作り込み済み）
+            if (!hq)
+            {
             Duct(t, new Vector3(-1.8f, h - 0.4f, 0f), hd * 2f - 0.6f, 0.45f, dark);
             Duct(t, new Vector3(1.8f, h - 0.4f, 0f), hd * 2f - 0.6f, 0.45f, dark);
             Deco(t, "CableTray", new Vector3(-hw + 0.25f, 2.3f, 0f), new Vector3(0.3f, 0.06f, hd * 2f - 0.4f), dark);
@@ -1758,19 +1768,45 @@ namespace EscapeProto
             foreach (float xs in new[] { -1.2f, 1.2f })
                 for (int k = 0; k < 4; k++)
                     Deco(t, "Rivet", new Vector3(xs, 0.5f + k * 0.7f, hd - 0.72f), new Vector3(0.08f, 0.08f, 0.04f), dark);
+            }
 
             // 端末デスク（モニターは全て暗転＝画面マテリアルを消灯に差し替え）と倒れた椅子
             for (int i = 0; i < 3; i++)
             {
                 var tpos = new Vector3(-hw + 1.2f, 0f, -2.2f + i * 1.9f);
+                if (hq)
+                {
+                    // 品質重視の制御卓（見た目は CoreAnte_Interior）：天板・両脇・奥の傾斜盤と画面の当たり判定
+                    var c = new GameObject($"Console_{i}");
+                    c.transform.SetParent(t, false);
+                    c.transform.localPosition = tpos;
+                    Solid(c.transform, "TopCol", new Vector3(0f, 0.735f, 0f), new Vector3(1.4f, 0.03f, 0.7f));
+                    Solid(c.transform, "SideCol", new Vector3(-0.68f, 0.36f, 0f), new Vector3(0.04f, 0.72f, 0.66f));
+                    Solid(c.transform, "SideCol", new Vector3(0.68f, 0.36f, 0f), new Vector3(0.04f, 0.72f, 0.66f));
+                    Solid(c.transform, "BackCol", new Vector3(0f, 1.1f, 0.26f), new Vector3(1.3f, 0.7f, 0.18f));
+                    continue;
+                }
                 if (Prop(t, "Workstation", tpos, 0f, true, deadScreen) == null)
                 {
                     var d = Desk(t, $"Terminal_{i}", tpos, dark);
                     Box(d.transform, "Screen", new Vector3(0f, 1.0f, 0.2f), new Vector3(0.5f, 0.32f, 0.05f), deadScreen);
                 }
             }
+            GameObject fallen;
+            if (hq && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("lab", "Chair")) != null)
+            {
+                // 研究所と同じ椅子（1脚は倒れている）
+                LabChair(t, new Vector3(-hw + 1.2f, 0f, 1.6f - 0.8f), -25f);
+                fallen = new GameObject("FallenChair");
+                fallen.transform.SetParent(t, false);
+                fallen.transform.localPosition = new Vector3(-hw + 2.2f, 0.27f, -0.5f);
+                fallen.transform.localRotation = Quaternion.Euler(0f, 30f, 100f);
+                Visual(fallen.transform, HqModel("lab", "Chair"), Vector3.zero);
+            }
+            else
+            {
             Prop(t, "OfficeChair", new Vector3(-hw + 1.2f, 0f, 1.6f - 0.8f), -25f);
-            var fallen = Prop(t, "OfficeChair", new Vector3(-hw + 2.2f, 0.3f, -0.5f), 0f, false);
+            fallen = Prop(t, "OfficeChair", new Vector3(-hw + 2.2f, 0.3f, -0.5f), 0f, false);
             if (fallen != null)
                 fallen.transform.localRotation = Quaternion.Euler(0f, 30f, 100f);
             else
@@ -1781,9 +1817,10 @@ namespace EscapeProto
                 fallen.transform.localRotation = Quaternion.Euler(0f, 30f, 100f);
                 Box(fallen.transform, "Seat", Vector3.zero, new Vector3(0.45f, 0.5f, 0.45f), dark);
             }
+            }
 
             // 資料（v2: 手順書・一覧・発見メモ・未送信メッセージ）
-            Findable(t, "manual", "運用手順書", new Vector3(-hw + 0.75f, 0.76f, -2.2f), paper,
+            var manualGo = Findable(t, "manual", "運用手順書", new Vector3(-hw + 0.75f, 0.76f, -2.2f), paper,
                 new Vector3(0.34f, 0.02f, 0.26f),
                 "リナシータ運用手順書",
                 "《運用手順書 抜粋》\n\n" +
@@ -1804,7 +1841,8 @@ namespace EscapeProto
                 "健常な、成人。それは、どこから？");
 
             // 配電盤（2章転・順序転記型）: 手順書3-3の順に給電する。3本目で脚本襲撃（水野初登場）
-            var panel = Lock<LoopSequenceLock>(t, "PowerPanel", new Vector3(-hw + 0.2f, 1.3f, hd - 1.9f),
+            //（以前は z=hd-1.9 で3台目の端末デスクの真後ろに隠れ、未送信メッセージの画面とも重なっていた → 北へ寄せる）
+            var panel = Lock<LoopSequenceLock>(t, "PowerPanel", new Vector3(-hw + 0.2f, 1.3f, hd - 1.25f),
                 new Vector3(0.14f, 0.9f, 0.7f), metal, "core_ante", "power", "配電盤", "core_ante_manual");
             panel.Title = "配電盤　── 系統別給電 ──";
             panel.Body = "非常電源から各系統へ復電する。給電する系統を順に選ぶこと。";
@@ -1819,13 +1857,14 @@ namespace EscapeProto
             var lamps = new Renderer[3];
             for (int i = 0; i < 3; i++)
             {
-                var lamp = Deco(panel.transform, $"Lamp_{i}", new Vector3(-0.08f, 0.3f - i * 0.22f, 0.15f), new Vector3(0.02f, 0.1f, 0.1f),
+                // ランプと系統名は部屋側（+X）に向ける（以前は壁側を向いていて見えなかった）
+                var lamp = Deco(panel.transform, $"Lamp_{i}", new Vector3(0.08f, 0.3f - i * 0.22f, 0.15f), new Vector3(0.02f, 0.1f, 0.1f),
                     EmissiveMat("LP_PanelLampOff", new Color(0.5f, 0.1f, 0.1f), new Color(0.6f, 0.1f, 0.1f)));
                 lamps[i] = lamp.GetComponent<Renderer>();
-                TextPlate(panel.transform, panel.Steps[i], new Vector3(-0.09f, 0.3f - i * 0.22f, -0.15f), 90f, new Color(0.9f, 0.9f, 0.9f), 0.012f);
+                TextPlate(panel.transform, panel.Steps[i], new Vector3(0.09f, 0.3f - i * 0.22f, -0.15f), -90f, new Color(0.9f, 0.9f, 0.9f), 0.012f);
             }
             panel.StepLamps = lamps;
-            Findable(t, "brainlist", "登録一覧", new Vector3(-hw + 0.18f, 1.4f, 0.5f), deadScreen,
+            var brainGo = Findable(t, "brainlist", "登録一覧", new Vector3(-hw + 0.18f, 1.4f, 0.5f), deadScreen,
                 new Vector3(0.06f, 0.5f, 0.8f),
                 "BRAIN DATA 登録一覧",
                 "《登録一覧》　※非常電源で表示\n\n" +
@@ -1835,7 +1874,7 @@ namespace EscapeProto
                 "登録者の欄は、削除されている。\n" +
                 "3件。──なぜだろう。\n" +
                 "この数字に、指先が冷たくなる。");
-            Findable(t, "wmemo", "発見メモ", new Vector3(-hw + 0.75f, 0.76f, 1.6f), paper,
+            var memoGo = Findable(t, "wmemo", "発見メモ", new Vector3(-hw + 0.75f, 0.76f, 1.6f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "水野の発見メモ",
                 "《メモ》　筆跡: 水野\n\n" +
@@ -1843,7 +1882,8 @@ namespace EscapeProto
                 "　ものと一致する。そんなはずない。\n" +
                 "　所長に報告 → 『そのデータには触るな』と。\n" +
                 "　どうして？　どうしてみんな、何も言わないの」");
-            Findable(t, "unsentmsg", "未送信メッセージ", new Vector3(-hw + 0.18f, 1.4f, 2.4f), deadScreen,
+            // 以前は z=2.4 で配電盤と重なっていた → 南の壁寄りの空いた壁へ
+            var unsentGo = Findable(t, "unsentmsg", "未送信メッセージ", new Vector3(-hw + 0.18f, 1.4f, -3.05f), deadScreen,
                 new Vector3(0.06f, 0.5f, 0.8f),
                 "未送信メッセージ（水野）",
                 "《送信トレイ》　宛先: 所長\n\n" +
@@ -1853,6 +1893,16 @@ namespace EscapeProto
                 "本文は、そこで途切れている。\n" +
                 "送信されなかった、最後の言葉。\n\n" +
                 "「あの人」。……主任が、誰かを使っている？");
+
+            if (hq)
+            {
+                // 制御卓3台・壁の表示器2台（非常電源で一覧と送信トレイを表示）・給電盤の箱・資料の見た目
+                Visual(t, HqModel("core_ante", "Interior"), Vector3.zero);
+                HideRenderers(t, brainGo.name, unsentGo.name);
+                if (Visual(panel.transform, HqModel("core_ante", "PowerPanel"), Vector3.zero) != null) HideRenderers(t, "PowerPanel");
+                if (Visual(manualGo.transform, HqModel("core_ante", "Manual"), Vector3.zero) != null) HideRenderers(t, manualGo.name);
+                if (Visual(memoGo.transform, HqModel("core_ante", "Memo"), Vector3.zero) != null) HideRenderers(t, memoGo.name);
+            }
 
             return new[] { "manual", "brainlist", "wmemo", "unsentmsg", "power" };
         }
@@ -3361,6 +3411,43 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- CORE前室 ----
+                case "CAN_Epoxy":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("CoreAnte/epoxy_floor"), HqTex("CoreAnte/epoxy_floor_n", true), 0.5f);
+                case "CAN_Hazard":    return HqLit(n, Color.white, 0.3f, 0f, HqTex("CoreAnte/hazard"), HqTex("CoreAnte/hazard_n", true), 0.3f);
+                case "CAN_Block":     return HqLit(n, Color.white, 0.1f, 0f, HqTex("CoreAnte/block_wall"), HqTex("CoreAnte/block_wall_n", true), 0.7f);
+                case "CAN_Concrete":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("Analysis/concrete_dark"), HqTex("Analysis/concrete_dark_n", true), 0.6f);
+                case "CAN_Galvanized":return HqLit(n, Color.white, 0.6f, 0.8f, HqTex("Analysis/galvanized"));
+                case "CAN_Steel":     return HqLit(n, Color.white, 0.35f, 0.4f, HqTex("CoreAnte/steel_plate"), HqTex("CoreAnte/steel_plate_n", true), 0.4f);
+                case "CAN_SteelDark": return HqLit(n, new Color(0.16f, 0.17f, 0.19f), 0.45f, 0.5f);
+                case "CAN_Grey":      return HqLit(n, new Color(0.42f, 0.44f, 0.46f), 0.45f, 0.3f);
+                case "CAN_Beige":     return HqLit(n, new Color(0.62f, 0.6f, 0.54f), 0.4f);
+                case "CAN_Chrome":    return HqLit(n, new Color(0.85f, 0.85f, 0.86f), 0.85f, 1f);
+                case "CAN_Rubber":    return HqLit(n, new Color(0.04f, 0.04f, 0.04f), 0.2f);
+                case "CAN_Black":     return HqLit(n, new Color(0.02f, 0.02f, 0.025f), 0.5f);
+                case "CAN_RedPipe":   return HqLit(n, new Color(0.55f, 0.07f, 0.05f), 0.5f);
+                case "CAN_BluePipe":  return HqLit(n, new Color(0.16f, 0.3f, 0.5f), 0.5f, 0.3f);
+                case "CAN_Emergency": return HqLit(n, new Color(0.7f, 0.1f, 0.08f), 0.7f, 0f, null, null, 1f, new Color(1f, 0.18f, 0.12f) * 2.5f);
+                case "CAN_TubeOff":   return HqLit(n, new Color(0.72f, 0.73f, 0.72f), 0.6f);
+                case "CAN_DeadScreen":return HqLit(n, new Color(0.02f, 0.022f, 0.026f), 0.95f);
+                case "CAN_ScreenCrack": return HqLit(n, Color.white, 0.9f, 0f, HqTex("CoreAnte/screen_crack", clamp: true));
+                case "CAN_ScreenList":return HqLit(n, Color.white, 0.85f, 0f, HqTex("CoreAnte/screen_list", clamp: true), null, 1f, Color.white * 0.8f, HqTex("CoreAnte/screen_list", clamp: true));
+                case "CAN_ScreenMail":return HqLit(n, Color.white, 0.85f, 0f, HqTex("CoreAnte/screen_mail", clamp: true), null, 1f, Color.white * 0.8f, HqTex("CoreAnte/screen_mail", clamp: true));
+                case "CAN_ConsolePanel": return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreAnte/console_panel", clamp: true));
+                case "CAN_PlateCore": return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreAnte/plate_core", clamp: true), null, 1f, new Color(1f, 0.4f, 0.35f) * 0.5f, HqTex("CoreAnte/plate_core", clamp: true));
+                case "CAN_SignRestricted": return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreAnte/sign_restricted", clamp: true));
+                case "CAN_PipeLabel": return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreAnte/pipe_label"));
+                case "CAN_PanelLabel":return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreAnte/panel_label", clamp: true));
+                case "CAN_Manual":    return HqLit(n, Color.white, 0.1f, 0f, HqTex("CoreAnte/manual", clamp: true));
+                case "CAN_Memo":      return HqLit(n, Color.white, 0.1f, 0f, HqTex("CoreAnte/wmemo", clamp: true));
+                case "CAN_Binder":    return HqLit(n, new Color(0.12f, 0.2f, 0.36f), 0.4f);
+                case "CAN_Cable":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.4f);
+                case "CAN_CableGrey": return HqLit(n, new Color(0.45f, 0.47f, 0.5f), 0.4f);
+                case "CAN_WiredGlass":return HqLit(n, new Color(0.08f, 0.1f, 0.11f), 0.95f, 0.3f);
+                case "CAN_LedRed":    return HqLit(n, new Color(0.5f, 0.05f, 0.05f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.1f, 0.08f) * 2f);
+                case "CAN_ButtonRed": return HqLit(n, new Color(0.45f, 0.06f, 0.05f), 0.6f);
+                case "CAN_ButtonGreen": return HqLit(n, new Color(0.08f, 0.3f, 0.12f), 0.6f);
+                case "CAN_ButtonAmber": return HqLit(n, new Color(0.55f, 0.35f, 0.05f), 0.6f);
+                case "CAN_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
                 // ---- 臨床病棟 ----
                 case "WRD_Vinyl":     return HqLit(n, Color.white, 0.55f, 0f, HqTex("Ward/vinyl_floor"), HqTex("Ward/vinyl_floor_n", true), 0.3f);
                 case "WRD_Paint":     return HqLit(n, Color.white, 0.1f, 0f, HqTex("Ward/paint"), HqTex("Ward/paint_n", true), 0.3f);
@@ -3691,7 +3778,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
