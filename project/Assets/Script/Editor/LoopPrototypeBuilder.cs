@@ -2416,6 +2416,7 @@ namespace EscapeProto
             var fridge = GetMat("LP_Fridge", new Color(0.88f, 0.9f, 0.9f), 0.5f);
             var dish = GetMat("LP_CoffeeCup", new Color(0.92f, 0.9f, 0.86f), 0.5f);
             var crayon = GetMat("LP_Crayon", new Color(0.95f, 0.9f, 0.75f), 0.1f);
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("kuroda_home", "Interior")) != null;
 
             // 台所の小さな灯りだけが食卓を照らす
             var lamp = new GameObject("KitchenLight");
@@ -2436,7 +2437,19 @@ namespace EscapeProto
                 new Vector3(-0.55f, 0f, 0.85f), new Vector3(0.55f, 0f, 0.85f),
             };
             bool propChairs = true;
-            for (int i = 0; i < 4; i++)
+            if (hq)
+            {
+                // 品質重視：食卓・椅子4脚・四人分の夕食（父の席だけ手つかず）は KurodaHome_Dining
+                Visual(table.transform, HqModel("kuroda_home", "Dining"), Vector3.zero);
+                HideRenderers(table.transform, "Top", "Leg");
+                foreach (var st in seats)
+                {
+                    float back = st.z < 0f ? -1f : 1f;
+                    Solid(table.transform, "ChairSeatCol", new Vector3(st.x, 0.23f, st.z), new Vector3(0.44f, 0.46f, 0.4f));
+                    Solid(table.transform, "ChairBackCol", new Vector3(st.x, 0.68f, st.z + back * 0.17f), new Vector3(0.42f, 0.44f, 0.05f));
+                }
+            }
+            for (int i = 0; i < 4 && !hq; i++)
             {
                 // 南側の2脚は背を南（yaw 0）、北側は背を北（yaw 180）に向ける
                 if (Prop(table.transform, "DiningChair", seats[i], seats[i].z < 0f ? 0f : 180f) == null)
@@ -2445,7 +2458,7 @@ namespace EscapeProto
                     Box(table.transform, $"Chair_{i}", seats[i] + new Vector3(0f, 0.24f, 0f), new Vector3(0.45f, 0.48f, 0.45f), wood);
                 }
             }
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4 && !hq; i++)
             {
                 var pl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 pl.name = $"Dish_{i}"; pl.transform.SetParent(table.transform, false);
@@ -2456,7 +2469,7 @@ namespace EscapeProto
             }
 
             // ペンダントの下のラグと、座布団
-            Rug(t, new Vector3(0f, 0f, 0.6f), new Vector2(2.6f, 2.2f), new Color(0.5f, 0.38f, 0.3f));
+            if (!hq) Rug(t, new Vector3(0f, 0f, 0.6f), new Vector2(2.6f, 2.2f), new Color(0.5f, 0.38f, 0.3f));
             if (!propChairs)
             {
                 var cushion = GetMat("LP_Cushion", new Color(0.55f, 0.35f, 0.3f), 0.05f);
@@ -2476,7 +2489,7 @@ namespace EscapeProto
             Deco(t, "RangeHood", new Vector3(-hw + 0.35f, 1.55f, 0.4f), new Vector3(0.5f, 0.2f, 0.6f), sink);
 
             // 窓（東）とテレビ台（南西）
-            Window(t, new Vector3(hw - 0.08f, 1.5f, -1.8f), 90f, 1.2f, 1.1f, true, new Color(0.75f, 0.7f, 0.6f));
+            if (!hq) Window(t, new Vector3(hw - 0.08f, 1.5f, -1.8f), 90f, 1.2f, 1.1f, true, new Color(0.75f, 0.7f, 0.6f));
             Box(t, "TvStand", new Vector3(-1.8f, 0.22f, -hd + 0.45f), new Vector3(1.4f, 0.44f, 0.5f), wood);
             Box(t, "Tv", new Vector3(-1.8f, 0.8f, -hd + 0.45f), new Vector3(1.1f, 0.65f, 0.08f),
                 GetMat("LP_DeadScreen", new Color(0.05f, 0.05f, 0.07f), 0.6f));
@@ -2498,7 +2511,7 @@ namespace EscapeProto
             var sideb = new GameObject("Sideboard"); sideb.transform.SetParent(t, false);
             sideb.transform.localPosition = new Vector3(hw - 0.55f, 0f, -1.8f);
             Box(sideb.transform, "Body", new Vector3(0f, 0.45f, 0f), new Vector3(0.5f, 0.9f, 1.6f), wood);
-            Findable(sideb.transform, "rules", "個人記録", new Vector3(0f, 0.93f, -0.3f), paper,
+            var rulesGo = Findable(sideb.transform, "rules", "個人記録", new Vector3(0f, 0.93f, -0.3f), paper,
                 new Vector3(0.28f, 0.02f, 0.2f),
                 "黒田の個人記録",
                 "《手帳》　筆跡: 黒田\n\n" +
@@ -2508,7 +2521,7 @@ namespace EscapeProto
                 "「正しいことと、救うことは同じではない。\n" +
                 "　それでも私は、正しい方を選ぶ。\n" +
                 "　誰かが選ばなければならないからだ」");
-            Findable(sideb.transform, "lastrec", "対峙の記録", new Vector3(0f, 0.93f, 0.35f), paper,
+            var lastrecGo = Findable(sideb.transform, "lastrec", "対峙の記録", new Vector3(0f, 0.93f, 0.35f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "最後の対峙の記録（破損）",
                 "《ICレコーダー 復元断片》\n\n" +
@@ -2549,6 +2562,25 @@ namespace EscapeProto
                 (new Vector3(-0.55f, 0f, -0.25f), 20f, 0.55f, 3f, 1.2f, false),
                 (new Vector3(0.55f, 0f, -0.25f), -20f, 0.6f, -4f, 1.4f, false),
                 (new Vector3(0.55f, 0f, 1.45f), 180f, 0.95f, 2f, 0.7f, false));
+
+            if (hq)
+            {
+                // 台所・冷蔵庫・テレビ・ソファ・サイドボード・壁の飾りの見た目（当たり判定・調べる判定・手帳の判定は元の箱のまま）
+                Visual(t, HqModel("kuroda_home", "Interior"), Vector3.zero);
+                var lamps = Visual(t, HqModel("kuroda_home", "Lamps"), Vector3.zero);
+                if (lamps != null)
+                    foreach (var r in lamps.GetComponentsInChildren<Renderer>())
+                        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                HideRenderers(t, "KitchenCounter", "CounterTop", "SinkBasin", "Faucet", "UpperCabinet", "RangeHood",
+                    "TvStand", "Tv", "Fridge", "FridgeHandle");
+                HideRenderers(sideb.transform, "Body");
+                Solid(t, "Sofa", new Vector3(-1.8f, 0.4f, -2.2f), new Vector3(1.5f, 0.8f, 0.8f));
+                Solid(t, "Plant", new Vector3(hw - 0.45f, 0.5f, -hd + 0.5f), new Vector3(0.45f, 1.0f, 0.45f));
+                if (Visual(draw.transform, HqModel("kuroda_home", "Drawing"), Vector3.zero) != null) HideRenderers(t, draw.name);
+                if (Visual(rulesGo.transform, HqModel("kuroda_home", "Rules"), Vector3.zero) != null) HideRenderers(sideb.transform, rulesGo.name);
+                if (Visual(lastrecGo.transform, HqModel("kuroda_home", "LastRec"), Vector3.zero) != null) HideRenderers(sideb.transform, lastrecGo.name);
+                if (Visual(verdict.transform, HqModel("kuroda_home", "Verdict"), Vector3.zero) != null) HideRenderers(sideb.transform, "Verdict");
+            }
 
             return new[] { "rules", "lastrec", "verdict" };
         }
@@ -3506,6 +3538,71 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 黒田の自宅 ----
+                case "KUR_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("KurodaHome/flooring"), HqTex("KurodaHome/flooring_n", true), 0.4f);
+                case "KUR_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/wallpaper"), HqTex("KurodaHome/wallpaper_n", true), 0.4f);
+                case "KUR_Ceiling":   return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.05f);
+                case "KUR_Trim":      return HqLit(n, new Color(0.55f, 0.4f, 0.28f), 0.5f, 0f, HqTex("KurodaHome/wood"), HqTex("KurodaHome/wood_n", true), 0.3f);
+                case "KUR_Wood":      return HqLit(n, Color.white, 0.5f, 0f, HqTex("KurodaHome/wood"), HqTex("KurodaHome/wood_n", true), 0.3f);
+                case "KUR_WoodDark":  return HqLit(n, new Color(0.6f, 0.5f, 0.42f), 0.5f, 0f, HqTex("KurodaHome/wood"), HqTex("KurodaHome/wood_n", true), 0.3f);
+                case "KUR_KitchenTile": return HqLit(n, Color.white, 0.8f, 0f, HqTex("KurodaHome/kitchen_tile"), HqTex("KurodaHome/kitchen_tile_n", true), 0.5f);
+                case "KUR_CabinetCream": return HqLit(n, new Color(0.9f, 0.87f, 0.78f), 0.55f);
+                case "KUR_Stainless": return HqLit(n, new Color(0.8f, 0.81f, 0.83f), 0.5f, 0.8f);
+                case "KUR_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "KUR_WhitePlastic": return HqLit(n, new Color(0.93f, 0.93f, 0.91f), 0.6f);
+                case "KUR_Fridge":    return HqLit(n, new Color(0.9f, 0.9f, 0.86f), 0.7f);
+                case "KUR_Rug":       return HqLit(n, Color.white, 0.02f, 0f, HqTex("KurodaHome/rug", clamp: true), HqTex("KurodaHome/rug_n", true), 0.5f);
+                case "KUR_Sofa":      return HqLit(n, Color.white, 0.05f, 0f, HqTex("KurodaHome/sofa"), HqTex("KurodaHome/sofa_n", true), 0.5f);
+                case "KUR_Curtain":   return HqLit(n, Color.white, 0.05f, 0f, HqTex("KurodaHome/curtain"), HqTex("KurodaHome/curtain_n", true), 0.4f);
+                case "KUR_LampShade": return HqLit(n, new Color(1f, 0.94f, 0.82f), 0.05f, 0f, HqTex("KurodaHome/curtain"), null, 1f, new Color(1f, 0.75f, 0.45f) * 0.7f);
+                case "KUR_Bulb":      return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.8f, 0f, null, null, 1f, new Color(1f, 0.82f, 0.58f) * 3f);
+                case "KUR_CeilingLight": return HqLit(n, new Color(1f, 0.97f, 0.92f), 0.5f, 0f, null, null, 1f, new Color(1f, 0.9f, 0.75f) * 1.2f);
+                case "KUR_Night":     return HqLit(n, Color.black, 0f, 0f, null, null, 1f, Color.white, HqTex("MizunoApart/night_city", clamp: true));
+                case "KUR_WindowGlass":
+                {
+                    var m = GlassMat(n, new Color(0.7f, 0.72f, 0.76f, 0.1f));
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "KUR_Glass":
+                {
+                    var m = GlassMat(n, new Color(0.8f, 0.85f, 0.9f, 0.3f));
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "KUR_Aluminum":  return HqLit(n, new Color(0.78f, 0.79f, 0.8f), 0.7f, 0.9f);
+                case "KUR_Porcelain": return HqLit(n, new Color(0.94f, 0.93f, 0.9f), 0.8f);
+                case "KUR_Indigo":    return HqLit(n, new Color(0.16f, 0.22f, 0.4f), 0.75f);
+                case "KUR_Lacquer":   return HqLit(n, new Color(0.35f, 0.08f, 0.06f), 0.8f);
+                case "KUR_Rice":      return HqLit(n, new Color(0.96f, 0.95f, 0.9f), 0.4f);
+                case "KUR_GrilledFish": return HqLit(n, new Color(0.62f, 0.44f, 0.28f), 0.5f);
+                case "KUR_Miso":      return HqLit(n, new Color(0.55f, 0.38f, 0.2f), 0.9f);
+                case "KUR_Greens":    return HqLit(n, new Color(0.25f, 0.45f, 0.18f), 0.5f);
+                case "KUR_Chopsticks":return HqLit(n, new Color(0.3f, 0.18f, 0.1f), 0.6f);
+                case "KUR_Juice":     return HqLit(n, new Color(0.95f, 0.6f, 0.15f), 0.9f);
+                case "KUR_PotRed":    return HqLit(n, new Color(0.62f, 0.12f, 0.1f), 0.65f);
+                case "KUR_Drawing":   return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/drawing", clamp: true));
+                case "KUR_DrawingsWall": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/drawings_wall", clamp: true));
+                case "KUR_Calendar":  return HqLit(n, Color.white, 0.2f, 0f, HqTex("KurodaHome/calendar", clamp: true));
+                case "KUR_FamilyPhoto": return HqLit(n, Color.white, 0.5f, 0f, HqTex("KurodaHome/family_photo", clamp: true));
+                case "KUR_NotebookRules": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/notebook_rules", clamp: true));
+                case "KUR_NotebookBlank": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/notebook_blank", clamp: true));
+                case "KUR_RecorderLcd": return HqLit(n, Color.white, 0.6f, 0f, HqTex("KurodaHome/recorder_lcd", clamp: true));
+                case "KUR_NotebookCover": return HqLit(n, new Color(0.12f, 0.12f, 0.16f), 0.4f);
+                case "KUR_NotebookBrown": return HqLit(n, new Color(0.38f, 0.24f, 0.16f), 0.4f);
+                case "KUR_TvScreen":  return HqLit(n, new Color(0.02f, 0.025f, 0.03f), 0.9f);
+                case "KUR_Randoseru": return HqLit(n, new Color(0.6f, 0.08f, 0.1f), 0.7f);
+                case "KUR_Bear":      return HqLit(n, new Color(0.58f, 0.42f, 0.28f), 0.02f);
+                case "KUR_Magnet":    return HqLit(n, new Color(0.2f, 0.5f, 0.85f), 0.7f);
+                case "KUR_PaperPlain":return HqLit(n, new Color(0.94f, 0.93f, 0.9f), 0.1f);
+                case "KUR_ClockFace": return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.6f);
+                case "KUR_PlantPot":  return HqLit(n, new Color(0.55f, 0.36f, 0.26f), 0.2f);
+                case "KUR_Soil":      return HqLit(n, new Color(0.12f, 0.08f, 0.05f), 0.05f);
+                case "KUR_Stem":      return HqLit(n, new Color(0.3f, 0.24f, 0.16f), 0.2f);
+                case "KUR_Leaf":      return HqLit(n, new Color(0.14f, 0.32f, 0.12f), 0.55f);
+                case "KUR_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "KUR_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
                 // ---- SYSTEM ROOM ----
                 case "SYS_Floor":     return HqLit(n, Color.white, 0.55f, 0f, HqTex("SystemRoom/dark_floor"), HqTex("SystemRoom/dark_floor_n", true), 0.4f);
                 case "SYS_WallPanel": return HqLit(n, Color.white, 0.1f, 0f, HqTex("SystemRoom/wall_panel"), HqTex("SystemRoom/wall_panel_n", true), 0.6f);
@@ -4052,7 +4149,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
