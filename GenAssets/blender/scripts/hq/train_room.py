@@ -598,10 +598,10 @@ def door(M):
     return p
 
 
-def breaker(M):
-    """車内の配電盤（前面 -X、壁は +X 側。本体 x -0.125〜0.125 → 壁に付くよう奥へ）"""
+def breaker(M, back=0.125, conduit_top=2.65):
+    """配電盤（前面 -X、壁は +X 側）。back=ユニット原点から壁までの距離（電車 0.125、他の部屋 0.275）"""
     p = []
-    x0, x1 = -0.12, 0.125                                        # 前面〜壁
+    x0, x1 = -0.12, back                                         # 前面〜壁
     p.append(span("TB_Box", x0 + 0.01, x1, 0.95, 1.75, -0.25, 0.25, M["mel"], 0.01, 3))
     p.append(span("TB_Door", x0, x0 + 0.012, 0.98, 1.72, -0.225, 0.225, M["mel"], 0.006))
     # 通風の切り欠き・警告ラベル・蝶番・鍵
@@ -615,7 +615,7 @@ def breaker(M):
     # レバーの溝（黒い縦長の穴）
     p.append(span("TB_Slot", x0 - 0.002, x0 + 0.004, 1.0, 1.5, -0.035, 0.035, M["rubber"], 0.003))
     # 天井へ上がる電線管
-    p.append(pipe("TB_Conduit", [(0.06, 1.75, 0.15), (0.06, 2.65, 0.15)], 0.014, M["sus"], 0.05))
+    p.append(pipe("TB_Conduit", [(back - 0.065, 1.75, 0.15), (back - 0.065, conduit_top, 0.15)], 0.014, M["sus"], 0.05))
     for o in p:
         finish(o, 2.0, angle=35)
     return p

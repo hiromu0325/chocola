@@ -436,6 +436,7 @@ namespace EscapeProto
                 case "mizuno_apart": color = new Color(1f, 0.9f, 0.75f);     intensity = 0.5f; range = 7f; break;
                 case "son_room":     color = new Color(1f, 0.97f, 0.9f);     intensity = 0.7f; range = 7f; break;
                 case "train":        color = new Color(0.93f, 0.96f, 1f);    intensity = 1.3f; range = 10f; break;   // 夜の車内の蛍光灯
+                case "lab":          color = new Color(0.95f, 0.97f, 1f);    intensity = 1.6f; range = 12f; break;   // 研究所の白いLED
                 default:             color = new Color(1f, 0.96f, 0.9f);     intensity = 2.0f; range = 12f; break;
             }
 
@@ -1077,12 +1078,22 @@ namespace EscapeProto
                 new Vector3(hw - 1.8f, 0f, 1.6f), new Vector3(hw - 1.8f, 0f, -0.8f),
             };
             var deskNames = new[] { "佐伯", "水野", "黒田", "", "" };
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("lab", "Desk")) != null;
             for (int i = 0; i < deskPos.Length; i++)
             {
-                // Blender製ワークステーション＋椅子（無ければ従来の机）
-                var d = Prop(t, "Workstation", deskPos[i]) ?? Desk(t, $"ResearcherDesk_{i + 1}", deskPos[i], deskMat);
-                d.name = $"ResearcherDesk_{i + 1}";
-                Prop(t, "OfficeChair", deskPos[i] + new Vector3(0f, 0f, -0.8f), (i * 37) % 30 - 15f);
+                // 品質重視の机（木目の天板・紺の脚・引き出し・2画面）＋メッシュチェア。無ければ従来の什器
+                GameObject d;
+                if (hq)
+                {
+                    d = LabDesk(t, $"ResearcherDesk_{i + 1}", deskPos[i]);
+                    LabChair(t, deskPos[i] + new Vector3(0f, 0f, -0.8f), (i * 37) % 30 - 15f);
+                }
+                else
+                {
+                    d = Prop(t, "Workstation", deskPos[i]) ?? Desk(t, $"ResearcherDesk_{i + 1}", deskPos[i], deskMat);
+                    d.name = $"ResearcherDesk_{i + 1}";
+                    Prop(t, "OfficeChair", deskPos[i] + new Vector3(0f, 0f, -0.8f), (i * 37) % 30 - 15f);
+                }
                 if (!string.IsNullOrEmpty(deskNames[i]))
                     TextPlate(d.transform, deskNames[i], new Vector3(0f, 0.78f, -0.34f), 0f,
                         new Color(0.25f, 0.25f, 0.3f), 0.022f);
@@ -1101,9 +1112,19 @@ namespace EscapeProto
                         "※第4項以降は破棄されている");
             }
 
+            // 研究員の机の隣にもう1台ずつ並べて島にする（資料は置かない）
+            if (hq)
+                for (int i = 0; i < deskPos.Length; i++)
+                {
+                    var p = deskPos[i] + new Vector3(deskPos[i].x < 0f ? 1.4f : -1.4f, 0f, 0f);
+                    LabDesk(t, $"SharedDesk_{i + 1}", p);
+                    LabChair(t, p + new Vector3(0f, 0f, -0.8f), (i * 53) % 40 - 20f);
+                }
+
             // 研究メンバー表（北壁のボード。写真4人分・うち3人は判読不能）
+            // 以前は北壁の中央＝出口の扉の真ん前にあり、扉を隠していた。扉の西へずらす
             var mb = new GameObject("MemberBoard"); mb.transform.SetParent(t, false);
-            mb.transform.localPosition = new Vector3(0f, 0f, hd - 0.3f);
+            mb.transform.localPosition = new Vector3(-3.3f, 0f, hd - 0.3f);
             var plate = Findable(mb.transform, "members", "社員名簿", new Vector3(0f, 1.6f, 0f), board,
                 new Vector3(2.7f, 1.2f, 0.06f),
                 "社員名簿",
@@ -1126,6 +1147,23 @@ namespace EscapeProto
             }
             TextPlate(plate.transform, "社 員 名 簿", new Vector3(0f, -0.42f, -0.04f), 180f,
                 new Color(0.2f, 0.2f, 0.25f), 0.03f);
+            // 品質重視の名簿（写真と名前はテクスチャ。調べる判定は元の板のまま）
+            if (Visual(plate.transform, HqModel("lab", "MemberBoard"), Vector3.zero) != null)
+            {
+                HideRenderers(plate.transform, "Photo_0", "Photo_1", "Photo_2", "Photo_3", "Text");
+                HideRenderers(mb.transform, plate.name);
+            }
+
+            // 壁の備品（ホワイトボード・ライトボックス・受付カウンター・計測ワゴン・サーバーラック・観葉植物）
+            if (Visual(t, HqModel("lab", "Interior"), Vector3.zero) != null)
+            {
+                Solid(t, "CounterCol", new Vector3(-4.31f, 0.52f, -hd + 0.415f), new Vector3(3.83f, 1.04f, 0.68f));
+                Solid(t, "StoolCol", new Vector3(-5.2f, 0.375f, -hd + 1.095f), new Vector3(0.36f, 0.75f, 0.36f));
+                Solid(t, "StoolCol", new Vector3(-3.7f, 0.375f, -hd + 1.095f), new Vector3(0.36f, 0.75f, 0.36f));
+                Solid(t, "CartCol", new Vector3(hw - 0.525f, 0.5f, 3.8f), new Vector3(0.6f, 1.0f, 0.5f));
+                Solid(t, "RackCol", new Vector3(hw - 0.585f, 1.02f, -hd + 0.675f), new Vector3(0.98f, 2.04f, 0.6f));
+                Solid(t, "PlantCol", new Vector3(-hw + 0.525f, 0.8f, hd - 0.525f), new Vector3(0.42f, 1.6f, 0.42f));
+            }
 
             return new[] { "summary", "members" };
         }
@@ -3053,6 +3091,29 @@ namespace EscapeProto
             return unit;
         }
 
+        /// <summary>研究所の机（品質重視モデル＋見えない箱：天板・両脇の脚・引き出し・モニター）</summary>
+        private static GameObject LabDesk(Transform parent, string name, Vector3 pos)
+        {
+            var d = new GameObject(name);
+            d.transform.SetParent(parent, false);
+            d.transform.localPosition = pos;
+            Visual(d.transform, HqModel("lab", "Desk"), Vector3.zero);
+            Solid(d.transform, "TopCol", new Vector3(0f, 0.735f, 0f), new Vector3(1.4f, 0.03f, 0.7f));
+            Solid(d.transform, "LegCol", new Vector3(-0.64f, 0.36f, 0f), new Vector3(0.06f, 0.72f, 0.66f));
+            Solid(d.transform, "LegCol", new Vector3(0.64f, 0.36f, 0f), new Vector3(0.06f, 0.72f, 0.66f));
+            Solid(d.transform, "PedCol", new Vector3(0.39f, 0.335f, -0.015f), new Vector3(0.42f, 0.61f, 0.53f));
+            Solid(d.transform, "MonCol", new Vector3(0.23f, 1.085f, 0.18f), new Vector3(0.9f, 0.28f, 0.06f));
+            return d;
+        }
+
+        /// <summary>研究所のメッシュチェア（机の方 = +Z）</summary>
+        private static GameObject LabChair(Transform parent, Vector3 pos, float yaw)
+        {
+            return HqProp(parent, "lab", "Chair", pos, yaw,
+                (new Vector3(0f, 0.26f, 0f), new Vector3(0.5f, 0.52f, 0.5f)),
+                (new Vector3(0f, 0.85f, -0.26f), new Vector3(0.46f, 0.46f, 0.06f)));
+        }
+
         /// <summary>品質重視モデル用のテクスチャ（法線マップは取り込み設定を合わせる）</summary>
         private static Texture2D HqTex(string file, bool normal = false, bool clamp = false, bool alpha = false)
         {
@@ -3145,6 +3206,43 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 研究所応接室 ----
+                case "LAB_Carpet":    return HqLit(n, Color.white, 0.05f, 0f, HqTex("Lab/carpet_tile"), HqTex("Lab/carpet_tile_n", true), 0.7f);
+                case "LAB_Paint":     return HqLit(n, Color.white, 0.15f, 0f, HqTex("Lab/paint"), HqTex("Lab/paint_n", true), 0.3f);
+                case "LAB_CeilingTile": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Lab/ceiling_tile"), HqTex("Lab/ceiling_tile_n", true), 0.5f);
+                case "LAB_Oak":       return HqLit(n, Color.white, 0.45f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
+                case "LAB_Mesh":      return HqLit(n, Color.white, 0.25f, 0f, HqTex("Lab/mesh"), HqTex("Lab/mesh_n", true), 0.6f);
+                case "LAB_Perforated":return HqLit(n, Color.white, 0.4f, 0.5f, HqTex("Lab/perforated"), HqTex("Lab/perforated_n", true), 0.6f);
+                case "LAB_ScreenEEG": return HqLit(n, Color.white, 0.85f, 0f, HqTex("Lab/screen_eeg", clamp: true), null, 1f, Color.white * 1.1f, HqTex("Lab/screen_eeg", clamp: true));
+                case "LAB_ScreenMRI": return HqLit(n, Color.white, 0.85f, 0f, HqTex("Lab/screen_mri", clamp: true), null, 1f, Color.white * 1.1f, HqTex("Lab/screen_mri", clamp: true));
+                case "LAB_Lightbox":  return HqLit(n, Color.white, 0.6f, 0f, HqTex("Lab/lightbox", clamp: true), null, 1f, new Color(0.9f, 0.95f, 1f) * 1.3f, HqTex("Lab/lightbox", clamp: true));
+                case "LAB_Whiteboard":return HqLit(n, Color.white, 0.8f, 0f, HqTex("Lab/whiteboard", clamp: true));
+                case "LAB_MemberBoard": return HqLit(n, Color.white, 0.2f, 0f, HqTex("Lab/member_board", clamp: true));
+                case "LAB_PaperGraph":return HqLit(n, Color.white, 0.1f, 0f, HqTex("Lab/paper_graph", clamp: true));
+                case "LAB_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
+                case "LAB_DeviceFront": return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/device_front", clamp: true));
+                case "LAB_LedBar":    return HqLit(n, new Color(0.95f, 0.97f, 1f), 0.5f, 0f, null, null, 1f, new Color(0.92f, 0.96f, 1f) * 2.2f);
+                case "LAB_LedGreen":  return HqLit(n, new Color(0.1f, 0.4f, 0.2f), 0.5f, 0f, null, null, 1f, new Color(0.3f, 1f, 0.5f) * 1.5f);
+                case "LAB_LedAmber":  return HqLit(n, new Color(0.4f, 0.3f, 0.1f), 0.5f, 0f, null, null, 1f, new Color(1f, 0.6f, 0.15f) * 1.5f);
+                case "LAB_Grid":      return HqLit(n, new Color(0.93f, 0.93f, 0.93f), 0.5f);
+                case "LAB_Cove":      return HqLit(n, new Color(0.2f, 0.2f, 0.22f), 0.35f);
+                case "LAB_Edge":      return HqLit(n, new Color(0.55f, 0.56f, 0.57f), 0.5f);
+                case "LAB_Navy":      return HqLit(n, new Color(0.12f, 0.2f, 0.36f), 0.55f, 0.3f);
+                case "LAB_SteelGrey": return HqLit(n, new Color(0.62f, 0.63f, 0.64f), 0.55f, 0.3f);
+                case "LAB_Aluminum":  return HqLit(n, new Color(0.8f, 0.81f, 0.82f), 0.7f, 0.9f);
+                case "LAB_Stainless": return HqLit(n, new Color(0.82f, 0.83f, 0.85f), 0.8f, 1f);
+                case "LAB_BlackPlastic": return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "LAB_ChairFabric": return HqLit(n, new Color(0.05f, 0.05f, 0.055f), 0.1f);
+                case "LAB_SolidWhite":return HqLit(n, new Color(0.93f, 0.93f, 0.92f), 0.7f);
+                case "LAB_Glass":     return HqLit(n, new Color(0.03f, 0.035f, 0.04f), 0.95f, 0.3f);
+                case "LAB_Rubber":    return HqLit(n, new Color(0.04f, 0.04f, 0.04f), 0.25f);
+                case "LAB_Pot":       return HqLit(n, new Color(0.22f, 0.22f, 0.23f), 0.4f);
+                case "LAB_Soil":      return HqLit(n, new Color(0.12f, 0.09f, 0.07f), 0.05f);
+                case "LAB_Leaf":      return HqLit(n, new Color(0.12f, 0.3f, 0.12f), 0.65f);
+                case "LAB_Stem":      return HqLit(n, new Color(0.3f, 0.24f, 0.16f), 0.2f);
+                case "LAB_PanelWhite":return HqLit(n, new Color(0.9f, 0.9f, 0.88f), 0.6f);
+                case "LAB_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "LAB_Mug":       return HqLit(n, new Color(0.85f, 0.85f, 0.82f), 0.8f);
                 // ---- 電車車内 ----
                 case "TRN_Melamine":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("Train/melamine"), HqTex("Train/melamine_n", true), 0.3f);
                 case "TRN_Linoleum":  return HqLit(n, Color.white, 0.35f, 0f, HqTex("Train/linoleum"), HqTex("Train/linoleum_n", true), 0.4f);
@@ -3238,6 +3336,8 @@ namespace EscapeProto
             foreach (Transform c in parent)
             {
                 if (!set.Contains(c.name)) continue;
+                // TextMesh は MeshRenderer を外せない（必須コンポーネント）ので、文字のオブジェクトごと隠す
+                if (c.GetComponent<TextMesh>() != null) { c.gameObject.SetActive(false); continue; }
                 var mr = c.GetComponent<MeshRenderer>();
                 if (mr != null) Object.DestroyImmediate(mr);
                 var mf = c.GetComponent<MeshFilter>();
@@ -3253,7 +3353,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁

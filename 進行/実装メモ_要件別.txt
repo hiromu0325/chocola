@@ -206,9 +206,18 @@
 　　　　調べる中吊り（研究所の広告）は額付きの両面ポスターに差し替え（調べる判定は元の箱）
 　　再生成: python GenAssets/train/make_textures.py →
 　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_train.py
+　　済: 研究所応接室（lab）… コンセプト lab4 のモダンな脳神経研究所のオフィス：濃色のタイルカーペット・
+　　　　薄い青灰色の塗り壁・600角の吸音板と格子天井・線状の吹出口・吊り下げのライン照明3本・オークのルーバー壁／
+　　　　研究員の机（オークの天板・紺の脚・引き出し・脳波とMRIの2画面）とメッシュチェアを10組（2台ずつの島。
+　　　　増やした5組には資料を置かない）／ガラスのホワイトボード（脳の図・回路・手書きのメモ）・
+　　　　MRIフィルムのライトボックス・社員名簿（無事な写真1枚と、溶けたように黒く滲んだ3枚）／
+　　　　波板ステンレスの受付カウンターとスツール・計測ワゴン・サーバーラック・観葉植物・木目の扉・白い配電盤
+　　　　修正: 社員名簿のボードが北壁の中央＝出口の扉の真ん前にあり扉を隠していた → 扉の西へ移動
+　　再生成: python GenAssets/lab/make_textures.py →
+　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_lab.py
 　　Unity側: HqModel(部屋,部品) があれば外殻・扉・什器・配電盤・レバーをそれに差し替え
-　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_*）。
-　　　テクスチャの共通部品は GenAssets/texlib.py。残り12部屋は従来の外殻のまま
+　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_* / LAB_*）。
+　　　テクスチャの共通部品は GenAssets/texlib.py。残り11部屋は従来の外殻のまま
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用
 　・デザインキャンバス：Material 3 のギミックUI（記憶回路・ログ照合・キーパッド・配電盤・手帳・トークン表）
