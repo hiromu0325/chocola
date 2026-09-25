@@ -431,7 +431,7 @@ namespace EscapeProto
                 case "analysis":     color = new Color(0.85f, 0.9f, 1f);     intensity = 0.7f; range = 9f; break;
                 case "ward":         color = new Color(0.8f, 0.95f, 0.85f);  intensity = 0.65f; range = 9f; break;
                 case "data_room":    color = new Color(0.75f, 0.82f, 1f);    intensity = 0.6f; range = 9f; break;
-                case "saeki_home":   color = new Color(1f, 0.85f, 0.65f);    intensity = 0.55f; range = 8f; break;
+                case "saeki_home":   color = new Color(1f, 0.85f, 0.65f);    intensity = 0.8f; range = 8f; break;    // 布のペンダント
                 case "kuroda_home":  color = new Color(1f, 0.85f, 0.6f);     intensity = 0.5f; range = 8f; break;
                 case "mizuno_apart": color = new Color(1f, 0.9f, 0.75f);     intensity = 0.5f; range = 7f; break;
                 case "son_room":     color = new Color(1f, 0.97f, 0.9f);     intensity = 0.7f; range = 7f; break;
@@ -1421,15 +1421,30 @@ namespace EscapeProto
             dl.type = LightType.Point; dl.color = new Color(1f, 0.6f, 0.35f);
             dl.intensity = 1.8f; dl.range = 7f;
 
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("saeki_home", "Interior")) != null;
             // ダイニングテーブル：誰も座らない二脚と、湯気の立たない二杯
             var dining = new GameObject("DiningTable"); dining.transform.SetParent(t, false);
             dining.transform.localPosition = new Vector3(1.4f, 0f, 1.2f);
             Box(dining.transform, "Top", new Vector3(0f, 0.72f, 0f), new Vector3(1.3f, 0.05f, 0.9f), wood);
             Box(dining.transform, "Leg", new Vector3(0f, 0.36f, 0f), new Vector3(0.12f, 0.72f, 0.12f), wood);
-            if (Prop(dining.transform, "DiningChair", new Vector3(0f, 0f, -0.75f), 0f) == null)
-                Box(dining.transform, "Chair_A", new Vector3(0f, 0.24f, -0.75f), new Vector3(0.45f, 0.48f, 0.45f), wood);
-            if (Prop(dining.transform, "DiningChair", new Vector3(0f, 0f, 0.75f), 180f) == null)
-                Box(dining.transform, "Chair_B", new Vector3(0f, 0.24f, 0.75f), new Vector3(0.45f, 0.48f, 0.45f), wood);
+            if (hq)
+            {
+                // 品質重視：一本脚のテーブル・椅子2脚・カップ（当たり判定は天板と脚の箱＋椅子の箱）
+                Visual(dining.transform, HqModel("saeki_home", "Dining"), Vector3.zero);
+                HideRenderers(dining.transform, "Top", "Leg");
+                foreach (float sz in new[] { -1f, 1f })
+                {
+                    Solid(dining.transform, "ChairSeatCol", new Vector3(0f, 0.23f, sz * 0.75f), new Vector3(0.44f, 0.46f, 0.4f));
+                    Solid(dining.transform, "ChairBackCol", new Vector3(0f, 0.68f, sz * 0.92f), new Vector3(0.42f, 0.44f, 0.05f));
+                }
+            }
+            else
+            {
+                if (Prop(dining.transform, "DiningChair", new Vector3(0f, 0f, -0.75f), 0f) == null)
+                    Box(dining.transform, "Chair_A", new Vector3(0f, 0.24f, -0.75f), new Vector3(0.45f, 0.48f, 0.45f), wood);
+                if (Prop(dining.transform, "DiningChair", new Vector3(0f, 0f, 0.75f), 180f) == null)
+                    Box(dining.transform, "Chair_B", new Vector3(0f, 0.24f, 0.75f), new Vector3(0.45f, 0.48f, 0.45f), wood);
+            }
             foreach (float z in new[] { -0.25f, 0.25f })
             {
                 var c = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -1449,14 +1464,22 @@ namespace EscapeProto
                         new Vector3(0.28f, 0.3f + (k % 3) * 0.04f, 0.2f),
                         GetMat($"LP_Book_{k % 3}", bookColors[k % 3], 0.15f));
             var desk = Desk(t, "Desk", new Vector3(-hw + 1.2f, 0f, -1.8f), wood);
-            if (Prop(t, "DiningChair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f) == null)
+            if (hq)
+                HqProp(t, "saeki_home", "Chair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f,
+                    (new Vector3(0f, 0.23f, 0f), new Vector3(0.44f, 0.46f, 0.4f)),
+                    (new Vector3(0f, 0.68f, -0.17f), new Vector3(0.42f, 0.44f, 0.05f)));
+            else if (Prop(t, "DiningChair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f) == null)
                 Box(t, "DeskChair", new Vector3(-hw + 1.2f, 0.24f, -2.55f), new Vector3(0.45f, 0.48f, 0.45f), wood);
             Deco(desk.transform, "DeskLamp", new Vector3(0.5f, 0.95f, 0.2f), new Vector3(0.2f, 0.12f, 0.2f),
                 EmissiveMat("LP_DeskLampShade", new Color(0.3f, 0.35f, 0.3f), new Color(1f, 0.85f, 0.6f) * 0.8f));
 
             // 東の窓（夕暮れの光がここから差す）、ラグ、ソファ、壁の時計
-            Window(t, new Vector3(hw - 0.08f, 1.5f, 1.5f), 90f, 1.4f, 1.2f, true, new Color(0.7f, 0.6f, 0.5f));
-            Rug(t, new Vector3(1.4f, 0f, 1.2f), new Vector2(2.4f, 2.0f), new Color(0.45f, 0.3f, 0.25f));
+            // 品質重視の外殻には窓の開口・カーテン・外の夕焼けがあり、ラグは家具のモデルに含む
+            if (!hq)
+            {
+                Window(t, new Vector3(hw - 0.08f, 1.5f, 1.5f), 90f, 1.4f, 1.2f, true, new Color(0.7f, 0.6f, 0.5f));
+                Rug(t, new Vector3(1.4f, 0f, 1.2f), new Vector2(2.4f, 2.0f), new Color(0.45f, 0.3f, 0.25f));
+            }
             var sofa = new GameObject("Sofa"); sofa.transform.SetParent(t, false);
             sofa.transform.localPosition = new Vector3(-2.0f, 0f, hd - 0.55f);
             var sofaMat = GetMat("LP_Sofa", new Color(0.35f, 0.32f, 0.3f), 0.1f);
@@ -1472,7 +1495,7 @@ namespace EscapeProto
             clockGo.GetComponent<Renderer>().sharedMaterial = cup;
             Object.DestroyImmediate(clockGo.GetComponent<Collider>());
 
-            Findable(dining.transform, "letter", "書きかけの手紙", new Vector3(0.4f, 0.755f, 0f), paper,
+            var letterGo = Findable(dining.transform, "letter", "書きかけの手紙", new Vector3(0.4f, 0.755f, 0f), paper,
                 new Vector3(0.24f, 0.01f, 0.16f),
                 "妻の書きかけの手紙",
                 "《便箋》\n\n" +
@@ -1483,7 +1506,7 @@ namespace EscapeProto
                 "　誰かに謝っているのが聞こえました」\n\n" +
                 "手紙は、そこで終わっている。\n" +
                 "投函されることは、なかったんだろう。");
-            Findable(desk.transform, "plog", "私的ログ", new Vector3(-0.2f, 0.76f, 0.05f), paper,
+            var plogGo = Findable(desk.transform, "plog", "私的ログ", new Vector3(-0.2f, 0.76f, 0.05f), paper,
                 new Vector3(0.3f, 0.02f, 0.22f),
                 "佐伯の私的ログ（最終頁）",
                 "《私的記録 最終頁》\n\n" +
@@ -1494,7 +1517,7 @@ namespace EscapeProto
                 "最後の行は、筆圧が乱れている。\n\n" +
                 "「……何をするつもりですか？」\n\n" +
                 "記録は、そこで途切れていた。");
-            Findable(desk.transform, "unsent", "未送信メモ", new Vector3(0.35f, 0.755f, -0.15f), paper,
+            var unsentGo = Findable(desk.transform, "unsent", "未送信メモ", new Vector3(0.35f, 0.755f, -0.15f), paper,
                 new Vector3(0.2f, 0.01f, 0.14f),
                 "宛先のないメモ",
                 "《走り書き》\n\n" +
@@ -1523,6 +1546,30 @@ namespace EscapeProto
                 "口論も研究も知らない家族の時間が、ここで止まっている。",
                 1.4f, 1.15f, 0.16f,
                 (new Vector3(2.3f, 0f, 1.2f), -90f, 0.92f, 1f, 1f, false));
+
+            if (hq)
+            {
+                // 品質重視の見た目に差し替え（当たり判定・調べる判定は元の箱のまま）
+                Visual(t, HqModel("saeki_home", "Interior"), Vector3.zero);
+                // 布のペンダントは影を落とさない（光源が笠のすぐ下にあり、笠の影で天井がまだらになる）
+                var lamps = Visual(t, HqModel("saeki_home", "Lamps"), Vector3.zero);
+                if (lamps != null)
+                    foreach (var r in lamps.GetComponentsInChildren<Renderer>())
+                        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                HideRenderers(t, "Bookshelf", "Book", "WallClock");
+                HideRenderers(dining.transform, "CoffeeCup");
+                HideRenderers(sofa.transform, "Seat", "Back", "Arm");
+                if (Visual(desk.transform, HqModel("saeki_home", "Desk"), Vector3.zero) != null)
+                    HideRenderers(desk.transform, "Top", "Leg", "DeskLamp");
+                // 新しく置いた家具の当たり判定（サイドボード・フロアランプ・観葉植物・コート掛け）
+                Solid(t, "Sideboard", new Vector3(2.15f, 0.4f, -hd + 0.3f), new Vector3(1.74f, 0.8f, 0.47f));
+                Solid(t, "FloorLamp", new Vector3(-0.9f, 0.7f, hd - 0.4f), new Vector3(0.3f, 1.4f, 0.3f));
+                Solid(t, "Plant", new Vector3(hw - 0.45f, 0.5f, hd - 0.45f), new Vector3(0.45f, 1.0f, 0.45f));
+                Solid(t, "CoatStand", new Vector3(-1.6f, 0.9f, -hd + 0.4f), new Vector3(0.35f, 1.8f, 0.35f));
+                if (Visual(letterGo.transform, HqModel("saeki_home", "Letter"), Vector3.zero) != null) HideRenderers(dining.transform, letterGo.name);
+                if (Visual(plogGo.transform, HqModel("saeki_home", "Plog"), Vector3.zero) != null) HideRenderers(desk.transform, plogGo.name);
+                if (Visual(unsentGo.transform, HqModel("saeki_home", "Unsent"), Vector3.zero) != null) HideRenderers(desk.transform, unsentGo.name);
+            }
 
             return new[] { "letter", "plog", "unsent" };
         }
@@ -3278,6 +3325,51 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 佐伯の自宅 ----
+                case "SAE_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("SaekiHome/wallpaper"), HqTex("SaekiHome/wallpaper_n", true), 0.4f);
+                case "SAE_Floor":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("SaekiHome/floor"), HqTex("SaekiHome/floor_n", true), 0.5f);
+                case "SAE_Wood":      return HqLit(n, Color.white, 0.5f, 0f, HqTex("SaekiHome/wood"), HqTex("SaekiHome/wood_n", true), 0.35f);
+                case "SAE_WoodLight": return HqLit(n, new Color(1.25f, 1.2f, 1.15f), 0.5f, 0f, HqTex("SaekiHome/wood"), HqTex("SaekiHome/wood_n", true), 0.35f);
+                case "SAE_Ceiling":   return HqLit(n, new Color(0.93f, 0.92f, 0.88f), 0.05f);
+                case "SAE_TrimPaint": return HqLit(n, new Color(0.9f, 0.88f, 0.83f), 0.45f);
+                case "SAE_SofaFabric":return HqLit(n, new Color(0.62f, 0.78f, 0.68f), 0.05f, 0f, HqTex("SaekiHome/sofa"), HqTex("SaekiHome/sofa_n", true), 0.6f);
+                case "SAE_Linen":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("SaekiHome/linen"), HqTex("SaekiHome/linen_n", true), 0.4f);
+                case "SAE_Curtain":   return HqLit(n, new Color(0.95f, 0.86f, 0.72f), 0.05f, 0f, HqTex("SaekiHome/linen"), HqTex("SaekiHome/linen_n", true), 0.4f);
+                case "SAE_LampShade": return HqLit(n, new Color(1f, 0.93f, 0.8f), 0.05f, 0f, HqTex("SaekiHome/linen"), null, 1f, new Color(1f, 0.72f, 0.42f) * 0.7f);
+                case "SAE_Bulb":      return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.8f, 0f, null, null, 1f, new Color(1f, 0.8f, 0.55f) * 3f);
+                case "SAE_Brass":     return HqLit(n, new Color(0.75f, 0.58f, 0.32f), 0.7f, 1f);
+                case "SAE_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.03f), 0.5f);
+                case "SAE_Sunset":    return HqLit(n, Color.black, 0f, 0f, null, null, 1f, Color.white, HqTex("SaekiHome/sunset", clamp: true));
+                case "SAE_Rug":       return HqLit(n, Color.white, 0.02f, 0f, HqTex("SaekiHome/rug", clamp: true), HqTex("SaekiHome/rug_n", true), 0.5f);
+                case "SAE_Porcelain": return HqLit(n, new Color(0.93f, 0.92f, 0.89f), 0.85f);
+                case "SAE_Coffee":    return HqLit(n, new Color(0.07f, 0.035f, 0.015f), 0.95f);
+                case "SAE_BankerGreen": return HqLit(n, new Color(0.05f, 0.3f, 0.16f), 0.9f);
+                case "SAE_Painting":  return HqLit(n, Color.white, 0.3f, 0f, HqTex("SaekiHome/painting", clamp: true));
+                case "SAE_Photo":     return HqLit(n, Color.white, 0.5f, 0f, HqTex("SaekiHome/photo", clamp: true));
+                case "SAE_Letter":    return HqLit(n, Color.white, 0.1f, 0f, HqTex("SaekiHome/letter", clamp: true));
+                case "SAE_Plog":      return HqLit(n, Color.white, 0.1f, 0f, HqTex("SaekiHome/plog", clamp: true));
+                case "SAE_Unsent":    return HqLit(n, Color.white, 0.1f, 0f, HqTex("SaekiHome/unsent", clamp: true));
+                case "SAE_BookSpine": return HqLit(n, Color.white, 0.3f, 0f, HqTex("Study/book_atlas", clamp: true));
+                case "SAE_BookPages": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/book_pages"));
+                case "SAE_Vase":      return HqLit(n, new Color(0.3f, 0.38f, 0.45f), 0.85f);
+                case "SAE_DriedFlower": return HqLit(n, new Color(0.55f, 0.42f, 0.3f), 0.1f);
+                case "SAE_ClockFace": return HqLit(n, new Color(0.92f, 0.9f, 0.84f), 0.6f);
+                case "SAE_SwitchPlate": return HqLit(n, new Color(0.9f, 0.88f, 0.84f), 0.7f);
+                case "SAE_PaperPlain":return HqLit(n, new Color(0.9f, 0.88f, 0.82f), 0.1f);
+                case "SAE_Terracotta":return HqLit(n, new Color(0.6f, 0.35f, 0.23f), 0.15f);
+                case "SAE_Soil":      return HqLit(n, new Color(0.12f, 0.08f, 0.05f), 0.05f);
+                case "SAE_Stem":      return HqLit(n, new Color(0.3f, 0.24f, 0.16f), 0.2f);
+                case "SAE_Leaf":      return HqLit(n, new Color(0.12f, 0.26f, 0.1f), 0.55f);
+                case "SAE_Felt":      return HqLit(n, new Color(0.22f, 0.2f, 0.18f), 0.1f);
+                case "SAE_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "SAE_WindowGlass":
+                {
+                    var m = GlassMat(n, new Color(0.75f, 0.7f, 0.65f, 0.1f));
+                    // 夕日の点光源がガラスに映って「太陽が二つ」に見えないよう、ハイライトは切る
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
                 // ---- 脳神経解析室 ----
                 case "ANA_Vinyl":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("Analysis/vinyl_floor"), HqTex("Analysis/vinyl_floor_n", true), 0.3f);
                 case "ANA_Panel":     return HqLit(n, Color.white, 0.4f, 0f, HqTex("Analysis/clean_panel"), HqTex("Analysis/clean_panel_n", true), 0.2f);
@@ -3493,7 +3585,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁

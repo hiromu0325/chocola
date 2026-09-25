@@ -87,3 +87,49 @@ class Saver:
             normal.save(os.path.join(self.out, name + "_n.png"))
             normal.save(os.path.join(self.unity, name + "_n.png"))
         print("OK", name)
+
+
+# ---------------------------------------------------------------- 住宅系の共通素材（色を指定して使う）
+
+def planks(n, seed, c0, c1, count=8, vary=0.12):
+    """床板（1枚 = 1m、幅 1/count の板。板ごとに色と木目を変える。長手は U）。(色, 高さ) を返す"""
+    rnd = np.random.default_rng(seed)
+    y, x = np.mgrid[0:n, 0:n] / n
+    plank = np.floor(y * count).astype(int)
+    col = np.zeros((n, n, 3)); h = np.zeros((n, n))
+    for p in range(count):
+        m = plank == p
+        warp = (fbm(n, 2.4, seed + 10 + p, ax=10.0, ay=1.0) - 0.5) * 0.8
+        ring = 0.5 + 0.5 * np.sin(2 * np.pi * ((y * count - p) * 3 + warp * 2))
+        streak = fbm(n, 1.0, seed + 40 + p, ax=40.0, ay=1.0)
+        t = np.clip(0.45 + (streak - 0.5) * 0.7 - (ring > 0.8) * 0.15 + rnd.uniform(-vary, vary), 0, 1)
+        c = colorize(t, c0, c1)
+        col[m] = c[m]; h[m] = streak[m]
+        cut = rnd.uniform(0.1, 0.9)
+        col[m & (np.abs(x - cut) < 0.0025)] *= 0.4
+    edge = np.abs((y * count) % 1 - 0.5) > 0.492
+    col[edge] *= 0.35; h[edge] = 0
+    col *= (0.92 + fbm(n, 2.2, seed + 60)[..., None] * 0.12)
+    return rgb(col), normal_map(h * 0.6 - edge * 0.8, 1.5)
+
+
+def wood(n, seed, c0, c1, rings=7):
+    """木目（1枚 = 1m、木目は U）。(色, 法線) を返す"""
+    y, x = np.mgrid[0:n, 0:n] / n
+    warp = (fbm(n, 2.6, seed, ax=10.0, ay=1.0) - 0.5) * 0.9
+    ring = np.clip(((0.5 + 0.5 * np.sin(2 * np.pi * (y * rings + warp * 3))) - 0.6) * 3.5, 0, 1)
+    streak = fbm(n, 1.1, seed + 1, ax=40.0, ay=1.0)
+    pores = fbm(n, 0.3, seed + 2, ax=12.0, ay=1.0)
+    t = np.clip(0.5 + (streak - 0.5) * 0.7 - ring * 0.2 - (pores > 0.64) * 0.08, 0, 1)
+    return rgb(colorize(t, c0, c1)), normal_map(streak * 0.5 - ring * 0.3, 1.0)
+
+
+def fabric(n, seed, base, weave=256, slub=0.05):
+    """織物（1枚 = 0.5m）。(色, 法線) を返す"""
+    y, x = np.mgrid[0:n, 0:n] / n
+    wx = 0.5 + 0.5 * np.sin(2 * np.pi * x * weave)
+    wy = 0.5 + 0.5 * np.sin(2 * np.pi * y * weave)
+    w = np.where(((np.floor(x * weave) + np.floor(y * weave)) % 2) == 0, wx, wy)
+    s = fbm(n, 1.2, seed, ax=0.1, ay=1.0) * 0.5 + fbm(n, 1.2, seed + 1, ax=1.0, ay=0.1) * 0.5
+    lum = 0.9 + w * 0.1 + (s - 0.5) * slub * 2 + (fbm(n, 0.4, seed + 2) - 0.5) * 0.06
+    return rgb(np.array(base, dtype=float)[None, None, :] * lum[..., None]), normal_map(w, 1.6)
