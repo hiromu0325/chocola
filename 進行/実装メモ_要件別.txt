@@ -289,11 +289,22 @@
 　　　　テレビ台と薄型テレビ・ソファ（ランドセル・くま）・壁の子供の絵・4月のカレンダー（18日「会議」）・時計・観葉植物
 　　再生成: python GenAssets/kuroda/make_textures.py →
 　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_kuroda.py
+　　済: MAIN CORE ROOM（core_main）… 磨いた黒い石の床（金の目地）・畝のある暗い壁と金の縦の光・天井の光の輪と
+　　　　放射状の梁／球形コア（段付きの台座と銘板・支持腕4本・半透明の殻と経緯の格子・金色の芯と光の軌道・
+　　　　天井へ昇るケーブル束）・床の金の輪と柱への光の線・光の柱6本（青い線とケーブルの巻き）・壁際の
+　　　　ケーブルトレイ・二段の段（当たり判定を追加）・祭壇の端末（再生メッセージの画面）
+　　　　修正: 台座の円柱プリミティブの当たり判定が半径2.1の球になっていて、北の出口のスポーンに食い込んでいた
+　　　　　　　→ 円柱の凸メッシュ（半径1.9）に置き換え
+　　再生成: python GenAssets/core_main/make_textures.py →
+　　　　　　blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_core_main.py
+　　通行の確認（2026/09/26）: 全14部屋で、入口から出口まで半径0.38（プレイヤー0.3＋スキン）のカプセルが
+　　　通れることを格子の探索で確認。水野のアパートは病室側で床頭台とベッドの間が 0.66m しかなく出口へ
+　　　通れなかった → ベッドを東へ、床頭台を西の壁際へ移した
 　　Unity側: HqModel(部屋,部品) があれば外殻・扉・什器・配電盤・レバーをそれに差し替え
-　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_* / LAB_* / STD_* / ANA_* / SAE_* / WRD_* / CAN_* / MZA_* / DAT_* / SYS_* / KUR_*）。
+　　　（当たり判定は箱のまま＋見えない箱を追加）。材質は HqMat() の表（DIM_* / TRN_* / LAB_* / STD_* / ANA_* / SAE_* / WRD_* / CAN_* / MZA_* / DAT_* / SYS_* / KUR_* / CMN_*）。
 　　　テクスチャの共通部品は GenAssets/texlib.py（fbm・板張り・木目・織物など）。
 　　　座標の注意: ビルダーの hw/hd は壁の中心基準。壁の内面は hw-0.075（Blender側は HW0/HD0 で写す）
-　　　残り2部屋（core_main / son_room）は
+　　　残り1部屋（son_room）は
 　　　従来の外殻のまま。全部屋の作り直しが終わるまで通しプレイの確認は行わない
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用

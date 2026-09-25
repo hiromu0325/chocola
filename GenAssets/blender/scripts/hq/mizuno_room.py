@@ -36,7 +36,8 @@ DOOR_HALF, DOOR_H = 0.55, 2.1
 SPLIT = 1.0
 WARM_WIN = (-1.7, -0.7, 0.95, 2.05)       # 東の窓（z0, z1, y0, y1）
 HOSP_WIN = (2.2, 3.4, 1.1, 2.1)
-HBED = (0.8, HD0 - 1.7)                    # 病室のベッド（頭 = 北）
+HBED = (1.1, HD0 - 1.7)                    # 病室のベッド（頭 = 北）。出口の扉への通り道を空けるため東寄り
+HCAB = (-1.4, HD0 - 0.9)                   # 床頭台（西の壁際。以前は扉の前でベッドとの隙間が 0.66m しかなく通れなかった）
 
 
 def mats():
@@ -541,11 +542,11 @@ def hospital(M):
     beds = join(ward_room.bed(Hm), "HB_Bed")
     beds.data.transform(Matrix.Translation(U(bx, 0, bz)) @ Matrix.Rotation(math.radians(180), 4, "Z"))
     out.append(beds)
-    out += ward_room.iv_stand(Hm, bx - 0.72, bz + 0.7, bag=True, seed=3)
-    out += ward_room.cabinet(Hm, -0.6, HD0 - 0.6, -1, 91)
+    out += ward_room.iv_stand(Hm, bx + 0.75, bz + 0.5, bag=True, seed=3)
+    out += ward_room.cabinet(Hm, HCAB[0], HCAB[1], -1, 91)
     out += ward_room.monitor(Hm, bx + 0.78, bz + 1.15, 1)
     # 床頭台の上の花（新しい花。毎日、誰かが替えている）
-    vx, vz = -0.6 - 0.12, HD0 - 0.6 - 0.12
+    vx, vz = HCAB[0] - 0.12, HCAB[1] - 0.12
     vase = lathe("HF_Vase", (vx, 0.825, vz), [(0.0, 0.0), (0.03, 0.0), (0.04, 0.06), (0.025, 0.14), (0.028, 0.16), (0.022, 0.16)], M["bottle"], 20, cap_top=False)
     out.append(finish(vase, 2.0, angle=60))
     rnd = random.Random(1481)
@@ -555,7 +556,7 @@ def hospital(M):
         out.append(finish(cyl_between(f"HF_Stem{k}", (vx, 0.95, vz), tip, 0.003, M["leaf"], 6), 2.0))
         out.append(finish(lathe(f"HF_Bloom{k}", (tip[0], tip[1] - 0.015, tip[2]), [(0.0, 0.0), (0.03, 0.012), (0.035, 0.025), (0.0, 0.02)], M["flower"], 12), 2.0))
     # カーテンレールと、半分引いたカーテン（ベッドの西、z 1.6〜2.6）
-    xr = bx - 0.75
+    xr = bx - 0.72
     out.append(finish(pipe("HC_Track", [(xr, H - 0.04, bz - 1.2), (xr, H - 0.04, bz + 1.2)], 0.012, Hm["chrome"], 0.05, 8), 2.0))
     top, bot = H - 0.06, 0.35
 

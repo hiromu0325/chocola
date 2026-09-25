@@ -2035,14 +2035,15 @@ namespace EscapeProto
                 Deco(t, "HospitalWallSkin", new Vector3(xs * (hw - 0.085f), h * 0.5f, split + 0.05f + backLen * 0.5f),
                     new Vector3(0.02f, h - 0.02f, backLen), hwall);
             var hbed = new GameObject("HospitalBedUnit"); hbed.transform.SetParent(t, false);
-            hbed.transform.localPosition = new Vector3(0.8f, 0f, hd - 1.7f);
+            // 品質重視では出口の扉への通り道を空けるためベッドを東へ寄せる（床頭台は西の壁際）
+            hbed.transform.localPosition = new Vector3(hq ? 1.1f : 0.8f, 0f, hd - 1.7f);
             if (hq)
             {
                 // 品質重視：病室のベッド・点滴・床頭台・モニター・カーテンは MizunoApart_Interior にある（頭 = 北）
                 Solid(hbed.transform, "FrameCol", new Vector3(0f, 0.36f, 0f), new Vector3(1.0f, 0.72f, 2.1f));
                 Solid(hbed.transform, "HeadCol", new Vector3(0f, 0.85f, 1.02f), new Vector3(1.0f, 0.3f, 0.06f));
                 Solid(hbed.transform, "FootCol", new Vector3(0f, 0.8f, -1.02f), new Vector3(1.0f, 0.2f, 0.06f));
-                Solid(t, "BedsideCabinet", new Vector3(-0.6f, 0.55f, hd - 0.6f), new Vector3(0.47f, 1.1f, 0.47f));
+                Solid(t, "BedsideCabinet", new Vector3(-1.4f, 0.55f, hd - 0.9f), new Vector3(0.47f, 1.1f, 0.47f));
             }
             // 頭側を奥（北）へ向ける＝180度回転
             else if (Prop(hbed.transform, "HospitalBed", Vector3.zero, 180f) == null)
@@ -2598,6 +2599,7 @@ namespace EscapeProto
             var rack = GetMat("LP_ServerRack", new Color(0.12f, 0.13f, 0.15f), 0.4f);
             var screen = EmissiveMat("LP_CoreTerminal", new Color(0.4f, 0.35f, 0.25f), new Color(1f, 0.9f, 0.6f) * 0.9f);
             var goldStrip = EmissiveMat("LP_GoldStrip", new Color(0.5f, 0.42f, 0.25f), new Color(1f, 0.85f, 0.45f) * 1.2f);
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("core_main", "Core")) != null;
 
             // 巨大な球形コア（内側の金の芯＋半透明の殻）と、それを支える台座リング
             void Sph(string name, Vector3 pos, float scale, Material m, bool collider)
@@ -2615,6 +2617,19 @@ namespace EscapeProto
             ring.transform.localPosition = new Vector3(0f, 0.35f, 2.5f);
             ring.transform.localScale = new Vector3(4.2f, 0.35f, 4.2f);
             ring.GetComponent<Renderer>().sharedMaterial = rack;
+            if (hq)
+            {
+                // 品質重視の球形コア（台座・支持腕・殻と経緯の格子・金の芯・天井へのケーブル）。当たり判定は元の球と円柱
+                Visual(t, HqModel("core_main", "Core"), Vector3.zero);
+                // 台座の円柱プリミティブの当たり判定はカプセル＝半径2.1の球になり、北の出口のスポーン（z=hd-1.2）に
+                // 食い込んでいた → 円柱の形（凸メッシュ、半径 1.9）にする
+                Object.DestroyImmediate(ring.GetComponent<Collider>());
+                ring.transform.localScale = new Vector3(3.8f, 0.35f, 3.8f);
+                var cradleCol = ring.AddComponent<MeshCollider>();
+                cradleCol.sharedMesh = ring.GetComponent<MeshFilter>().sharedMesh;
+                cradleCol.convex = true;
+                HideRenderers(t, "MainCoreInner", "MainCoreShell", "CoreCradle");
+            }
             var glow = new GameObject("CoreGlow");
             glow.transform.SetParent(t, false);
             glow.transform.localPosition = new Vector3(0f, 3.0f, 1.6f);
@@ -2623,7 +2638,7 @@ namespace EscapeProto
             gl2.intensity = 2.4f; gl2.range = 16f;
 
             // 床から天井へ伸びる光の柱（暗い柱の中に細い光の筋）
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 6 && !hq; i++)     // 品質重視の外殻に光の柱がある
             {
                 float ang = (i * 60f + 30f) * Mathf.Deg2Rad;   // 祭壇の正面（南）を空ける
                 float r = 4.2f;
@@ -2633,7 +2648,7 @@ namespace EscapeProto
                 Deco(t, "CablePillarLight", p, new Vector3(0.34f, h - 0.1f, 0.12f), cable);
             }
             // 床の光の輪（祭壇と球を結ぶ導線）
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < 24 && !hq; i++)
             {
                 float ang = i * 15f;
                 var seg = new GameObject("FloorRingSeg");
@@ -2643,18 +2658,30 @@ namespace EscapeProto
                 Deco(seg.transform, "Strip", new Vector3(0f, 0.004f, 2.6f), new Vector3(0.05f, 0.008f, 0.62f), goldStrip);
             }
             // 天井の大ダクトと、壁沿いのケーブル束
-            Duct(t, new Vector3(0f, h - 0.5f, 0f), hd * 2f - 0.8f, 0.7f, rack);
-            foreach (float xs in new[] { -1f, 1f })
-                Deco(t, "WallCables", new Vector3(xs * (hw - 0.2f), 0.5f, 0f), new Vector3(0.25f, 0.4f, hd * 2f - 0.4f), rack);
+            if (!hq)
+            {
+                Duct(t, new Vector3(0f, h - 0.5f, 0f), hd * 2f - 0.8f, 0.7f, rack);
+                foreach (float xs in new[] { -1f, 1f })
+                    Deco(t, "WallCables", new Vector3(xs * (hw - 0.2f), 0.5f, 0f), new Vector3(0.25f, 0.4f, hd * 2f - 0.4f), rack);
+            }
 
             // 祭壇のような操作端末（コアの前にひとつだけ。二段の段差の上）
-            Deco(t, "Step1", new Vector3(0f, 0.05f, -0.8f), new Vector3(3.0f, 0.1f, 2.2f), rack);
-            Deco(t, "Step2", new Vector3(0f, 0.15f, -0.8f), new Vector3(2.2f, 0.1f, 1.6f), rack);
+            if (hq)
+            {
+                // 段に当たり判定を付ける（以前は見た目だけで、祭壇の前で床に沈んで見えた）
+                Solid(t, "Step1", new Vector3(0f, 0.05f, -0.8f), new Vector3(3.0f, 0.1f, 2.2f));
+                Solid(t, "Step2", new Vector3(0f, 0.15f, -0.8f), new Vector3(2.2f, 0.1f, 1.6f));
+            }
+            else
+            {
+                Deco(t, "Step1", new Vector3(0f, 0.05f, -0.8f), new Vector3(3.0f, 0.1f, 2.2f), rack);
+                Deco(t, "Step2", new Vector3(0f, 0.15f, -0.8f), new Vector3(2.2f, 0.1f, 1.6f), rack);
+            }
             var altar = new GameObject("AltarTerminal"); altar.transform.SetParent(t, false);
             altar.transform.localPosition = new Vector3(0f, 0.2f, -0.8f);
             Box(altar.transform, "Stand", new Vector3(0f, 0.5f, 0f), new Vector3(0.9f, 1.0f, 0.6f), rack);
-            Deco(altar.transform, "StandStrip", new Vector3(0f, 0.5f, -0.31f), new Vector3(0.6f, 0.02f, 0.01f), goldStrip);
-            Findable(altar.transform, "message", "操作端末", new Vector3(0f, 1.15f, 0f), screen,
+            if (!hq) Deco(altar.transform, "StandStrip", new Vector3(0f, 0.5f, -0.31f), new Vector3(0.6f, 0.02f, 0.01f), goldStrip);
+            var msgGo = Findable(altar.transform, "message", "操作端末", new Vector3(0f, 1.15f, 0f), screen,
                 new Vector3(0.7f, 0.45f, 0.06f),
                 "主任のメッセージ",
                 "《再生メッセージ》　小川 暁\n\n" +
@@ -2677,6 +2704,9 @@ namespace EscapeProto
                 "　ものかを選り分けることは、\n" +
                 "　父親のあなたにしか、できない。\n\n" +
                 "　全ての部屋を、もう一度回ってきなさい」");
+
+            if (hq && Visual(altar.transform, HqModel("core_main", "Altar"), Vector3.zero) != null)
+                HideRenderers(altar.transform, "Stand", msgGo.name);
 
             return new[] { "message" };
         }
@@ -3538,6 +3568,32 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- MAIN CORE ROOM ----
+                case "CMN_Stone":     return HqLit(n, Color.white, 0.85f, 0f, HqTex("CoreMain/dark_stone"), HqTex("CoreMain/dark_stone_n", true), 0.3f);
+                case "CMN_WallRib":   return HqLit(n, Color.white, 0.4f, 0f, HqTex("CoreMain/wall_rib"), HqTex("CoreMain/wall_rib_n", true), 0.6f);
+                case "CMN_Ceiling":   return HqLit(n, new Color(0.05f, 0.05f, 0.06f), 0.1f);
+                case "CMN_MetalDark": return HqLit(n, new Color(0.1f, 0.1f, 0.12f), 0.7f, 0.8f);
+                case "CMN_Brass":     return HqLit(n, new Color(0.75f, 0.58f, 0.32f), 0.75f, 1f);
+                case "CMN_GoldLight": return HqLit(n, new Color(0.6f, 0.45f, 0.2f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.8f, 0.4f) * 2f);
+                case "CMN_BlueLight": return HqLit(n, new Color(0.15f, 0.3f, 0.5f), 0.6f, 0f, null, null, 1f, new Color(0.35f, 0.6f, 0.9f) * 1.8f);
+                case "CMN_CoreShell":
+                {
+                    var m = GlassMat(n, new Color(0.8f, 0.65f, 0.4f, 0.18f));
+                    m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "CMN_CoreGold":  return HqLit(n, new Color(0.3f, 0.3f, 0.3f), 0.6f, 0f, HqTex("CoreMain/core_gold"), null, 1f, Color.white * 1.8f, HqTex("CoreMain/core_gold"));
+                case "CMN_Cable":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.55f);
+                case "CMN_Plate":     return HqLit(n, Color.white, 0.5f, 0.3f, HqTex("CoreMain/plate", clamp: true));
+                case "CMN_ScreenMessage": return HqLit(n, Color.white, 0.85f, 0f, HqTex("CoreMain/screen_message", clamp: true), null, 1f, Color.white, HqTex("CoreMain/screen_message", clamp: true));
+                case "CMN_Black":     return HqLit(n, new Color(0.02f, 0.02f, 0.025f), 0.6f);
+                case "CMN_Downlight": return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.5f, 0f, null, null, 1f, new Color(1f, 0.9f, 0.7f) * 2f);
+                case "CMN_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "CMN_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
+                case "CMN_Steel":     return HqLit(n, new Color(0.55f, 0.5f, 0.45f), 0.35f, 0.4f, HqTex("CoreAnte/steel_plate"), HqTex("CoreAnte/steel_plate_n", true), 0.4f);
+                case "CMN_WiredGlass":return HqLit(n, new Color(0.08f, 0.1f, 0.11f), 0.95f, 0.3f);
+                case "CMN_Chrome":    return HqLit(n, new Color(0.85f, 0.85f, 0.86f), 0.85f, 1f);
                 // ---- 黒田の自宅 ----
                 case "KUR_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("KurodaHome/flooring"), HqTex("KurodaHome/flooring_n", true), 0.4f);
                 case "KUR_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/wallpaper"), HqTex("KurodaHome/wallpaper_n", true), 0.4f);
@@ -4149,7 +4205,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
