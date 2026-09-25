@@ -437,6 +437,7 @@ namespace EscapeProto
                 case "son_room":     color = new Color(1f, 0.97f, 0.9f);     intensity = 0.7f; range = 7f; break;
                 case "train":        color = new Color(0.93f, 0.96f, 1f);    intensity = 1.3f; range = 10f; break;   // 夜の車内の蛍光灯
                 case "lab":          color = new Color(0.95f, 0.97f, 1f);    intensity = 1.6f; range = 12f; break;   // 研究所の白いLED
+                case "study":        color = new Color(1f, 0.84f, 0.62f);    intensity = 1.1f; range = 8f; break;    // 書斎の裸電球
                 default:             color = new Color(1f, 0.96f, 0.9f);     intensity = 2.0f; range = 12f; break;
             }
 
@@ -733,18 +734,39 @@ namespace EscapeProto
             var wood = GetMat("LP_FurnitureDark", new Color(0.3f, 0.21f, 0.14f), 0.25f);
             var paper = GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f);
 
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("study", "Desk")) != null;
             // 書き物机（部屋中央やや奥）＋椅子
             var desk = Desk(t, "Desk", new Vector3(0f, 0f, 1.4f), wood);
             Box(t, "Chair", new Vector3(0f, 0.25f, 0.35f), new Vector3(0.5f, 0.5f, 0.5f), wood);
+            if (hq)
+            {
+                // 品質重視の両袖机と木の椅子（当たり判定は元の箱＋袖の箱）
+                Visual(desk.transform, HqModel("study", "Desk"), Vector3.zero);
+                HideRenderers(desk.transform, "Top", "Leg");
+                Solid(desk.transform, "PedCol", new Vector3(-0.49f, 0.35f, 0f), new Vector3(0.42f, 0.7f, 0.66f));
+                Solid(desk.transform, "PedCol", new Vector3(0.49f, 0.35f, 0f), new Vector3(0.42f, 0.7f, 0.66f));
+                HideRenderers(t, "Chair");
+                HqProp(t, "study", "Chair", new Vector3(0f, 0f, 0.35f), 4f);
+            }
             // 本棚（両壁。天井高に合わせる）
             float shelfH = Mathf.Min(2.1f, h - 0.4f);
-            for (int i = 0; i < 2; i++)
+            if (hq)
             {
-                float x = (i == 0 ? -1f : 1f) * (hw - 0.3f);
-                Box(t, "Bookshelf", new Vector3(x, shelfH * 0.5f, -1.2f), new Vector3(0.45f, shelfH, 2.6f), wood);
+                // 壁一面の本棚（西1台・東2台）。東は配電盤（z=0）を挟んで分ける
+                //（以前の東の本棚は z -2.5〜0.1 で、配電盤に一部めり込んでいた）
+                Solid(t, "Bookshelf", new Vector3(-hw + 0.255f, 1.05f, -0.55f), new Vector3(0.36f, 2.1f, 4.9f));
+                Solid(t, "Bookshelf", new Vector3(hw - 0.255f, 1.05f, -1.725f), new Vector3(0.36f, 2.1f, 2.55f));
+                Solid(t, "Bookshelf", new Vector3(hw - 0.255f, 1.05f, 1.175f), new Vector3(0.36f, 2.1f, 1.45f));
+                Visual(t, HqModel("study", "Interior"), Vector3.zero);
             }
+            else
+                for (int i = 0; i < 2; i++)
+                {
+                    float x = (i == 0 ? -1f : 1f) * (hw - 0.3f);
+                    Box(t, "Bookshelf", new Vector3(x, shelfH * 0.5f, -1.2f), new Vector3(0.45f, shelfH, 2.6f), wood);
+                }
 
-            Findable(desk.transform, "document", "文書", new Vector3(0f, 0.76f, 0f), paper,
+            var docGo = Findable(desk.transform, "document", "文書", new Vector3(0f, 0.76f, 0f), paper,
                 new Vector3(0.4f, 0.02f, 0.3f),
                 "研究文書（写し）",
                 "《被験体経過報告 抜粋》\n\n" +
@@ -760,10 +782,13 @@ namespace EscapeProto
             // 招聘状（サイドテーブルの上）→ 記憶回復①「私は二宮秀樹」
             var side = new GameObject("SideTable");
             side.transform.SetParent(t, false);
-            side.transform.localPosition = new Vector3(hw - 0.75f, 0f, -2.6f);
+            // 本棚の前に置くので、本棚（前面 x=hw-0.435）と重ならない位置へ
+            side.transform.localPosition = new Vector3(hq ? hw - 1.0f : hw - 0.75f, 0f, -2.6f);
             Box(side.transform, "Top", new Vector3(0f, 0.55f, 0f), new Vector3(0.6f, 0.05f, 0.5f), wood);
             Box(side.transform, "Leg", new Vector3(0f, 0.27f, 0f), new Vector3(0.1f, 0.54f, 0.1f), wood);
-            Findable(side.transform, "invite", "封書", new Vector3(0f, 0.59f, 0f), paper,
+            if (hq && Visual(side.transform, HqModel("study", "SideTable"), Vector3.zero) != null)
+                HideRenderers(side.transform, "Top", "Leg");
+            var inviteGo = Findable(side.transform, "invite", "封書", new Vector3(0f, 0.59f, 0f), paper,
                 new Vector3(0.3f, 0.02f, 0.22f),
                 "招聘状",
                 "《招聘状》　2015年3月25日\n\n" +
@@ -777,7 +802,7 @@ namespace EscapeProto
                 "私だ。私の名前だ。情報科学と、探偵。");
 
             // 主任の手帳の切れ端（机の上・端）
-            Findable(desk.transform, "scrap", "手帳の切れ端", new Vector3(-0.42f, 0.755f, -0.12f), paper,
+            var scrapGo = Findable(desk.transform, "scrap", "手帳の切れ端", new Vector3(-0.42f, 0.755f, -0.12f), paper,
                 new Vector3(0.24f, 0.01f, 0.12f),
                 "主任の手帳の切れ端",
                 "《手帳の切れ端》\n\n" +
@@ -791,7 +816,8 @@ namespace EscapeProto
 
             // 伏せられた家族写真（棚の上。読める演出・進行必須ではない）
             var frameMat = GetMat("LP_PhotoFrame", new Color(0.25f, 0.2f, 0.15f), 0.3f);
-            Findable(t, "photo", "伏せられた写真立て", new Vector3(hw - 0.55f, 2.14f, -1.2f), frameMat,
+            var photoGo = Findable(t, "photo", "伏せられた写真立て",
+                hq ? new Vector3(hw - 0.37f, 2.155f, -1.7f) : new Vector3(hw - 0.55f, 2.14f, -1.2f), frameMat,
                 new Vector3(0.2f, 0.03f, 0.15f),
                 "伏せられた写真立て",
                 "写真立てが、裏返しに伏せられている。\n\n" +
@@ -830,6 +856,20 @@ namespace EscapeProto
             dial.transform.localScale = new Vector3(0.14f, 0.02f, 0.14f);
             dial.GetComponent<Renderer>().sharedMaterial = GetMat("LP_SafeDial", new Color(0.75f, 0.72f, 0.65f), 0.6f);
             Object.DestroyImmediate(dial.GetComponent<Collider>());
+
+            if (hq)
+            {
+                // 資料・金庫・写真立ての見た目（調べる判定・装置は元の箱のまま）
+                if (Visual(docGo.transform, HqModel("study", "Document"), Vector3.zero) != null) HideRenderers(desk.transform, docGo.name);
+                if (Visual(scrapGo.transform, HqModel("study", "Scrap"), Vector3.zero) != null) HideRenderers(desk.transform, scrapGo.name);
+                if (Visual(inviteGo.transform, HqModel("study", "Envelope"), Vector3.zero) != null) HideRenderers(side.transform, inviteGo.name);
+                if (Visual(photoGo.transform, HqModel("study", "Photo"), Vector3.zero) != null) HideRenderers(t, photoGo.name);
+                if (Visual(safe.transform, HqModel("study", "Safe"), Vector3.zero) != null)
+                {
+                    HideRenderers(safe.transform, "Dial");
+                    HideRenderers(t, safe.name);
+                }
+            }
 
             return new[] { "document", "invite", "scrap", "safekey" };
         }
@@ -3206,6 +3246,31 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- 所長の書斎 ----
+                case "STD_Plaster":   return HqLit(n, Color.white, 0.05f, 0f, HqTex("Study/plaster_old"), HqTex("Study/plaster_old_n", true), 0.5f);
+                case "STD_FloorPlanks": return HqLit(n, Color.white, 0.4f, 0f, HqTex("Study/floor_planks"), HqTex("Study/floor_planks_n", true), 0.5f);
+                case "STD_DarkWood":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("Study/dark_wood"), HqTex("Study/dark_wood_n", true), 0.35f);
+                case "STD_WoodLight": return HqLit(n, new Color(1f, 0.97f, 0.94f), 0.45f, 0f, HqTex("Study/dark_wood"), HqTex("Study/dark_wood_n", true), 0.35f);
+                case "STD_BookSpine": return HqLit(n, Color.white, 0.3f, 0f, HqTex("Study/book_atlas", clamp: true));
+                case "STD_BookPages": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/book_pages"));
+                case "STD_DocReport": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/doc_report", clamp: true));
+                case "STD_DocScrap":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/doc_scrap", clamp: true));
+                case "STD_Envelope":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/envelope", clamp: true));
+                case "STD_FrameNote": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Study/frame_note", clamp: true));
+                case "STD_Brass":     return HqLit(n, new Color(0.72f, 0.55f, 0.3f), 0.65f, 1f);
+                case "STD_Chrome":    return HqLit(n, new Color(0.8f, 0.8f, 0.8f), 0.85f, 1f);
+                case "STD_Bulb":      return HqLit(n, new Color(1f, 0.95f, 0.8f), 0.8f, 0f, null, null, 1f, new Color(1f, 0.8f, 0.5f) * 4f);
+                case "STD_Porcelain": return HqLit(n, new Color(0.9f, 0.88f, 0.84f), 0.8f);
+                case "STD_Cord":      return HqLit(n, new Color(0.08f, 0.07f, 0.06f), 0.4f);
+                case "STD_SafeGreen": return HqLit(n, new Color(0.2f, 0.25f, 0.22f), 0.55f, 0.4f);
+                case "STD_DialFace":  return HqLit(n, new Color(0.78f, 0.74f, 0.62f), 0.7f, 0.8f);
+                case "STD_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.03f), 0.5f);
+                case "STD_Glass":     return HqLit(n, new Color(0.05f, 0.05f, 0.05f), 0.95f, 0.3f);
+                case "STD_PaperPlain":return HqLit(n, new Color(0.9f, 0.87f, 0.78f), 0.1f);
+                case "STD_Ink":       return HqLit(n, new Color(0.02f, 0.02f, 0.06f), 0.9f);
+                case "STD_SwitchPlate": return HqLit(n, new Color(0.86f, 0.83f, 0.76f), 0.7f);
+                case "STD_ClockFace": return HqLit(n, new Color(0.9f, 0.87f, 0.78f), 0.6f);
+                case "STD_LeverRed":  return HqLit(n, new Color(0.6f, 0.1f, 0.08f), 0.5f);
                 // ---- 研究所応接室 ----
                 case "LAB_Carpet":    return HqLit(n, Color.white, 0.05f, 0f, HqTex("Lab/carpet_tile"), HqTex("Lab/carpet_tile_n", true), 0.7f);
                 case "LAB_Paint":     return HqLit(n, Color.white, 0.15f, 0f, HqTex("Lab/paint"), HqTex("Lab/paint_n", true), 0.3f);
@@ -3353,7 +3418,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
