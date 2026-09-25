@@ -2123,6 +2123,7 @@ namespace EscapeProto
             var paper = GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f);
             var crt = EmissiveMat("LP_CrtScreen", new Color(0.08f, 0.15f, 0.12f), new Color(0.4f, 0.9f, 0.6f) * 0.7f);
             var trim = GetMat("LP_FacilityTrim", new Color(0.45f, 0.47f, 0.5f), 0.3f);
+            bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("data_room", "Interior")) != null;
 
             // サーバーラック2列（暗い柱に小さなLEDが無数に瞬く）
             for (int row = 0; row < 2; row++)
@@ -2131,6 +2132,8 @@ namespace EscapeProto
                     float sx = row == 0 ? 1f : -1f;
                     float x = -sx * 1.6f;
                     float z = -hd + 2.4f + i * 1.7f;
+                    // 品質重視：ラックの見た目は DataRoom_Interior。ここは当たり判定だけ
+                    if (hq) { Solid(t, $"Rack_{row}_{i}", new Vector3(x, 1.05f, z), new Vector3(0.8f, 2.1f, 1.0f)); continue; }
                     // Blender製ラック（扉＝+Z）を通路側へ向ける。無ければ箱＋LEDで代替
                     if (Prop(t, "ServerRack", new Vector3(x, 0f, z), sx > 0 ? 90f : -90f) != null) continue;
                     Box(t, $"Rack_{row}_{i}", new Vector3(x, 1.05f, z), new Vector3(0.8f, 2.1f, 1.0f), rack);
@@ -2144,13 +2147,16 @@ namespace EscapeProto
                                 new Vector3(0.012f, 0.03f, 0.03f), ((u + d + i) % 5 == 0) ? ledAmber : led);
                     }
                 }
-            // フリーアクセス床の目地と天井ダクト
+            // フリーアクセス床の目地と天井ダクト（品質重視の外殻は床のテクスチャと吸音板の天井）
             var seam = GetMat("LP_FloorSeam", new Color(0.4f, 0.43f, 0.42f), 0.3f);
+            if (!hq)
+            {
             for (float x = -hw + 0.6f; x < hw; x += 0.6f)
                 Deco(t, "FloorSeam", new Vector3(x, 0.003f, 0f), new Vector3(0.015f, 0.006f, hd * 2f - 0.2f), seam);
             for (float z = -hd + 0.6f; z < hd; z += 0.6f)
                 Deco(t, "FloorSeam", new Vector3(0f, 0.003f, z), new Vector3(hw * 2f - 0.2f, 0.006f, 0.015f), seam);
             Duct(t, new Vector3(0f, h - 0.35f, 0f), hd * 2f - 0.6f, 0.4f, trim);
+            }
 
             // 壁一面の紙ファイルキャビネット（番号順）
             for (int i = 0; i < 4; i++)
@@ -2158,12 +2164,13 @@ namespace EscapeProto
 
             // 管理者デスク：CRTと入退室記録、読みかけの眼鏡（椅子は引かれたまま）
             var admin = Desk(t, "AdminDesk", new Vector3(hw - 1.5f, 0f, hd - 1.6f), cab);
-            Prop(t, "OfficeChair", new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
+            if (hq) LabChair(t, new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
+            else Prop(t, "OfficeChair", new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
             Box(admin.transform, "CrtBody", new Vector3(0f, 0.95f, 0.18f), new Vector3(0.45f, 0.4f, 0.4f), rack);
             Deco(admin.transform, "CrtScreen", new Vector3(0f, 0.95f, -0.04f), new Vector3(0.36f, 0.3f, 0.02f), crt);
             Deco(admin.transform, "Glasses", new Vector3(-0.15f, 0.765f, -0.22f), new Vector3(0.14f, 0.02f, 0.05f), cab);
 
-            Findable(admin.transform, "minutes", "議事録", new Vector3(0.45f, 0.76f, -0.05f), paper,
+            var minutesGo = Findable(admin.transform, "minutes", "議事録", new Vector3(0.45f, 0.76f, -0.05f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "停止要求の議事録",
                 "《緊急会議 議事録》　起案: 黒田\n" +
@@ -2194,7 +2201,7 @@ namespace EscapeProto
                 "CRTが一行だけ吐き出した。\n" +
                 "「……主任じゃない。」\n\n" +
                 "なら、誰が主任のIDを使った。";
-            Findable(admin.transform, "kmemo", "黒田のメモ", new Vector3(-0.5f, 0.76f, 0.12f), paper,
+            var kmemoGo = Findable(admin.transform, "kmemo", "黒田のメモ", new Vector3(-0.5f, 0.76f, 0.12f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "黒田のメモ（一部欠損）",
                 "《個人メモ》　筆跡: 黒田\n\n" +
@@ -2203,7 +2210,7 @@ namespace EscapeProto
                 "後半は破り取られて読めない。\n\n" +
                 "3人を、犠牲に？\n" +
                 "主任が？　……そうか。そういうこと、なのか。");
-            Findable(t, "scribble", "走り書き", new Vector3(-hw + 0.62f, 1.55f, hd - 3.5f), paper,
+            var scribbleGo = Findable(t, "scribble", "走り書き", new Vector3(-hw + 0.62f, 1.55f, hd - 3.5f), paper,
                 new Vector3(0.18f, 0.14f, 0.02f),
                 "キャビネットの走り書き",
                 "ファイルの間に挟まれた付箋。\n\n" +
@@ -2227,6 +2234,24 @@ namespace EscapeProto
                 9f, 0.62f, 0.5f,
                 (new Vector3(0f, 0f, 0.4f), 120f, 1.28f, 10f, 1.6f, false),
                 (new Vector3(1.0f, 0f, 1.3f), -60f, 0.88f, -8f, 0.4f, false));
+
+            if (hq)
+            {
+                // ラック8台・キャビネット4台（引き出し1段が開いている）・付箋・管理者デスクと CRT の見た目
+                Visual(t, HqModel("data_room", "Interior"), Vector3.zero);
+                HideRenderers(t, "FileCabinet", scribbleGo.name);
+                Solid(t, "OpenDrawer", new Vector3(-hw + 0.075f + 0.5f + 0.115f, 1.12f, -hd + 1.8f + 1.7f), new Vector3(0.25f, 0.42f, 1.36f));
+                Solid(t, "Crac", new Vector3(hw - 0.375f, 0.95f, -hd + 0.975f), new Vector3(0.6f, 1.9f, 0.9f));
+                Solid(t, "Extinguisher", new Vector3(-0.95f, 0.3f, -hd + 0.225f), new Vector3(0.25f, 0.6f, 0.25f));
+                if (Visual(admin.transform, HqModel("data_room", "Desk"), Vector3.zero) != null)
+                {
+                    HideRenderers(admin.transform, "Top", "Leg", "CrtBody", "CrtScreen", "AuditTerminal", "Glasses");
+                    Solid(admin.transform, "PedCol", new Vector3(0.48f, 0.36f, 0f), new Vector3(0.4f, 0.72f, 0.66f));
+                    Visual(admin.transform, HqModel("data_room", "Glasses"), new Vector3(-0.15f, 0.768f, -0.22f));
+                }
+                if (Visual(minutesGo.transform, HqModel("data_room", "Minutes"), Vector3.zero) != null) HideRenderers(admin.transform, minutesGo.name);
+                if (Visual(kmemoGo.transform, HqModel("data_room", "KMemo"), Vector3.zero) != null) HideRenderers(admin.transform, kmemoGo.name);
+            }
 
             return new[] { "minutes", "kmemo", "scribble", "audit" };
         }
@@ -3447,6 +3472,57 @@ namespace EscapeProto
                 case "DIM_Book2":     return HqLit(n, new Color(0.12f, 0.16f, 0.24f), 0.3f);
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
+                // ---- データ管理室 ----
+                case "DAT_AccessFloor": return HqLit(n, Color.white, 0.45f, 0f, HqTex("DataRoom/access_floor"), HqTex("DataRoom/access_floor_n", true), 0.4f);
+                case "DAT_AccessFloorPerf": return HqLit(n, Color.white, 0.45f, 0f, HqTex("DataRoom/access_floor_perf"), HqTex("DataRoom/access_floor_perf_n", true), 0.6f);
+                case "DAT_Panel":     return HqLit(n, Color.white, 0.4f, 0f, HqTex("Analysis/clean_panel"), HqTex("Analysis/clean_panel_n", true), 0.2f);
+                case "DAT_CeilingTile": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Lab/ceiling_tile"), HqTex("Lab/ceiling_tile_n", true), 0.5f);
+                case "DAT_Grid":      return HqLit(n, new Color(0.93f, 0.93f, 0.93f), 0.5f);
+                case "DAT_LedPanel":  return HqLit(n, new Color(0.9f, 0.94f, 1f), 0.5f, 0f, null, null, 1f, new Color(0.85f, 0.92f, 1f) * 1.3f);
+                case "DAT_Cove":      return HqLit(n, new Color(0.25f, 0.27f, 0.29f), 0.4f);
+                case "DAT_RackBlack": return HqLit(n, new Color(0.05f, 0.055f, 0.06f), 0.5f, 0.4f);
+                case "DAT_RackRail":  return HqLit(n, new Color(0.35f, 0.36f, 0.38f), 0.6f, 0.8f);
+                case "DAT_ServerFronts": return HqLit(n, Color.white, 0.5f, 0.2f, HqTex("DataRoom/server_fronts", clamp: true));
+                case "DAT_BlankPanel":return HqLit(n, new Color(0.08f, 0.085f, 0.09f), 0.5f, 0.3f);
+                case "DAT_LedGreen":  return HqLit(n, new Color(0.1f, 0.4f, 0.2f), 0.6f, 0f, null, null, 1f, new Color(0.3f, 1f, 0.5f) * 2.5f);
+                case "DAT_LedAmber":  return HqLit(n, new Color(0.4f, 0.3f, 0.1f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.6f, 0.15f) * 2.5f);
+                case "DAT_LedBlue":   return HqLit(n, new Color(0.1f, 0.2f, 0.4f), 0.6f, 0f, null, null, 1f, new Color(0.3f, 0.6f, 1f) * 2.5f);
+                case "DAT_CableYellow": return HqLit(n, new Color(0.85f, 0.7f, 0.1f), 0.5f);
+                case "DAT_CableBlue": return HqLit(n, new Color(0.15f, 0.35f, 0.75f), 0.5f);
+                case "DAT_CableBlack":return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "DAT_CableRed":  return HqLit(n, new Color(0.7f, 0.12f, 0.1f), 0.5f);
+                case "DAT_Galvanized":return HqLit(n, Color.white, 0.6f, 0.8f, HqTex("Analysis/galvanized"));
+                case "DAT_CabinetGrey": return HqLit(n, new Color(0.55f, 0.57f, 0.6f), 0.55f, 0.3f);
+                case "DAT_Chrome":    return HqLit(n, new Color(0.85f, 0.85f, 0.86f), 0.85f, 1f);
+                case "DAT_CabinetLabels": return HqLit(n, Color.white, 0.4f, 0f, HqTex("DataRoom/cabinet_labels", clamp: true));
+                case "DAT_FolderGreen": return HqLit(n, new Color(0.35f, 0.5f, 0.35f), 0.3f);
+                case "DAT_FolderBuff":return HqLit(n, new Color(0.8f, 0.7f, 0.5f), 0.2f);
+                case "DAT_ArchiveBox":return HqLit(n, new Color(0.72f, 0.62f, 0.46f), 0.2f);
+                case "DAT_CracWhite": return HqLit(n, new Color(0.88f, 0.89f, 0.88f), 0.55f);
+                case "DAT_VentGrey":  return HqLit(n, new Color(0.35f, 0.36f, 0.38f), 0.5f, 0.4f);
+                case "DAT_ExtinguisherRed": return HqLit(n, new Color(0.7f, 0.06f, 0.05f), 0.65f);
+                case "DAT_Black":     return HqLit(n, new Color(0.03f, 0.03f, 0.035f), 0.5f);
+                case "DAT_CrtBeige":  return HqLit(n, new Color(0.74f, 0.71f, 0.63f), 0.55f);
+                case "DAT_CrtScreen": return HqLit(n, Color.white, 0.9f, 0f, HqTex("DataRoom/crt_audit", clamp: true), null, 1f, Color.white * 1.1f, HqTex("DataRoom/crt_audit", clamp: true));
+                case "DAT_DeskGrey":  return HqLit(n, new Color(0.6f, 0.62f, 0.64f), 0.55f, 0.3f);
+                case "DAT_DeskTop":   return HqLit(n, new Color(0.78f, 0.78f, 0.74f), 0.6f);
+                case "DAT_PaperPlain":return HqLit(n, new Color(0.93f, 0.92f, 0.88f), 0.1f);
+                case "DAT_Minutes":   return HqLit(n, Color.white, 0.1f, 0f, HqTex("DataRoom/minutes", clamp: true));
+                case "DAT_KMemo":     return HqLit(n, Color.white, 0.1f, 0f, HqTex("DataRoom/kmemo", clamp: true));
+                case "DAT_Scribble":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("DataRoom/scribble", clamp: true));
+                case "DAT_SignRoom":  return HqLit(n, Color.white, 0.4f, 0f, HqTex("DataRoom/sign_room", clamp: true));
+                case "DAT_RackLabels":return HqLit(n, Color.white, 0.4f, 0f, HqTex("DataRoom/rack_labels", clamp: true));
+                case "DAT_Lens":
+                {
+                    var m = GlassMat(n, new Color(0.8f, 0.85f, 0.9f, 0.2f));
+                    EditorUtility.SetDirty(m);
+                    return m;
+                }
+                case "DAT_Mug":       return HqLit(n, new Color(0.3f, 0.42f, 0.55f), 0.7f);
+                case "DAT_ClockFace": return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.6f);
+                case "DAT_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
+                case "DAT_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
+                case "DAT_DoorLaminate": return HqLit(n, new Color(0.8f, 0.82f, 0.84f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
                 // ---- 水野のアパート ----
                 case "MZA_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("MizunoApart/flooring"), HqTex("MizunoApart/flooring_n", true), 0.4f);
                 case "MZA_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/wallpaper"), HqTex("MizunoApart/wallpaper_n", true), 0.4f);
@@ -3906,7 +3982,7 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
