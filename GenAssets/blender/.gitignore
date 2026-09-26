@@ -2,3 +2,5 @@
 *.blend
 *.blend1
 __pycache__/
+# zfight_check.py の出力（毎回作り直す）
+zfight_report.txt

@@ -3,7 +3,8 @@
 配電盤とレバーは部屋ごとに材質を変えた共通の形（train_room.breaker / train_room.lever）なので、
 形を変えた時はこれで一括で書き出す（部屋の他の部品は触らない）。
 
-    blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_breakers.py
+    blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_breakers.py [-- 部品,部品]
+    例: -- Door        （全部屋の扉だけ）。部品を持たない部屋は飛ばす
 """
 import importlib
 import os
@@ -21,7 +22,7 @@ if HERE not in sys.path:
 
 # (部屋のモジュール, 書き出し名 = HqModel の部屋名)。最初の部屋（dim）には配電盤が無い
 ROOMS = [
-    ("train_room", "Train"), ("lab_room", "Lab"), ("study_room", "Study"), ("analysis_room", "Analysis"),
+    ("dim_room", "Dim"), ("train_room", "Train"), ("lab_room", "Lab"), ("study_room", "Study"), ("analysis_room", "Analysis"),
     ("saeki_room", "SaekiHome"), ("ward_room", "Ward"), ("core_ante_room", "CoreAnte"),
     ("mizuno_room", "MizunoApart"), ("data_room", "DataRoom"), ("system_room", "SystemRoom"),
     ("kuroda_room", "KurodaHome"), ("core_main_room", "CoreMain"), ("son_room", "SonRoom"),
@@ -39,7 +40,10 @@ def main():
         for o in list(bpy.data.objects):
             bpy.data.objects.remove(o, do_unlink=True)
         M = mod.mats()
-        for part in ("Breaker", "Lever"):
+        parts = sys.argv[sys.argv.index("--") + 1].split(",") if "--" in sys.argv else ["Breaker", "Lever"]
+        for part in parts:
+            if part not in mod.PIECES:
+                continue
             objs = mod.PIECES[part](M)
             for o in objs:
                 o.location = (0, 0, 0)
@@ -47,7 +51,7 @@ def main():
             one = hq.join(objs, f"{pascal}_{part}")
             total += hq.export([one], os.path.join(HQ, pascal, f"{pascal}_{part}.fbx"))
         print(f"[breakers] {pascal}")
-    print(f"[breakers] exported {len(ROOMS) * 2} models, {total // 1024} KB")
+    print(f"[breakers] exported, {total // 1024} KB")
 
 
 if __name__ == "__main__":

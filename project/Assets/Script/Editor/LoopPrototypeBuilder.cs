@@ -293,8 +293,9 @@ namespace EscapeProto
                     roomLeaf.localPosition = pivot;
                     Visual(roomLeaf, HqModel(roomId, "Door"), new Vector3(0f, 0.02f, zc) - pivot, 180f);
                     // 窓のある扉から奥（中央の塊の中）が抜けて見えないよう、扉板の厚みの中に黒い芯を入れる
+                    // 窓ガラスは扉板の中心から ±2mm にあるので、芯はそれより薄く（ガラスと同じ位置でちらつかないように）
                     var core = Box(roomLeaf, "Core", new Vector3(0f, 1.07f, zc) - pivot,
-                                   new Vector3(0.88f, 2.06f, 0.004f), UnlitMat("COR_Void", Color.black));
+                                   new Vector3(0.88f, 2.06f, 0.0016f), UnlitMat("COR_Void", Color.black));
                     Object.DestroyImmediate(core.GetComponent<Collider>());
                     core.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     if (h.sliding)

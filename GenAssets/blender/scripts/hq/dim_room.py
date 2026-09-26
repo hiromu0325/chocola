@@ -787,7 +787,9 @@ def door(M):
     p.append(span("Door_StileR", x1 - 0.12, x1, 0.0, 2.1, -t, t, w, 0.004))
     for (y0, y1, nm) in ((1.96, 2.1, "Top"), (0.98, 1.14, "Lock"), (0.0, 0.22, "Bot")):
         p.append(span(f"Door_Rail{nm}", x0 + 0.12, x1 - 0.12, y0, y1, -t, t, w, 0.004))
-    p.append(span("Door_Mull", -0.035, 0.035, 0.22, 1.96, -t, t, w, 0.004))
+    # 中桟は錠前の横框で分ける（横框と重ねると表面がちらつく）
+    p.append(span("Door_MullB", -0.035, 0.035, 0.22, 0.98, -t, t, w, 0.004))
+    p.append(span("Door_MullT", -0.035, 0.035, 1.14, 1.96, -t, t, w, 0.004))
     # 鏡板（周囲を面取りして一段下げる）
     for (px0, px1) in ((x0 + 0.12, -0.035), (0.035, x1 - 0.12)):
         for (py0, py1) in ((0.22, 0.98), (1.14, 1.96)):
@@ -796,8 +798,10 @@ def door(M):
             # 押縁（パネルの縁取り）
             for zs in (-1, 1):
                 zz0, zz1 = sorted((zs * (t - 0.008), zs * (t - 0.001)))
+                # 縦の押縁は上下の押縁の間だけ（四隅で重ねない）
                 for (a0, a1, b0, b1) in ((px0, px1, py0, py0 + 0.014), (px0, px1, py1 - 0.014, py1),
-                                         (px0, px0 + 0.014, py0, py1), (px1 - 0.014, px1, py0, py1)):
+                                         (px0, px0 + 0.014, py0 + 0.014, py1 - 0.014),
+                                         (px1 - 0.014, px1, py0 + 0.014, py1 - 0.014)):
                     p.append(span("Door_Bead", a0, a1, b0, b1, zz0, zz1, w, 0.003))
     done(p, 1.0, rot90=True)
     leaf = join(p, "Door_Leaf")
