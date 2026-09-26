@@ -3,7 +3,37 @@ guid: c6aaa996496165142924d862774711b0
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_DarkGrille
+    second: {fileID: 2100000, guid: 4bdf10c06fc7b504b818c613e4c0cec1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Hazard
+    second: {fileID: 2100000, guid: 513e7135a7b113e48ba17346989e91f0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_LeverRed
+    second: {fileID: 2100000, guid: c4b0269a91d5b4e4fa9fc1f81cf04979, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Melamine
+    second: {fileID: 2100000, guid: bf3944c14e0e0984fa1069c2791cd042, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Rubber
+    second: {fileID: 2100000, guid: 668930e1963af8f478a6d4984529cd50, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Stainless
+    second: {fileID: 2100000, guid: 18765ae5f4fe4c64ca7e4926ddaedee2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,17 @@ guid: 71e15278c17a3b54db2fde5e0fa0fe84
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Black
+    second: {fileID: 2100000, guid: 79e06212e4d3d3348896f8a9a5470b67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Lens
+    second: {fileID: 2100000, guid: 0b4c73a6207cccc49a249aee8dfc43b0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,22 @@ guid: eb5de4f161fabe54dbb7f672f329f3b0
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stainless
+    second: {fileID: 2100000, guid: 10448f6c1c5b53749ada057fca2c512f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Wood
+    second: {fileID: 2100000, guid: 1693eac367c13064fbb75e5e6b5d3340, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WoodDark
+    second: {fileID: 2100000, guid: c631edc7d2efdf24caea7ada0dcb7e96, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

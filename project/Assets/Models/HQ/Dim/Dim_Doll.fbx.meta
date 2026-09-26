@@ -3,7 +3,37 @@ guid: a80facd7b615b0440b82d0df011f2d2d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_DollDress
+    second: {fileID: 2100000, guid: 104d610b56323bd4182e7fe033e11842, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_DollEye
+    second: {fileID: 2100000, guid: b4f27675d2edc37428ee107fbfb03d38, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_DollHair
+    second: {fileID: 2100000, guid: c93580c999b80e44db41ed5f1e197e09, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_DollLip
+    second: {fileID: 2100000, guid: 230b0b1858fdcfb4db3b59dea547406a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Lace
+    second: {fileID: 2100000, guid: 1119fbd4909f6e546962f1830e348212, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Porcelain
+    second: {fileID: 2100000, guid: 504c650b48bde564daa69867b30f1e4e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

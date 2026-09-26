@@ -3,7 +3,27 @@ guid: c35016f4d5a7da74fb140426e2df4e94
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Black
+    second: {fileID: 2100000, guid: 79e06212e4d3d3348896f8a9a5470b67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_DoorLaminate
+    second: {fileID: 2100000, guid: 2d64f7d922120db41b966d5dd392c530, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_RackRail
+    second: {fileID: 2100000, guid: fde8ec59b7f06d14a883a8576b86e525, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

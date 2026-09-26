@@ -3,7 +3,52 @@ guid: 6b9986fcf14566948826daf1526befb9
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Black
+    second: {fileID: 2100000, guid: 79e06212e4d3d3348896f8a9a5470b67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CrtBeige
+    second: {fileID: 2100000, guid: 53f7ff60e8776ca48aa03c0cc754476e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CrtScreen
+    second: {fileID: 2100000, guid: adeda42735727284fbc0ad2b1de1c9ec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_DeskGrey
+    second: {fileID: 2100000, guid: 022f0b331bb7da7478720f163c48982a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_DeskTop
+    second: {fileID: 2100000, guid: 233666854fb86be4ebf4d518ddad8c31, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedGreen
+    second: {fileID: 2100000, guid: 6e85c45c535ef1c419148fcecf68d4a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Mug
+    second: {fileID: 2100000, guid: bff47b9529c1f3845883f7a1b97bcd4d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_PaperPlain
+    second: {fileID: 2100000, guid: 557dbb4a6579536499c9a683eb6d8e15, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

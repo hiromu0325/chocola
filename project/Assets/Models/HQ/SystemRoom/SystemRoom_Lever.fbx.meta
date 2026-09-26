@@ -3,7 +3,17 @@ guid: d45d114ae01e9ca438e692f02d6d7cad
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Chrome
+    second: {fileID: 2100000, guid: f9dc5f961e4b6d54187f6df4c8890c4a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_LeverRed
+    second: {fileID: 2100000, guid: e75ef3c08fb35d549af0da14b8dd6e9e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,17 @@ guid: 8678371e87fec8742ad8227797abdeec
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_LeverRed
+    second: {fileID: 2100000, guid: 107a10e86e9fd954cb5896c99fcafdb5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stainless
+    second: {fileID: 2100000, guid: 10448f6c1c5b53749ada057fca2c512f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

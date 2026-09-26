@@ -3,7 +3,77 @@ guid: 55050bff201cdba4ba63dc53dbb8a80e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Ceiling
+    second: {fileID: 2100000, guid: 3f6fb85cf730a094f910de28ea129394, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_CeilingLight
+    second: {fileID: 2100000, guid: 66dab068c2d5ab7419aef2636152a792, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Curtain
+    second: {fileID: 2100000, guid: d80626c193202a44b86d6cf7dc6f54ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Drawings
+    second: {fileID: 2100000, guid: e8b4e963f96cc484381ccaf5911ec350, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Floor
+    second: {fileID: 2100000, guid: 62f7f604d9663ad41bce5a4a77fd4090, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_HeightChart
+    second: {fileID: 2100000, guid: eb6f50b4be1a11046a71eef5a50ee968, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_LightBeam
+    second: {fileID: 2100000, guid: 03842f26fcb731c4c9412bcebe3f392d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_PaperPlain
+    second: {fileID: 2100000, guid: 3b789454dc8bcf141ad7e27a9369515f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_SkyMorning
+    second: {fileID: 2100000, guid: 8ad31e77d239a8d48b69379b2d62518a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyYellow
+    second: {fileID: 2100000, guid: 58df98f8cec770d449d2730085bb9ae7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Wallpaper
+    second: {fileID: 2100000, guid: fffc487206e5b924d861d4b58848468c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_WhiteWood
+    second: {fileID: 2100000, guid: 990a82c58959ec54f9c981443ea1ee05, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_WindowGlass
+    second: {fileID: 2100000, guid: 3cf601fed08cc2d47a6051196606d93b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Wood
+    second: {fileID: 2100000, guid: 221a330e63b619f4b93694a4d47c70c8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

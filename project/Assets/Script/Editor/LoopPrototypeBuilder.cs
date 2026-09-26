@@ -91,6 +91,7 @@ namespace EscapeProto
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             MeshCache.Clear();
+            RemappedThisRun.Clear();   // FBX の材質の割り当ては生成ごとに1回だけ見直す
             if (!AssetDatabase.IsValidFolder(MatDir))
                 AssetDatabase.CreateFolder("Assets/EscapePrototype", "MoodMaterials");
 
@@ -3576,6 +3577,7 @@ namespace EscapeProto
                 mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
                 AssetDatabase.CreateAsset(mat, path);
             }
+            if (IsHandTuned(mat)) return mat;   // 人が調整した材質（HandTuned ラベル）はそのまま
             mat.color = color;
             if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", smoothness);
             EditorUtility.SetDirty(mat);
@@ -3639,21 +3641,20 @@ namespace EscapeProto
         private static GameObject Prop(Transform parent, string fbx, Vector3 pos, float yaw = 0f,
                                        bool collider = true, Material screenOverride = null)
         {
-            var go = Place($"Assets/Models/Props/{fbx}.fbx", parent, pos, yaw);
+            // FBX を直接置かず、FBX を親にした Prefab を置く（材質は取り込み設定で割り当て済み）
+            var go = Place(ModelPrefabPath($"Assets/Models/Props/{fbx}.fbx", PropMat), parent, pos, yaw);
             if (go == null) return null;
             go.name = fbx;
             var rs = go.GetComponentsInChildren<Renderer>();
-            foreach (var r in rs)
-            {
-                var mats = r.sharedMaterials;
-                for (int i = 0; i < mats.Length; i++)
+            if (screenOverride != null)
+                foreach (var r in rs)
                 {
-                    if (mats[i] == null) continue;
-                    if (screenOverride != null && mats[i].name.StartsWith("Emit_Screen")) mats[i] = screenOverride;
-                    else mats[i] = PropMat(mats[i]);
+                    // 画面だけ別の材質にしたい時は、この1個だけ上書きする
+                    var mats = r.sharedMaterials;
+                    for (int i = 0; i < mats.Length; i++)
+                        if (mats[i] != null && mats[i].name == "LP_Prop_Screen") mats[i] = screenOverride;
+                    r.sharedMaterials = mats;
                 }
-                r.sharedMaterials = mats;
-            }
             if (collider)
             {
                 // 境界ボックスだと天板やベッドの上に置いた資料まで箱の中に入ってしまい、
@@ -4518,18 +4519,95 @@ namespace EscapeProto
         /// </summary>
         private static GameObject Visual(Transform parent, string path, Vector3 pos, float yaw = 0f)
         {
-            var go = Place(path, parent, pos, yaw);
+            // FBX を直接置かず、FBX を親にした Prefab（Assets/Prefabs/Models/…）を置く。
+            // 材質は FBX の取り込み設定で名前ごとに割り当て済みなので、ここでは触らない
+            var go = Place(ModelPrefabPath(path, ShellMat), parent, pos, yaw);
             if (go == null) return null;
             go.name = System.IO.Path.GetFileNameWithoutExtension(path);
-            foreach (var r in go.GetComponentsInChildren<Renderer>())
-            {
-                var mats = r.sharedMaterials;
-                for (int k = 0; k < mats.Length; k++)
-                    if (mats[k] != null) mats[k] = ShellMat(mats[k]);
-                r.sharedMaterials = mats;
-            }
-            foreach (var c in go.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
             return go;
+        }
+
+        // ============================== モデルの Prefab（人の手直しを残すための層） ==============================
+        //
+        // FBX（Blender から書き出す）→ Prefab Variant（Assets/Prefabs/Models/<FBX と同じ相対パス>.prefab）→ シーン。
+        // ・Prefab は無い時だけ作る。あれば一切触らないので、Prefab を開いて手で直した内容（部品の位置・材質の差し替え・
+        //   コンポーネントの追加など）は、シーンを作り直しても残り、同じモデルを置いた全ての場所に反映される。
+        // ・FBX を書き出し直すと、形の変更は Variant の元（FBX）から流れ込む。
+        // ・材質は FBX の取り込み設定（Materials > Remapped Materials）で、FBX 内の材質名 → プロジェクトの材質 に割り当てる。
+        //   名前で結び付くので、Blender 側で材質の並びが変わってもずれない。
+        // ・手で調整した材質は、材質アセットに「HandTuned」ラベルを付けるとビルダーが値を書き換えない（IsHandTuned）。
+
+        private const string ModelPrefabDir = "Assets/Prefabs/Models";
+        private const string HandTunedLabel = "HandTuned";
+        private static readonly HashSet<string> RemappedThisRun = new HashSet<string>();
+
+        /// <summary>人が手で調整した材質か（「HandTuned」ラベル付き）。ビルダーは値を書き換えない</summary>
+        private static bool IsHandTuned(Material m) =>
+            m != null && System.Array.IndexOf(AssetDatabase.GetLabels(m), HandTunedLabel) >= 0;
+
+        /// <summary>
+        /// FBX を包む Prefab のパス（無ければ作る）。FBX が無ければ null。
+        /// mapMat = FBX 内の材質 → プロジェクトの材質（取り込み設定に保存する）
+        /// </summary>
+        private static string ModelPrefabPath(string fbxPath, System.Func<Material, Material> mapMat)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            if (model == null) return null;
+            RemapModelMaterials(fbxPath, mapMat);
+            const string root = "Assets/Models/";
+            string rel = fbxPath.StartsWith(root) ? fbxPath.Substring(root.Length) : System.IO.Path.GetFileName(fbxPath);
+            string prefabPath = $"{ModelPrefabDir}/{System.IO.Path.ChangeExtension(rel, ".prefab")}".Replace('\\', '/');
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null) return prefabPath;   // 既にあれば触らない
+
+            EnsureAssetFolder(System.IO.Path.GetDirectoryName(prefabPath).Replace('\\', '/'));
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            foreach (var c in inst.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            PrefabUtility.SaveAsPrefabAsset(inst, prefabPath);   // FBX のインスタンスから保存 → FBX を元にした Prefab Variant
+            Object.DestroyImmediate(inst);
+            return prefabPath;
+        }
+
+        /// <summary>
+        /// FBX 内の材質を、名前ごとにプロジェクトの材質へ割り当てる（取り込み設定の Remapped Materials）。
+        /// 割り当て済みの名前も毎回 mapMat を通し、材質の値（色・テクスチャ）をコードの定義に合わせて更新する
+        ///（HandTuned の材質は mapMat 側で値を書き換えない）
+        /// </summary>
+        private static void RemapModelMaterials(string fbxPath, System.Func<Material, Material> mapMat)
+        {
+            if (!RemappedThisRun.Add(fbxPath)) return;
+            if (!(AssetImporter.GetAtPath(fbxPath) is ModelImporter imp)) return;
+            var current = imp.GetExternalObjectMap();
+            bool changed = false;
+            // まだ割り当てていない材質（FBX に埋め込まれたまま）
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            {
+                if (!(obj is Material m)) continue;
+                var target = mapMat(m);
+                if (target == null || target == m) continue;
+                var id = new AssetImporter.SourceAssetIdentifier(typeof(Material), m.name);
+                if (current.TryGetValue(id, out var cur) && cur == target) continue;
+                imp.AddRemap(id, target);
+                changed = true;
+            }
+            // 割り当て済みの材質：名前だけの仮の材質を通して、材質の値を最新の定義に合わせる
+            foreach (var kv in current)
+            {
+                if (kv.Key.type != typeof(Material)) continue;
+                var proxy = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = kv.Key.name };
+                if (kv.Value is Material curMat) proxy.color = curMat.color;
+                var target = mapMat(proxy);
+                Object.DestroyImmediate(proxy);
+                if (target != null && target != kv.Value) { imp.AddRemap(kv.Key, target); changed = true; }
+            }
+            if (changed) imp.SaveAndReimport();
+        }
+
+        private static void EnsureAssetFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)) return;
+            string parentPath = System.IO.Path.GetDirectoryName(path).Replace('\\', '/');
+            EnsureAssetFolder(parentPath);
+            AssetDatabase.CreateFolder(parentPath, System.IO.Path.GetFileName(path));
         }
 
         /// <summary>指定した名前の直下の箱から見た目だけを外す（BoxColliderは残す）</summary>
@@ -4556,6 +4634,8 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
+            var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat");
+            if (IsHandTuned(tuned)) return tuned;   // 人が調整した材質は値を書き換えない
             if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_")) return HqMat(src);
             switch (n)
             {
@@ -4583,6 +4663,8 @@ namespace EscapeProto
         private static Material PropMat(Material src)
         {
             string n = src.name;
+            var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/LP_Prop_{n}.mat");
+            if (IsHandTuned(tuned)) return tuned;
             switch (n)
             {
                 case "RackBody":     return GetMat("LP_Prop_RackBody", new Color(0.12f, 0.13f, 0.15f), 0.4f);
@@ -4610,6 +4692,7 @@ namespace EscapeProto
         private static GameObject Place(string path, Transform parent, Vector3 pos,
                                         float yRot = 0f, float targetHeight = -1f)
         {
+            if (string.IsNullOrEmpty(path)) return null;
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null) return null;
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);

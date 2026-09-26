@@ -3,7 +3,32 @@ guid: 07d90b2f249f13b4abf33380ce0183e8
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Black
+    second: {fileID: 2100000, guid: 79e06212e4d3d3348896f8a9a5470b67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CracWhite
+    second: {fileID: 2100000, guid: f4532ec186f46a941ab0930d445f5345, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Hazard
+    second: {fileID: 2100000, guid: 7662959e717f2404d923a84cd29ce1c7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LeverRed
+    second: {fileID: 2100000, guid: cd11c72b33dad4c448235963182f096f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

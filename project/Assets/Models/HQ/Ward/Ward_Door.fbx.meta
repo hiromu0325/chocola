@@ -3,7 +3,27 @@ guid: e206ba091d6a0a14dba2ef2023931f8f
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Aluminum
+    second: {fileID: 2100000, guid: a4ac1d17ecee6ca4998ee072924f8cb9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Laminate
+    second: {fileID: 2100000, guid: 9f7da4d02093c9044a6341854ada2070, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Stainless
+    second: {fileID: 2100000, guid: eb2abae9c64e5eb4da50460f33dd5ff8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_WindowGlass
+    second: {fileID: 2100000, guid: dc3161b930ac8a14ca6b43e9f8f473a7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

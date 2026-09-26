@@ -3,7 +3,27 @@ guid: c2cd651dd5eb50549b3220f74d573bf5
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Black
+    second: {fileID: 2100000, guid: 6a1f6f607617465439c7aa60aa486fa5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_NotebookBlank
+    second: {fileID: 2100000, guid: 4f880183f0a396a44829b8b8f87df9e9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_NotebookCover
+    second: {fileID: 2100000, guid: 18e8b9d89e5ab154598ac6d6f6c9fdfc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stainless
+    second: {fileID: 2100000, guid: 10448f6c1c5b53749ada057fca2c512f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

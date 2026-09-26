@@ -3,7 +3,37 @@ guid: da9fb6b6209f4f641a51e39d92bdb81c
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Black
+    second: {fileID: 2100000, guid: c64772a38956c81409fec51e4276e05f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Chrome
+    second: {fileID: 2100000, guid: 2aeeac765fb0c2c4799ba7751d99f03f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Grey
+    second: {fileID: 2100000, guid: 8d241f1d7ccc8e84f8c550a6f4d773f3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Hazard
+    second: {fileID: 2100000, guid: 105668c4a81621041a2ed29307397199, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_LeverRed
+    second: {fileID: 2100000, guid: f92258bef7eb9f640b13c6c2435a3514, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Rubber
+    second: {fileID: 2100000, guid: e17057e33081aab4996a9ee17a0b9c7b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

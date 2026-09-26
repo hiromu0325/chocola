@@ -3,7 +3,12 @@ guid: c2a8255e99499644986a6c17824014a6
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_KMemo
+    second: {fileID: 2100000, guid: 08eb2935b269292449f1707606f8932e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

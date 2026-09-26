@@ -3,7 +3,27 @@ guid: a57f3202d2b94ec43bd036c770232784
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Brass
+    second: {fileID: 2100000, guid: 3b1b065403eb83e43a830d880663f5c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Bulb
+    second: {fileID: 2100000, guid: 077f859ab532ad3419f952f71e5edf45, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_LampShade
+    second: {fileID: 2100000, guid: 30cedb79c5d05b9428535735080d91fa, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

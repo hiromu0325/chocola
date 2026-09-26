@@ -3,7 +3,17 @@ guid: 101ddd07769960344b8c4d516a3049d0
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LeverRed
+    second: {fileID: 2100000, guid: cd11c72b33dad4c448235963182f096f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,32 @@ guid: f2cf1f3620b992c4ebdb8da89b431fcb
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Black
+    second: {fileID: 2100000, guid: 6a1f6f607617465439c7aa60aa486fa5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Hazard
+    second: {fileID: 2100000, guid: 2dc3f6263d357364d8aac03557f22ec9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_LeverRed
+    second: {fileID: 2100000, guid: 107a10e86e9fd954cb5896c99fcafdb5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stainless
+    second: {fileID: 2100000, guid: 10448f6c1c5b53749ada057fca2c512f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WhitePlastic
+    second: {fileID: 2100000, guid: e944e28a8ddc71f4c81972f3cd9cb506, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

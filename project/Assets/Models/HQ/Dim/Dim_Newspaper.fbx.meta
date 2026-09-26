@@ -3,7 +3,12 @@ guid: 715b234dc71a7174f9711ad1c022729e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Newspaper
+    second: {fileID: 2100000, guid: 5f5c3483ab79a564f865c96001984302, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

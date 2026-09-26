@@ -3,7 +3,82 @@ guid: 081458fbe568cd841b3c601808d38cf1
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Aluminum
+    second: {fileID: 2100000, guid: 32be5ad6466a06449b49323426107131, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Binders
+    second: {fileID: 2100000, guid: cbf85a5b3ac9f154f887d03a8a34b148, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Cable
+    second: {fileID: 2100000, guid: fc224c43532e8684e967ca89934867f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_GlassClear
+    second: {fileID: 2100000, guid: e623ef105ecf7f04db5558f12d53371c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Leather
+    second: {fileID: 2100000, guid: fc0eb23e4f6d4e84d9b119b64e47a3c8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Pad
+    second: {fileID: 2100000, guid: 3a32a80541fb4d54893b27b40d2aa89b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_RackBlack
+    second: {fileID: 2100000, guid: 63263cfdf3fd7e54f97d6ba7d79bd633, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenCT
+    second: {fileID: 2100000, guid: 8c29c3404d19949439f3e03df505aedb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenConnectome
+    second: {fileID: 2100000, guid: 828b17c0e8218d04cbcb8954d5566c97, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenEEG
+    second: {fileID: 2100000, guid: 34080746a2e5cdd479fe85ea8936fc59, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenMRI
+    second: {fileID: 2100000, guid: 770b12f3862e28648ab4dbf5b35b1ffa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenSpectrum
+    second: {fileID: 2100000, guid: bcef010c465dc83449c86cec8bb69c39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SeatVinyl
+    second: {fileID: 2100000, guid: c2eb0f995eef90d4786e309d464a86ab, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

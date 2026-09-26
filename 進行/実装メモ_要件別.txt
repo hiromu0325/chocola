@@ -360,6 +360,15 @@
 　　今後: 全部屋の材質へ同じ方式を広げる
 　・WASDの歩き出しの遅れ（2026/09/26）: 高fps（約270fps以上）だと1フレームの移動量が CharacterController の
 　　最小移動距離(0.001m)を下回って捨てられ、速度0のまま動き出せなかった → minMoveDistance=0。入力は移動より先に読む
+　・モデルの Prefab 層（2026/09/27）: FBX を直接シーンに置かず、FBX を元にした Prefab Variant を挟む。
+　　Assets/Models/HQ/Lab/Lab_Door.fbx → Assets/Prefabs/Models/HQ/Lab/Lab_Door.prefab → シーン（全382か所）
+　　・Prefab は無い時だけ作り、あれば触らない。Prefab を開いて手で直した内容（部品の位置・材質の差し替え・
+　　　コンポーネントの追加）はシーンを作り直しても残り、同じモデルを使う全ての場所に反映される
+　　・FBX を Blender から書き出し直すと、形の変更は Variant の元（FBX）から流れ込む（手直しは上書きされない）
+　　・材質は FBX の取り込み設定（Materials > Remapped Materials）で「FBX 内の材質名 → プロジェクトの材質」に割り当てる。
+　　　名前で結ぶので Blender 側で材質の順番が変わってもずれない。シーン側に材質の上書きは無い
+　　・材質を手で調整したら、材質アセットに「HandTuned」ラベルを付ける → ビルダーが色・テクスチャを書き換えなくなる
+　　・Prefab を作り直したい時は、その .prefab を消してからシーン生成（消した分だけ FBX から作り直す）
 　・Irodori-TTS：人物ごとの基準音声＋感情キャプション。gen_echo_voices.py
 　・ComfyUI（Krea2）：日本語文字入りの画像が作れる構成あり。今回の部屋では未使用
 　・デザインキャンバス：Material 3 のギミックUI（記憶回路・ログ照合・キーパッド・配電盤・手帳・トークン表）

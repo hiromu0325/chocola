@@ -3,7 +3,87 @@ guid: d0de25e7a7d95d84ea57828db960fa38
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Aluminum
+    second: {fileID: 2100000, guid: 32be5ad6466a06449b49323426107131, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Bumper
+    second: {fileID: 2100000, guid: c8fff603de9841a418c85a5bea81ed44, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Cable
+    second: {fileID: 2100000, guid: fc224c43532e8684e967ca89934867f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_CableGrey
+    second: {fileID: 2100000, guid: 2236f15211915734dbe23c512eb7fce5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ConcreteDark
+    second: {fileID: 2100000, guid: 5d25b09b97ef9d84c91207547443533c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Cove
+    second: {fileID: 2100000, guid: 06d82bc2cf05a9c4687ef6a2a3106dcd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Galvanized
+    second: {fileID: 2100000, guid: 7d553f4734abfe848924a4ea5e47bcbc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_LedPanel
+    second: {fileID: 2100000, guid: 7bebedee52adf904bad1f549cd25324e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Panel
+    second: {fileID: 2100000, guid: 222d9e72c2245e24cab0502f9e10594f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Seam
+    second: {fileID: 2100000, guid: e25de1495054bf44da971f37ca7f3095, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SignCaution
+    second: {fileID: 2100000, guid: 2248e330c0e4dbf408de96df9d1fcbd8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SignRoom
+    second: {fileID: 2100000, guid: cf61c8a35d5de534a92f85d77d59d7c3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SprinklerRed
+    second: {fileID: 2100000, guid: f292cc1db4e31f84ab07c72f4fe7fec1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Vinyl
+    second: {fileID: 2100000, guid: 555d12868ecc99441a6379c7d9e833a2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

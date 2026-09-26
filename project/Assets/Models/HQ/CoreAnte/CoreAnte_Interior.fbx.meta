@@ -3,7 +3,82 @@ guid: d8f1b8240cbb23345972b61c3d018ab0
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Beige
+    second: {fileID: 2100000, guid: 99fc9ee097a53254184f2fd2a922561a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Binder
+    second: {fileID: 2100000, guid: 6368a7fff721da3469c885a929c087bb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Black
+    second: {fileID: 2100000, guid: c64772a38956c81409fec51e4276e05f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ButtonAmber
+    second: {fileID: 2100000, guid: 8222629415209ce4384b571b1412eb09, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ButtonGreen
+    second: {fileID: 2100000, guid: ef4547e6d249b6f478d1b8ab6a64804f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ButtonRed
+    second: {fileID: 2100000, guid: 65e7930201b0e9741abc7bea96ffd55a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Cable
+    second: {fileID: 2100000, guid: 24a950730e697e24fa534856d1376753, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Chrome
+    second: {fileID: 2100000, guid: 2aeeac765fb0c2c4799ba7751d99f03f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ConsolePanel
+    second: {fileID: 2100000, guid: a87a876019ecc1c4d91f8aba4650d4e1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_DeadScreen
+    second: {fileID: 2100000, guid: 526d8404f0542f14c9c68061a04bd21a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Grey
+    second: {fileID: 2100000, guid: 8d241f1d7ccc8e84f8c550a6f4d773f3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ScreenCrack
+    second: {fileID: 2100000, guid: aa6bca76785073b42b9ebfc00aab171c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ScreenList
+    second: {fileID: 2100000, guid: 9c2ed433ec299f242a469c2b2b1d940f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_ScreenMail
+    second: {fileID: 2100000, guid: bbfaa8c8908c23a4786095ecda5ddd2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_SteelDark
+    second: {fileID: 2100000, guid: adfd1a032c998834cbd0d4558140b1ac, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

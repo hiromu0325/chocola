@@ -3,7 +3,57 @@ guid: 930678572bd58c34fbfcd7d6537503c2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Aluminum
+    second: {fileID: 2100000, guid: 058b148050d55d9479d0b8f1c3f9bf7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Ceiling
+    second: {fileID: 2100000, guid: 038d49dc5ba83114a891803bcd7c02df, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Curtain
+    second: {fileID: 2100000, guid: 82e41333782667043af081382389b379, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Flooring
+    second: {fileID: 2100000, guid: 75aa5bfee0df9604782ce7c69fd3395e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_KitchenTile
+    second: {fileID: 2100000, guid: 9fdbf98d72780ee4aa75f26a26b664b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Night
+    second: {fileID: 2100000, guid: b1c7c0ecc1e21fe428c3bad9774608c9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Trim
+    second: {fileID: 2100000, guid: 31e8b95ccea1fcf4ba5ca86cd6722f9d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Wallpaper
+    second: {fileID: 2100000, guid: c3e24844aeb72a647a9af84b43104061, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WhitePlastic
+    second: {fileID: 2100000, guid: e944e28a8ddc71f4c81972f3cd9cb506, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WindowGlass
+    second: {fileID: 2100000, guid: 7595cce978b74a5409699fff50a00b8b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

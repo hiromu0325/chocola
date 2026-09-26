@@ -3,7 +3,17 @@ guid: 022cd916aed15da41ae23014fb585256
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GreyPlastic
+    second: {fileID: 2100000, guid: ee425332634a84f44bc7c825054dafec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_LeverRed
+    second: {fileID: 2100000, guid: 1935365c3cc2458408e1ea7acabbf2f7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

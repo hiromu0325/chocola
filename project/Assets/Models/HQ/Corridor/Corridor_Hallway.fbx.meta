@@ -3,7 +3,52 @@ guid: 7bda085d868f5d94d9ca217f8a6079f5
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Brass
+    second: {fileID: 2100000, guid: fec5dd3c12d2db9478bd4e3a0ec0bc7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Cord
+    second: {fileID: 2100000, guid: 85155342c01708147b819a9fc710f17f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldCeiling
+    second: {fileID: 2100000, guid: 4afda3acf61e22a439cdd760ac4f29d8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldDoor
+    second: {fileID: 2100000, guid: 0ea1f9ef5357e464791c5dd3ae37c639, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldFloor
+    second: {fileID: 2100000, guid: b345ba9e47595cc4cbd7276de565ae9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldPlaster
+    second: {fileID: 2100000, guid: 0127f71c49289f64b966f181cb14846d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldShade
+    second: {fileID: 2100000, guid: 584a0f41227fa6b42bf6c840db31e92e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_OldWainscot
+    second: {fileID: 2100000, guid: 9fffa6c53c401b64a98a0c13ee18b12e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Void
+    second: {fileID: 2100000, guid: de4af6bf6b2eb314cb8b1202634ed2c3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

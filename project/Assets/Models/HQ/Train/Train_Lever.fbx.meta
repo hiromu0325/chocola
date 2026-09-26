@@ -3,7 +3,17 @@ guid: 6427601b301fa884189f18d279142ecf
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_LeverRed
+    second: {fileID: 2100000, guid: c4b0269a91d5b4e4fa9fc1f81cf04979, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Stainless
+    second: {fileID: 2100000, guid: 18765ae5f4fe4c64ca7e4926ddaedee2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

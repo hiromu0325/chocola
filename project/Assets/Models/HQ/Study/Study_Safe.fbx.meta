@@ -3,7 +3,37 @@ guid: 846b1d32b70091646abe8ac0c846f3dd
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Black
+    second: {fileID: 2100000, guid: 05ac307afe02278469d3983c1552bba3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Brass
+    second: {fileID: 2100000, guid: dd356095c343bda41b5004440d3fd089, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Chrome
+    second: {fileID: 2100000, guid: 08c9f33bc2696404abd0368fba453013, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_DarkWood
+    second: {fileID: 2100000, guid: ccf656578a4f1854da49d09867d70d91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_DialFace
+    second: {fileID: 2100000, guid: bb845d3e0c251fa4fbf3af966e76d40d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_SafeGreen
+    second: {fileID: 2100000, guid: 1d9cf42f486f6f9438bb6dcffc5aefea, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

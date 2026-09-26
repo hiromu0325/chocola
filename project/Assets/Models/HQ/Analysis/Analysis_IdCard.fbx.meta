@@ -3,7 +3,17 @@ guid: 165209f837595da4faa4b0d142e85c63
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Bumper
+    second: {fileID: 2100000, guid: c8fff603de9841a418c85a5bea81ed44, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_IdCard
+    second: {fileID: 2100000, guid: d5a6d981c4b02224aadec41c136763a7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

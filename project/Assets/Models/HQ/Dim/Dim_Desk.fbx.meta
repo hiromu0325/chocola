@@ -3,7 +3,17 @@ guid: 26a2e99a27c1ac6448e5a1aaaff8c7ad
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Brass
+    second: {fileID: 2100000, guid: 9668d3093caa4174a85005f55ae3993d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Walnut
+    second: {fileID: 2100000, guid: 23341eb59289fb0439d684baa116e707, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

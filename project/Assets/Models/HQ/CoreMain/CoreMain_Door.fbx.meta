@@ -3,7 +3,32 @@ guid: b8d232d68bf7f43468b336430207380a
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Chrome
+    second: {fileID: 2100000, guid: 1f6ced25c69956f4cac4d0fed2b73f46, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Hazard
+    second: {fileID: 2100000, guid: 6ad81128f43221f43a64e331ed17ecaa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_MetalDark
+    second: {fileID: 2100000, guid: 55b3a4686a37a7846a1b1e9766de2011, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Steel
+    second: {fileID: 2100000, guid: 9b81fd8db10c55b42a1e153170cf87b1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_WiredGlass
+    second: {fileID: 2100000, guid: 0a617b4eb7cd74e4f8327122be20aa8f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

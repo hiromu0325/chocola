@@ -3,7 +3,112 @@ guid: 479afe86b1f5cf341ac23e127baed38a
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Beige
+    second: {fileID: 2100000, guid: 99fc9ee097a53254184f2fd2a922561a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Black
+    second: {fileID: 2100000, guid: c64772a38956c81409fec51e4276e05f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Block
+    second: {fileID: 2100000, guid: 94a400e5037b280458d564f59b5b5c85, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_BluePipe
+    second: {fileID: 2100000, guid: 17e4cfa94c0b83b4eabd91380a8e4cce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Cable
+    second: {fileID: 2100000, guid: 24a950730e697e24fa534856d1376753, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_CableGrey
+    second: {fileID: 2100000, guid: 27e65a954fc20e54dace0035d0bdd6ab, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Chrome
+    second: {fileID: 2100000, guid: 2aeeac765fb0c2c4799ba7751d99f03f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Concrete
+    second: {fileID: 2100000, guid: a313086600eeda941b0f322c02f23329, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Emergency
+    second: {fileID: 2100000, guid: a4594aa0d10a2bf48adf711a897392a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Epoxy
+    second: {fileID: 2100000, guid: d2b720f6998e3054481df3e42be4b141, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Galvanized
+    second: {fileID: 2100000, guid: 4ba4da0e604174b469da0f5efd3209ed, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Grey
+    second: {fileID: 2100000, guid: 8d241f1d7ccc8e84f8c550a6f4d773f3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Hazard
+    second: {fileID: 2100000, guid: 105668c4a81621041a2ed29307397199, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_LedRed
+    second: {fileID: 2100000, guid: ec38595e614f4524b9e8fe0f0be10dab, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_PipeLabel
+    second: {fileID: 2100000, guid: 9b8632a39bedf2544b94cbc54d298473, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_PlateCore
+    second: {fileID: 2100000, guid: fe4a96e2340a7f340bb85dd48adb7a64, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_RedPipe
+    second: {fileID: 2100000, guid: 231e0225df7a4554bb4b69f8d37efc25, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_SignRestricted
+    second: {fileID: 2100000, guid: fa6d8674196d79049bccf42eb5cb021e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Steel
+    second: {fileID: 2100000, guid: 9de08e13c888188498c6cb7757ac111f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_SteelDark
+    second: {fileID: 2100000, guid: adfd1a032c998834cbd0d4558140b1ac, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_TubeOff
+    second: {fileID: 2100000, guid: 8a338704135f0a1479a20ada28b8dc57, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

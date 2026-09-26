@@ -3,7 +3,97 @@ guid: 3b6cbc44816f51c45830e7efebd767f2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_BookPages
+    second: {fileID: 2100000, guid: 9a56735a34fcb6c4ca0099d6ddc84424, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_BookSpine
+    second: {fileID: 2100000, guid: 80ed9b021fa7ae0438f4865e75259a1d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Brass
+    second: {fileID: 2100000, guid: 3b1b065403eb83e43a830d880663f5c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_DriedFlower
+    second: {fileID: 2100000, guid: 66606b111b507b5448a89e36eff0723b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Felt
+    second: {fileID: 2100000, guid: 9d7bb408c60681a4badb280b2fa4ab6c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_LampShade
+    second: {fileID: 2100000, guid: 30cedb79c5d05b9428535735080d91fa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Leaf
+    second: {fileID: 2100000, guid: 85f4186c2e5726b45b5f19c9275468f0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Linen
+    second: {fileID: 2100000, guid: a8934ab4869406b4ebee45196e0337ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Photo
+    second: {fileID: 2100000, guid: ab5d691ab16780b48b4908d4b70bbd3c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Rug
+    second: {fileID: 2100000, guid: 6556b041cd022ee40b2ed70d667cdb10, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_SofaFabric
+    second: {fileID: 2100000, guid: dc48a56c8e4c0ee479575d319b09d652, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Soil
+    second: {fileID: 2100000, guid: 19f71140cc861194c98e7014392e2d0b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Stem
+    second: {fileID: 2100000, guid: a7b4a88d45ef6b345b8e3b62cead0517, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Terracotta
+    second: {fileID: 2100000, guid: 47c65d94edac0c441b12395a3c473396, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Vase
+    second: {fileID: 2100000, guid: 81a0916ecedb80840a5540cf1fdc3063, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Wood
+    second: {fileID: 2100000, guid: 6a5dd3207dc202f4eb9373d6f2b495d2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_WoodLight
+    second: {fileID: 2100000, guid: bf7f9bf5b3f2e2848b2b6f889199683f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

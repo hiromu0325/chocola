@@ -3,7 +3,47 @@ guid: b8ad586815a4911499dff9228c423ffd
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_BlackPlastic
+    second: {fileID: 2100000, guid: 1ad89a5eea041364da94ef7e6ded1408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Book1
+    second: {fileID: 2100000, guid: c5f7de4f99024f642b1520c804d2313f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Book2
+    second: {fileID: 2100000, guid: 6661c6e693bc1384ab597211c4ce0d97, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Brass
+    second: {fileID: 2100000, guid: 9668d3093caa4174a85005f55ae3993d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Metal
+    second: {fileID: 2100000, guid: 467359470b8c2c74f9f190e900145212, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Pages
+    second: {fileID: 2100000, guid: 18c72d1cb83839446a65e7aef370355e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_SwitchPlate
+    second: {fileID: 2100000, guid: 00f6872399895df48b7faf253a713a2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Walnut
+    second: {fileID: 2100000, guid: 23341eb59289fb0439d684baa116e707, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

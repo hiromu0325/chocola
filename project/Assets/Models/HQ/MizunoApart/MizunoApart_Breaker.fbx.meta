@@ -3,7 +3,32 @@ guid: a6b1e8002ee958141aeeb1a2f80f89b5
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Black
+    second: {fileID: 2100000, guid: 90b06d4ab34765c4883a1768d586ab5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Hazard
+    second: {fileID: 2100000, guid: f91df4dc92dbee94ba06a1dfdbd0b45d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_LeverRed
+    second: {fileID: 2100000, guid: b8f2474a096ecb947a0f206daaf9783d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Silver
+    second: {fileID: 2100000, guid: f59401cdd42cc2247853316d0b4eace5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_WhitePlastic
+    second: {fileID: 2100000, guid: 84df0bdd92b16504d95f8514cf4dbe3f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

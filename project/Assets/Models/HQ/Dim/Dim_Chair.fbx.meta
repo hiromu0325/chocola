@@ -3,7 +3,12 @@ guid: 73f3a384a9df1124aa46cc7f5c9185e2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Walnut
+    second: {fileID: 2100000, guid: 23341eb59289fb0439d684baa116e707, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,22 @@ guid: e827a6363f5238a4ea6c04675191f6bc
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Silver
+    second: {fileID: 2100000, guid: f59401cdd42cc2247853316d0b4eace5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_WoodLight
+    second: {fileID: 2100000, guid: a1c389f8e9d3cf54698bf5bbbc9bcc62, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_WoodMid
+    second: {fileID: 2100000, guid: b71aaf4de14a4ab4f80f556cc4ecf350, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

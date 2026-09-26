@@ -3,7 +3,72 @@ guid: a0a0456712829314f9d9af0f1dc9b649
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Aluminum
+    second: {fileID: 2100000, guid: 9dc515a3c327a6a489c8ea9ca0942542, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_CarNumber
+    second: {fileID: 2100000, guid: 5a2ee1902f01a5348905a55d42294acf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_DarkGrille
+    second: {fileID: 2100000, guid: 4bdf10c06fc7b504b818c613e4c0cec1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_DoorSticker
+    second: {fileID: 2100000, guid: ea0c88956bcf97c47a3604934b93abd0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_FanCream
+    second: {fileID: 2100000, guid: 56be0df1cf2caf24a8ee0ccdc94db88a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Glass
+    second: {fileID: 2100000, guid: 7c506831b8901564aa543aa129815be9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_LeverRed
+    second: {fileID: 2100000, guid: c4b0269a91d5b4e4fa9fc1f81cf04979, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_LightCover
+    second: {fileID: 2100000, guid: 082df1692d3d6cc4caad484041a7bf60, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Linoleum
+    second: {fileID: 2100000, guid: 58eda1b1b24f66445998697118925022, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Melamine
+    second: {fileID: 2100000, guid: bf3944c14e0e0984fa1069c2791cd042, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Priority
+    second: {fileID: 2100000, guid: 0d86c08a8976e704c89cb7f75f078b0d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Rubber
+    second: {fileID: 2100000, guid: 668930e1963af8f478a6d4984529cd50, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Stainless
+    second: {fileID: 2100000, guid: 18765ae5f4fe4c64ca7e4926ddaedee2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

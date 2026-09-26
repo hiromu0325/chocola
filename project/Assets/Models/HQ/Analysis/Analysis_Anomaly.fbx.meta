@@ -3,7 +3,17 @@ guid: e037595d35c7a99469737efebfb12d0e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_ScreenAnomaly
+    second: {fileID: 2100000, guid: b1daa3795528b574eb1dd29264fa9579, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

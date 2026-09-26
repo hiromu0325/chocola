@@ -3,7 +3,22 @@ guid: 32e3ce7ed0b3413438c4639a4379f709
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Brass
+    second: {fileID: 2100000, guid: dd356095c343bda41b5004440d3fd089, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_DarkWood
+    second: {fileID: 2100000, guid: ccf656578a4f1854da49d09867d70d91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_WoodLight
+    second: {fileID: 2100000, guid: be82a4c1241267448a58b08061f43245, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,32 @@ guid: 5fa557a2fd07d484cabf07fdab11f184
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Aluminum
+    second: {fileID: 2100000, guid: 32be5ad6466a06449b49323426107131, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_DoorGrey
+    second: {fileID: 2100000, guid: d950b128399350b4dbc1b828b7e6a6cb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_WiredGlass
+    second: {fileID: 2100000, guid: e7968688d3ff41946bd53ad85c61e79c, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

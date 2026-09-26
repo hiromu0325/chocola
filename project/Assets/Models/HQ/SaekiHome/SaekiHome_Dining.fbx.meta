@@ -3,7 +3,32 @@ guid: f45af2d0f7577684bbdf5c5134b624c7
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Coffee
+    second: {fileID: 2100000, guid: f3c4393ce4d182a43812a6d885068472, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Linen
+    second: {fileID: 2100000, guid: a8934ab4869406b4ebee45196e0337ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Porcelain
+    second: {fileID: 2100000, guid: d1425182613daae4780c00ab08ef28b0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Wood
+    second: {fileID: 2100000, guid: 6a5dd3207dc202f4eb9373d6f2b495d2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_WoodLight
+    second: {fileID: 2100000, guid: bf7f9bf5b3f2e2848b2b6f889199683f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

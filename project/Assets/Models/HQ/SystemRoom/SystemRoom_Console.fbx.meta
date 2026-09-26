@@ -3,7 +3,47 @@ guid: 4ca7fc01402dba440a308d335ab1efff
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Black
+    second: {fileID: 2100000, guid: 297fd24d826853447995f08b3de928c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_DeskTop
+    second: {fileID: 2100000, guid: bd56f755e67c8af44a457c371e756300, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_LedGreen
+    second: {fileID: 2100000, guid: 06d8a39de8f8e6f42a8bfcda008233de, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalDark
+    second: {fileID: 2100000, guid: 9d7246168aeb23d41be9a8fcc44b8a3a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalLight
+    second: {fileID: 2100000, guid: 4118f9987f75ace44a30bcd7c977dd16, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenConnectome
+    second: {fileID: 2100000, guid: 054c778404b8bda458172ca5fb547e80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenStatus
+    second: {fileID: 2100000, guid: c155b2abfc174274c97ecde6abfc5d4b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenWave
+    second: {fileID: 2100000, guid: 02740555938ee7f4d869481cfb7a227a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

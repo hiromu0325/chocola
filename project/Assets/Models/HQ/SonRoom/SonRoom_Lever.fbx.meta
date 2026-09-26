@@ -3,7 +3,17 @@ guid: 5bd103bf5f32d8443877c792d8a1fac3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Aluminum
+    second: {fileID: 2100000, guid: 7173c02caa0f9c346ab9d024137df29a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_LeverRed
+    second: {fileID: 2100000, guid: e62e1b74c51a15e4689cf74a1f2c3d49, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

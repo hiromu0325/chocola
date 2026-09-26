@@ -3,7 +3,47 @@ guid: a5743dcd941776c4796e0a4060562216
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Brass
+    second: {fileID: 2100000, guid: dd356095c343bda41b5004440d3fd089, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Bulb
+    second: {fileID: 2100000, guid: 3dfa29b34514ef84d8e3ebdd9187bbf2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Cord
+    second: {fileID: 2100000, guid: 49492f58e7629534c860dd23e7c67ca9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_DarkWood
+    second: {fileID: 2100000, guid: ccf656578a4f1854da49d09867d70d91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_FloorPlanks
+    second: {fileID: 2100000, guid: 04a636a61383acb4fbd0707592cabf7d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Plaster
+    second: {fileID: 2100000, guid: 9fccc46ec59ef7349a66017094e30d36, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Porcelain
+    second: {fileID: 2100000, guid: 5c54042b7b013a04f911c2bbee8510bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_SwitchPlate
+    second: {fileID: 2100000, guid: ab2bd68964c9bf54c84bc4b1fb4923d3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

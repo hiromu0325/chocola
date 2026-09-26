@@ -3,7 +3,17 @@ guid: 98a36d6de620b87448f032f08462a535
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Folder
+    second: {fileID: 2100000, guid: 9ac10e254e315d94aab544b2ec06c7ec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GirlFile
+    second: {fileID: 2100000, guid: 760a1bcda2d698f458753e111d2816c4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

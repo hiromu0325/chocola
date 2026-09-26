@@ -3,7 +3,62 @@ guid: 7448f3eedf0f94f4297c47fda9b3701b
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Black
+    second: {fileID: 2100000, guid: ecce8754d6842844a80a2b4a8aedb497, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Globe
+    second: {fileID: 2100000, guid: 2900a43b8e8585348b0ca84f7d3ae617, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Pillow
+    second: {fileID: 2100000, guid: 3d7a88f5ea42366488b2035caa9a79b5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ShoeRed
+    second: {fileID: 2100000, guid: 1e3e895f91edf6645b89bb81af44057d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ShoeSole
+    second: {fileID: 2100000, guid: 581caa45b8006de43b69cf7edcf683b4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyBlue
+    second: {fileID: 2100000, guid: a2fd6d78457fa2645bc7ffd082328b8a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyGreen
+    second: {fileID: 2100000, guid: 10838cc1ecfe64643b6b53db398cb476, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyRed
+    second: {fileID: 2100000, guid: 877784a1e560ab448980ca64de7461de, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyYellow
+    second: {fileID: 2100000, guid: 58df98f8cec770d449d2730085bb9ae7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_WhiteWood
+    second: {fileID: 2100000, guid: 990a82c58959ec54f9c981443ea1ee05, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Wood
+    second: {fileID: 2100000, guid: 221a330e63b619f4b93694a4d47c70c8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

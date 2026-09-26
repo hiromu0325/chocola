@@ -3,7 +3,27 @@ guid: 4d22d4f8cff336a418d7ad2babae9f38
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Chrome
+    second: {fileID: 2100000, guid: 2aeeac765fb0c2c4799ba7751d99f03f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Grey
+    second: {fileID: 2100000, guid: 8d241f1d7ccc8e84f8c550a6f4d773f3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_PanelLabel
+    second: {fileID: 2100000, guid: 14d15d466c8871444883af7e8feeb2b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_SteelDark
+    second: {fileID: 2100000, guid: adfd1a032c998834cbd0d4558140b1ac, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

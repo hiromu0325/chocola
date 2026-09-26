@@ -3,7 +3,17 @@ guid: 9f01096f72a0831478bfb601293e6431
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_AdLab
+    second: {fileID: 2100000, guid: 7a26975bfc165f5449ecd8c075cfe5a5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Aluminum
+    second: {fileID: 2100000, guid: 9dc515a3c327a6a489c8ea9ca0942542, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

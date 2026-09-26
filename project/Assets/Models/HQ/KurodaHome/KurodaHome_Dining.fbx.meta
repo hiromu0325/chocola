@@ -3,7 +3,72 @@ guid: 9c6db3e94115d37449188f3c98fdc4fb
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Chopsticks
+    second: {fileID: 2100000, guid: 63848a2c9958c824cbc75af8149f044a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Glass
+    second: {fileID: 2100000, guid: 5b4ca7a2666631743a993edb7a927ce2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Greens
+    second: {fileID: 2100000, guid: 4b063e6042531364ab8db215b2748835, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_GrilledFish
+    second: {fileID: 2100000, guid: 22c80a09496a557478f44dad8c383e3a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Indigo
+    second: {fileID: 2100000, guid: 81abf62d6aa85d3449b6182d75f4c9c9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Juice
+    second: {fileID: 2100000, guid: c16659531de5bd744a41011ac7b6fd40, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Lacquer
+    second: {fileID: 2100000, guid: 4c4125515bc08ae4494abd9bb5860815, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Miso
+    second: {fileID: 2100000, guid: 0ce04cb48bd509c49b8fc442158cfb76, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Porcelain
+    second: {fileID: 2100000, guid: a9972c8535c45f34da409b9fc9b10c7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Rice
+    second: {fileID: 2100000, guid: 84b465fff0544904d9cdc7cc0386f5d7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Sofa
+    second: {fileID: 2100000, guid: b6c482881a3982a498ff1095678518a7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Wood
+    second: {fileID: 2100000, guid: 1693eac367c13064fbb75e5e6b5d3340, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WoodDark
+    second: {fileID: 2100000, guid: c631edc7d2efdf24caea7ada0dcb7e96, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

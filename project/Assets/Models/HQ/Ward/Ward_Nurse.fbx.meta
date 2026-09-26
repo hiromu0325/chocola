@@ -3,7 +3,57 @@ guid: 51a7a9ff509911b48adeda088e1c6b98
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Black
+    second: {fileID: 2100000, guid: 0b73f6effc878c84493f015ef37b946f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_CallRed
+    second: {fileID: 2100000, guid: 5e5caf1c7b881f44eb8127812ff7dcbc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Cove
+    second: {fileID: 2100000, guid: 82df61ed88098ee4989d999344a4357b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Folder
+    second: {fileID: 2100000, guid: 9ac10e254e315d94aab544b2ec06c7ec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GreyPlastic
+    second: {fileID: 2100000, guid: ee425332634a84f44bc7c825054dafec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Ivory
+    second: {fileID: 2100000, guid: 6fe6375cbb24fa24890571c56f5cf8e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Laminate
+    second: {fileID: 2100000, guid: 9f7da4d02093c9044a6341854ada2070, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_O2Green
+    second: {fileID: 2100000, guid: 801552b6ce73a774593cecab47ed088c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_ScreenChart
+    second: {fileID: 2100000, guid: 0a2339cb61885a243a1ad893bf2574fb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Wainscot
+    second: {fileID: 2100000, guid: 278b591d10003e849ba5f4d9b6cb48c8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

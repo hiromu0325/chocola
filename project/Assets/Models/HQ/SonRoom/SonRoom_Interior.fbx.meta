@@ -3,7 +3,82 @@ guid: ba694d76bb62a5143a9b96e63fc8f399
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Aluminum
+    second: {fileID: 2100000, guid: 7173c02caa0f9c346ab9d024137df29a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Black
+    second: {fileID: 2100000, guid: ecce8754d6842844a80a2b4a8aedb497, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Pillow
+    second: {fileID: 2100000, guid: 3d7a88f5ea42366488b2035caa9a79b5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Playmat
+    second: {fileID: 2100000, guid: 7e42b09a355238f4f91fda601d1ea2a3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_PlushDog
+    second: {fileID: 2100000, guid: 8f4ac04789cc3fd4c803366669d25690, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Quilt
+    second: {fileID: 2100000, guid: 82aa0bbf3594e0346bca6a3f244652bf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Randoseru
+    second: {fileID: 2100000, guid: 6b77c6405861c77439f8ddbc34ebaf4c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_String
+    second: {fileID: 2100000, guid: e9e597eae2d61ec40b7dc79145dc817b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyBlue
+    second: {fileID: 2100000, guid: a2fd6d78457fa2645bc7ffd082328b8a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyGreen
+    second: {fileID: 2100000, guid: 10838cc1ecfe64643b6b53db398cb476, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyGrey
+    second: {fileID: 2100000, guid: 99e9992ec22e63a4c987c064e62a41ae, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyRed
+    second: {fileID: 2100000, guid: 877784a1e560ab448980ca64de7461de, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_ToyYellow
+    second: {fileID: 2100000, guid: 58df98f8cec770d449d2730085bb9ae7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_WhiteWood
+    second: {fileID: 2100000, guid: 990a82c58959ec54f9c981443ea1ee05, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SON_Wood
+    second: {fileID: 2100000, guid: 221a330e63b619f4b93694a4d47c70c8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
