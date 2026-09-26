@@ -47,7 +47,7 @@ namespace EscapeProto
         private LoopSearcher _searcher;
         private float _sweepTimer;
 
-        private Color _prevAmbient;
+        private AmbientTrio _prevAmbient;
         private bool _lightingDarkened;
         private bool _scriptedActive;    // 脚本襲撃の進行中（警報フェーズ）
         private float _huntLeft = -1f;   // 復旧後の徘徊フェーズ残り秒（<0で停止）
@@ -425,8 +425,8 @@ namespace EscapeProto
             {
                 if (!_lightingDarkened)
                 {
-                    _prevAmbient = RenderSettings.ambientLight;
-                    RenderSettings.ambientLight = new Color(0.10f, 0.03f, 0.03f);
+                    _prevAmbient = AmbientTrio.Current;
+                    AmbientTrio.Emergency.Apply();
                     _lightingDarkened = true;
                 }
                 if (LoopProgress.IsFound(LoopProgress.StartRoomId, "flashlight"))
@@ -437,7 +437,7 @@ namespace EscapeProto
             }
             else if (_lightingDarkened)
             {
-                RenderSettings.ambientLight = _prevAmbient;
+                _prevAmbient.Apply();
                 _lightingDarkened = false;
             }
         }

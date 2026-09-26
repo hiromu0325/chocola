@@ -166,6 +166,13 @@ namespace EscapeProto
                     BuildCorridorDoor(doorsRoot, side, slot, assign.roomId, assign.exitSide, doorMat, frameMat, hq);
                 }
 
+            // 反射プローブ（辺ごとに1つ。角は隣の辺と重ねて滑らかにつなぐ）
+            float mid = (i + o) * 0.5f;
+            AddProbe(t, "Probe_N", new Vector3(0f, 1.6f, mid), new Vector3(0f, H * 0.5f, mid), new Vector3(o * 2f, H, w));
+            AddProbe(t, "Probe_S", new Vector3(0f, 1.6f, -mid), new Vector3(0f, H * 0.5f, -mid), new Vector3(o * 2f, H, w));
+            AddProbe(t, "Probe_E", new Vector3(mid, 1.6f, 0f), new Vector3(mid, H * 0.5f, 0f), new Vector3(w, H, o * 2f));
+            AddProbe(t, "Probe_W", new Vector3(-mid, 1.6f, 0f), new Vector3(-mid, H * 0.5f, 0f), new Vector3(w, H, o * 2f));
+
             // 扉の奥の暗い廊下（1つだけ。開く扉の裏へ RoomTransitionSystem が動かす）。
             // 中央の塊の当たり判定の中に入るが、見た目だけなので歩ける範囲は変わらない
             if (hq)
@@ -201,7 +208,7 @@ namespace EscapeProto
             switch (roomId)
             {
                 case "train":
-                    return (Vector3.zero, 0f, true, new Vector3(-0.9f, 0f, 0f));
+                    return (Vector3.zero, 0f, true, new Vector3(-0.96f, 0f, 0f));   // 車端の引き戸（脇の詰め板の裏へ引き込む）
                 case "lab": case "data_room": case "ward": case "analysis":
                     return (new Vector3(0.462f, 0f, 0.02f), 80f, false, Vector3.zero);     // 右吊りの施設の扉
                 case "core_ante": case "core_main": case "system_room":
@@ -270,15 +277,17 @@ namespace EscapeProto
                 signal.AlarmMaterial = HqLit("COR_SignalAlarm", new Color(0.9f, 0.2f, 0.15f), 0.85f, 0f, null, null, 1f,
                                              new Color(1f, 0.12f, 0.08f) * 2.8f);
                 // 部屋へ入れるようになると、扉板がその部屋の入口の扉（外側の面を回廊へ向けたもの）に変わる。
-                // 電車の車端扉は引き戸で、このままでは枠からはみ出すので今は回廊の扉のまま（扱いは後で決める）
-                if (!string.IsNullOrEmpty(roomId) && roomId != "train"
+                // 電車の車端扉は引き戸：扉板を壁の裏（奥の暗い廊下の側）に置き、横へ滑らせて壁の裏へ引き込む
+                //（枠の外や隣の扉の前には出ない）
+                if (!string.IsNullOrEmpty(roomId)
                     && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(roomId, "Door")) != null)
                 {
                     var h = RoomDoorHinge(roomId);
-                    float t = Mathf.Max(0.02f, h.pivot.z);            // 扉板の厚みの半分
-                    float zc = -0.0375f - t;                            // 表の面を戸当たりの裏に合わせる
+                    float t = h.sliding ? 0.02f : Mathf.Max(0.02f, h.pivot.z);   // 扉板の厚みの半分
+                    float zc = h.sliding ? -0.15f - 0.005f - t                  // 引き戸：壁の裏
+                                         : -0.0375f - t;                        // 開き戸：表の面を戸当たりの裏に合わせる
                     // 部屋の扉のモデルは180度回して置くので、吊り元の左右が入れ替わる（押して奥へ開く）
-                    var pivot = new Vector3(-h.pivot.x, 0f, zc - t - 0.004f);
+                    var pivot = h.sliding ? new Vector3(0f, 0f, zc) : new Vector3(-h.pivot.x, 0f, zc - t - 0.004f);
                     var roomLeaf = new GameObject("RoomLeaf").transform;
                     roomLeaf.SetParent(ut, false);
                     roomLeaf.localPosition = pivot;
@@ -288,6 +297,14 @@ namespace EscapeProto
                                    new Vector3(0.88f, 2.06f, 0.004f), UnlitMat("COR_Void", Color.black));
                     Object.DestroyImmediate(core.GetComponent<Collider>());
                     core.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    if (h.sliding)
+                    {
+                        // 引き戸は枠の奥にあるので、扉板の脇の細い隙間から中央の塊の中が抜けて見えないよう、裏に黒い板を添える
+                        var back = Box(roomLeaf, "Backing", new Vector3(0f, 1.1f, zc - 0.035f) - pivot,
+                                       new Vector3(1.02f, 2.22f, 0.004f), UnlitMat("COR_Void", Color.black));
+                        Object.DestroyImmediate(back.GetComponent<Collider>());
+                        back.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    }
                     roomLeaf.gameObject.SetActive(false);
                     var look = unit.AddComponent<DoorLook>();
                     look.RoomId = roomId;
@@ -296,6 +313,12 @@ namespace EscapeProto
                     look.CorridorAngle = swing.OpenAngle;
                     look.RoomLeaf = roomLeaf.gameObject;
                     look.RoomAngle = pivot.x > 0f ? -80f : 80f;
+                    if (h.sliding)
+                    {
+                        // 取っ手（モデルの +X、180度回して回廊の -X）の反対側へ引き込む
+                        look.RoomSliding = true;
+                        look.RoomSlide = new Vector3(1.0f, 0f, 0f);
+                    }
                 }
 
                 var hqDoor = unit.AddComponent<LoopDoor>();
@@ -508,6 +531,8 @@ namespace EscapeProto
             if (def.id != "son_room") BuildMemoryToy(t, def.id);
 
             BuildRoomLights(t, def);
+            AddProbe(t, "ReflectionProbe", new Vector3(0f, Mathf.Min(1.6f, def.h - 0.3f), 0f),
+                     new Vector3(0f, def.h * 0.5f, 0f), new Vector3(def.w, def.h, def.d));
 
             // ルート登録
             var roomRoot = root.AddComponent<LoopRoomRoot>();
@@ -3241,19 +3266,25 @@ namespace EscapeProto
             unit.transform.SetParent(parent, false);
             unit.transform.localPosition = pos;
             Box(unit.transform, "Body", new Vector3(0f, 1.35f, 0f), new Vector3(0.25f, 0.8f, 0.5f), boxMat);
-            var lever = Box(unit.transform, "Lever", new Vector3(-0.16f, 1.35f, 0f), new Vector3(0.1f, 0.22f, 0.12f), leverMat);
+            // レバーは回転の軸に置いた親 Lever の子（上げる = 斜め上、落ちる = 斜め下に回る）。
+            // 調べる当たり判定は腕に沿った箱で、レバーと一緒に回る
+            var lever = new GameObject("Lever");
+            lever.transform.SetParent(unit.transform, false);
+            lever.transform.localPosition = new Vector3(-0.126f, 1.32f, 0f);   // train_room.LEVER_PIVOT
+            Box(lever.transform, "LeverBox", new Vector3(-0.012f, 0.11f, 0f), new Vector3(0.05f, 0.24f, 0.14f), leverMat);
             // Blender製の分電盤（壁の受け金具・警告ラベル・電線管付き）。レバーは動くので箱のまま残す
             if ((Visual(unit.transform, HqModel(roomId, "Breaker"), Vector3.zero)
                  ?? Visual(unit.transform, "Assets/Models/Props/BreakerBox.fbx", Vector3.zero)) != null)
                 HideRenderers(unit.transform, "Body");
             // 品質重視のレバー（レバーの子なので上げ下げに付いて動く）
             if (Visual(lever.transform, HqModel(roomId, "Lever"), Vector3.zero) != null)
-                HideRenderers(unit.transform, "Lever");
+                HideRenderers(lever.transform, "LeverBox");
             // 本体でもレバーでも視線が通るよう、コンポーネントはユニットのルートに付ける
             //（子コライダーからGetComponentInParentで解決される）
             var sw = unit.AddComponent<BreakerSwitch>();
             sw.RoomId = roomId;
             sw.Lever = lever.transform;
+            sw.Rotates = true;
             return sw;
         }
 
@@ -3262,8 +3293,18 @@ namespace EscapeProto
         private static void BuildLighting()
         {
             // 白い明るめの空間（ホラーの「昼の白さ」）。フォグは薄く
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.42f, 0.42f, 0.44f);
+            // 環境光は上・横・下の3色（Flat だと面の向きで明るさが変わらず、造作の段差が平板に見える）。
+            // 光は焼かない（停電・復旧で照明を点けたり消したりするため）
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.52f, 0.52f, 0.54f);
+            RenderSettings.ambientEquatorColor = new Color(0.4f, 0.4f, 0.42f);
+            RenderSettings.ambientGroundColor = new Color(0.22f, 0.21f, 0.2f);
+            // 反射プローブの外（扉の奥の暗い廊下など）は、空ではなく暗い無彩色を映す
+            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
+            RenderSettings.customReflectionTexture = DarkReflectionCube();
+            RenderSettings.reflectionIntensity = 1f;
+            // 反射プローブはリアルタイムで、照明が変わった時だけ撮り直す（ReflectionProbes.RefreshActive）
+            QualitySettings.realtimeReflectionProbes = true;
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogColor = new Color(0.55f, 0.56f, 0.58f);
@@ -3288,6 +3329,48 @@ namespace EscapeProto
                 l.intensity = 1.4f;
                 l.range = 10f;
             }
+        }
+
+        /// <summary>既定の反射：屋内なので空の代わりに暗い無彩色の小さなキューブマップ</summary>
+        private static Cubemap DarkReflectionCube()
+        {
+            const string path = "Assets/EscapePrototype/Textures/DarkReflection.cubemap";
+            var cube = AssetDatabase.LoadAssetAtPath<Cubemap>(path);
+            if (cube != null) return cube;
+            cube = new Cubemap(8, TextureFormat.RGBA32, false);
+            var px = new Color[64];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color(0.035f, 0.035f, 0.038f);
+            foreach (CubemapFace f in new[] { CubemapFace.PositiveX, CubemapFace.NegativeX, CubemapFace.PositiveY,
+                                              CubemapFace.NegativeY, CubemapFace.PositiveZ, CubemapFace.NegativeZ })
+                cube.SetPixels(px, f);
+            cube.Apply();
+            AssetDatabase.CreateAsset(cube, path);
+            return cube;
+        }
+
+        /// <summary>
+        /// 反射プローブ（ボックス投影）。焼かずにリアルタイムで、スクリプトから撮り直す。
+        /// capture = 撮る位置、boxCenter / size = 部屋（回廊の辺）の箱。どちらも parent の座標
+        /// </summary>
+        private static void AddProbe(Transform parent, string name, Vector3 capture, Vector3 boxCenter, Vector3 size)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = capture;
+            var p = go.AddComponent<ReflectionProbe>();
+            p.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            p.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting;
+            p.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
+            p.resolution = 256;
+            p.hdr = true;
+            p.boxProjection = true;
+            p.center = boxCenter - capture;
+            p.size = size;
+            p.blendDistance = 0.5f;
+            p.nearClipPlane = 0.05f;
+            p.farClipPlane = 40f;
+            p.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.SolidColor;
+            p.backgroundColor = Color.black;
         }
 
         private static GameObject BuildPlayer()
@@ -3648,11 +3731,13 @@ namespace EscapeProto
         }
 
         /// <summary>品質重視モデル用のテクスチャ（法線マップは取り込み設定を合わせる）</summary>
-        private static Texture2D HqTex(string file, bool normal = false, bool clamp = false, bool alpha = false)
+        private static Texture2D HqTex(string file, bool normal = false, bool clamp = false, bool alpha = false, bool linear = false)
         {
             string path = $"{HqTexDir}/{file}.png";
             if (!(AssetImporter.GetAtPath(path) is TextureImporter imp)) return null;
             bool dirty = false;
+            // 光沢（Metallic＋Smoothness）・AO マップは色ではなくデータなので sRGB を切る
+            if (linear && imp.sRGBTexture) { imp.sRGBTexture = false; dirty = true; }
             if (normal && imp.textureType != TextureImporterType.NormalMap) { imp.textureType = TextureImporterType.NormalMap; dirty = true; }
             var wrap = clamp ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
             if (imp.wrapMode != wrap) { imp.wrapMode = wrap; dirty = true; }
@@ -3665,9 +3750,17 @@ namespace EscapeProto
         /// <summary>URP Lit の材質にテクスチャ・法線・発光を設定する</summary>
         private static Material HqLit(string name, Color tint, float smooth, float metal = 0f,
                                       Texture2D albedo = null, Texture2D normal = null, float bump = 1f,
-                                      Color? emission = null, Texture2D emissionMap = null)
+                                      Color? emission = null, Texture2D emissionMap = null,
+                                      Texture2D metalSmooth = null, Texture2D occlusion = null, float aoStrength = 1f)
         {
             var m = GetMat(name, tint, smooth);
+            // 光沢マップ（R = 金属度、A = 滑らかさ。smooth はその倍率）と AO マップ（環境光と反射にだけ掛かる）
+            m.SetTexture("_MetallicGlossMap", metalSmooth);
+            if (metalSmooth != null) { m.EnableKeyword("_METALLICSPECGLOSSMAP"); m.SetFloat("_SmoothnessTextureChannel", 0f); }
+            else m.DisableKeyword("_METALLICSPECGLOSSMAP");
+            m.SetTexture("_OcclusionMap", occlusion);
+            if (occlusion != null) { m.EnableKeyword("_OCCLUSIONMAP"); m.SetFloat("_OcclusionStrength", aoStrength); }
+            else m.DisableKeyword("_OCCLUSIONMAP");
             m.SetTexture("_BaseMap", albedo);
             m.mainTextureScale = Vector2.one;
             if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metal);
@@ -3692,6 +3785,21 @@ namespace EscapeProto
                 m.SetColor("_EmissionColor", Color.black);
                 m.SetTexture("_EmissionMap", null);
             }
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>
+        /// 回廊の PBR 材質：色・法線・光沢（Metallic＋Smoothness）・AO をそろえて付ける（Corridor/&lt;tex&gt;{,_n,_ms,_ao}）。
+        /// smooth は光沢マップの倍率、tile は 1m あたりの繰り返し（金物は細かく）
+        /// </summary>
+        private static Material CorPbr(string n, Color tint, float smooth, string tex, float bump,
+                                       float aoStrength = 1f, float tile = 1f, bool ao = true)
+        {
+            var m = HqLit(n, tint, smooth, 0f, HqTex($"Corridor/{tex}"), HqTex($"Corridor/{tex}_n", true), bump,
+                          metalSmooth: HqTex($"Corridor/{tex}_ms", linear: true),
+                          occlusion: ao ? HqTex($"Corridor/{tex}_ao", linear: true) : null, aoStrength: aoStrength);
+            m.mainTextureScale = new Vector2(tile, tile);
             EditorUtility.SetDirty(m);
             return m;
         }
@@ -3740,23 +3848,23 @@ namespace EscapeProto
                 case "DIM_Book3":     return HqLit(n, new Color(0.55f, 0.48f, 0.34f), 0.3f);
                 case "DIM_SwitchPlate": return HqLit(n, new Color(0.88f, 0.86f, 0.80f), 0.5f);
                 // ---- 回廊と扉・扉の奥の暗い廊下 ----
-                case "COR_Floor":     return HqLit(n, new Color(1.15f, 0.98f, 0.86f), 0.16f, 0f, HqTex("Corridor/floor"), HqTex("Corridor/floor_n", true), 0.5f);
-                case "COR_Plaster":   return HqLit(n, Color.white, 0.12f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.25f);
-                case "COR_Ceiling":   return HqLit(n, new Color(0.98f, 0.98f, 0.97f), 0.05f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.15f);
-                case "COR_Wainscot":  return HqLit(n, new Color(0.74f, 0.72f, 0.66f), 0.4f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
-                case "COR_Trim":      return HqLit(n, new Color(0.5f, 0.46f, 0.41f), 0.4f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
-                case "COR_Door":      return HqLit(n, new Color(0.88f, 0.85f, 0.78f), 0.42f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
-                case "COR_Brass":     return HqLit(n, new Color(0.6f, 0.48f, 0.28f), 0.55f, 1f);
-                case "COR_Steel":     return HqLit(n, new Color(0.3f, 0.3f, 0.31f), 0.55f, 0.8f);
+                case "COR_Floor":     return CorPbr(n, new Color(1.15f, 0.98f, 0.86f), 1f, "floor", 0.8f);
+                case "COR_Plaster":   return CorPbr(n, Color.white, 1f, "plaster", 0.5f, aoStrength: 0.6f);
+                case "COR_Ceiling":   return CorPbr(n, new Color(0.98f, 0.98f, 0.97f), 0.7f, "plaster", 0.3f, aoStrength: 0.4f);
+                case "COR_Wainscot":  return CorPbr(n, new Color(0.7f, 0.68f, 0.62f), 1f, "paint", 0.45f);
+                case "COR_Trim":      return CorPbr(n, new Color(0.5f, 0.46f, 0.41f), 1f, "paint", 0.45f);
+                case "COR_Door":      return CorPbr(n, new Color(0.84f, 0.81f, 0.74f), 1f, "paint", 0.45f);
+                case "COR_Brass":     return CorPbr(n, Color.white, 1f, "brass", 0.5f, tile: 4f, ao: false);
+                case "COR_Steel":     return CorPbr(n, Color.white, 1f, "steel", 0.5f, tile: 4f, ao: false);
                 case "COR_Black":     return HqLit(n, new Color(0.02f, 0.02f, 0.02f), 0.3f);
                 case "COR_Oak":       return HqLit(n, new Color(0.8f, 0.7f, 0.55f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
                 case "COR_LampGlass": return HqLit(n, new Color(1f, 0.98f, 0.94f), 0.6f, 0f, null, null, 1f, new Color(1f, 0.95f, 0.85f) * 1.6f);
                 case "COR_Signal":    return HqLit(n, new Color(0.3f, 0.26f, 0.2f), 0.85f);   // 消えた表示灯（煙った琥珀のガラス）
-                case "COR_OldPlaster":return HqLit(n, new Color(0.72f, 0.7f, 0.66f), 0.05f, 0f, HqTex("Corridor/old_plaster"), HqTex("Corridor/old_plaster_n", true), 0.5f);
-                case "COR_OldFloor":  return HqLit(n, new Color(0.8f, 0.8f, 0.8f), 0.2f, 0f, HqTex("Corridor/old_floor"), HqTex("Corridor/old_floor_n", true), 0.5f);
-                case "COR_OldWainscot": return HqLit(n, new Color(0.4f, 0.38f, 0.33f), 0.25f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
-                case "COR_OldCeiling":return HqLit(n, new Color(0.6f, 0.58f, 0.55f), 0.05f, 0f, HqTex("Corridor/plaster"), HqTex("Corridor/plaster_n", true), 0.2f);
-                case "COR_OldDoor":   return HqLit(n, new Color(0.6f, 0.57f, 0.5f), 0.3f, 0f, HqTex("Corridor/paint"), HqTex("Corridor/paint_n", true), 0.3f);
+                case "COR_OldPlaster":return CorPbr(n, new Color(0.72f, 0.7f, 0.66f), 1f, "old_plaster", 0.6f);
+                case "COR_OldFloor":  return CorPbr(n, new Color(0.8f, 0.8f, 0.8f), 1f, "old_floor", 0.7f);
+                case "COR_OldWainscot": return CorPbr(n, new Color(0.4f, 0.38f, 0.33f), 0.5f, "paint", 0.45f);
+                case "COR_OldCeiling":return CorPbr(n, new Color(0.6f, 0.58f, 0.55f), 0.6f, "plaster", 0.3f, aoStrength: 0.5f);
+                case "COR_OldDoor":   return CorPbr(n, new Color(0.6f, 0.57f, 0.5f), 0.55f, "paint", 0.45f);
                 case "COR_OldShade":  return HqLit(n, new Color(0.62f, 0.6f, 0.55f), 0.6f);
                 case "COR_Cord":      return HqLit(n, new Color(0.05f, 0.05f, 0.05f), 0.3f);
                 case "COR_Fog":       return UnlitMat(n, new Color(0f, 0f, 0f, 0.2f), true);   // 奥へ重ねる闇の板

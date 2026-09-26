@@ -18,6 +18,9 @@ namespace EscapeProto
         [Tooltip("入れるようになった後の、部屋の入口の扉（蝶番の軸に置いた親）")]
         public GameObject RoomLeaf;
         public float RoomAngle = -80f;
+        [Tooltip("部屋の扉が引き戸（電車の車端扉）。壁の裏へ RoomSlide だけ引き込む")]
+        public bool RoomSliding;
+        public Vector3 RoomSlide;
 
         private bool _roomLook;
         private bool _applied;
@@ -47,7 +50,11 @@ namespace EscapeProto
             if (Swing != null)
             {
                 var leaf = room ? RoomLeaf : CorridorLeaf;
-                if (leaf != null) Swing.UseLeaf(leaf.transform, room ? RoomAngle : CorridorAngle);
+                if (leaf != null)
+                {
+                    if (room) Swing.UseLeaf(leaf.transform, RoomAngle, RoomSliding, RoomSlide);
+                    else Swing.UseLeaf(leaf.transform, CorridorAngle);
+                }
             }
         }
     }

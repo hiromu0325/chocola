@@ -91,12 +91,14 @@ class Saver:
 
 # ---------------------------------------------------------------- 住宅系の共通素材（色を指定して使う）
 
-def planks(n, seed, c0, c1, count=8, vary=0.12):
-    """床板（1枚 = 1m、幅 1/count の板。板ごとに色と木目を変える。長手は U）。(色, 高さ) を返す"""
+def planks(n, seed, c0, c1, count=8, vary=0.12, maps=False):
+    """床板（1枚 = 1m、幅 1/count の板。板ごとに色と木目を変える。長手は U）。(色, 法線) を返す。
+    maps=True なら (色, 法線, 詳細) で、詳細は光沢・AO マップ用の {"h": 木目の高さ, "edge": 板の継ぎ目,
+    "cut": 板の端の突き付け, "plank": 板の番号, "rnd": 板ごとの乱数} を返す"""
     rnd = np.random.default_rng(seed)
     y, x = np.mgrid[0:n, 0:n] / n
     plank = np.floor(y * count).astype(int)
-    col = np.zeros((n, n, 3)); h = np.zeros((n, n))
+    col = np.zeros((n, n, 3)); h = np.zeros((n, n)); cuts = np.zeros((n, n), bool); prnd = np.zeros((n, n))
     for p in range(count):
         m = plank == p
         warp = (fbm(n, 2.4, seed + 10 + p, ax=10.0, ay=1.0) - 0.5) * 0.8
@@ -107,10 +109,30 @@ def planks(n, seed, c0, c1, count=8, vary=0.12):
         col[m] = c[m]; h[m] = streak[m]
         cut = rnd.uniform(0.1, 0.9)
         col[m & (np.abs(x - cut) < 0.0025)] *= 0.4
+        cuts |= m & (np.abs(x - cut) < 0.0025)
+        prnd[m] = rnd.uniform(0, 1)
     edge = np.abs((y * count) % 1 - 0.5) > 0.492
     col[edge] *= 0.35; h[edge] = 0
     col *= (0.92 + fbm(n, 2.2, seed + 60)[..., None] * 0.12)
-    return rgb(col), normal_map(h * 0.6 - edge * 0.8, 1.5)
+    nrm = normal_map(h * 0.6 - edge * 0.8, 1.5)
+    if maps:
+        return rgb(col), nrm, {"h": h, "edge": edge, "cut": cuts, "plank": plank, "rnd": prnd}
+    return rgb(col), nrm
+
+
+def ms_map(metal, smooth):
+    """URP Lit の Metallic＋Smoothness マップ（R = 金属度、A = 滑らかさ。どちらも 0〜1 の配列）"""
+    n0, n1 = smooth.shape
+    a = np.zeros((n0, n1, 4))
+    a[..., 0] = np.broadcast_to(metal, smooth.shape) * 255
+    a[..., 3] = np.clip(smooth, 0, 1) * 255
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA")
+
+
+def ao_map(ao):
+    """AO マップ（1 = 遮られていない、0 = 真っ暗）"""
+    v = np.clip(ao, 0, 1)[..., None] * 255
+    return Image.fromarray(np.repeat(v, 3, axis=2).astype(np.uint8))
 
 
 def wood(n, seed, c0, c1, rings=7):

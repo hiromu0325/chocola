@@ -42,13 +42,15 @@ namespace EscapeProto
         /// 動かす扉板を差し替える（回廊の扉が、入れるようになって部屋の入口の扉の見た目に変わる時）。
         /// 今の扉板は閉じた姿勢に戻してから切り替える
         /// </summary>
-        public void UseLeaf(Transform leaf, float openAngle)
+        public void UseLeaf(Transform leaf, float openAngle, bool sliding = false, Vector3 slide = default)
         {
             if (leaf == Leaf) return;
             if (_rattle != null) { StopCoroutine(_rattle); _rattle = null; }
             if (Leaf != null && _captured) { Leaf.localPosition = _pos0; Leaf.localRotation = _rot0; }
             Leaf = leaf;
             OpenAngle = openAngle;
+            Sliding = sliding;
+            SlideOffset = slide;
             _captured = false;
             _open = 0f;
             Capture();

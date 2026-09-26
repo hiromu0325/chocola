@@ -1,3 +1,4 @@
+using System.Collections;
 using StarterAssets;
 using UnityEngine;
 
@@ -5,13 +6,17 @@ namespace EscapeProto
 {
     /// <summary>
     /// 各部屋にあるブレイカー。BreakerSystemが降下対象を選び、プレイヤーが上げる。
-    /// レバーの見た目（子Transform）が上下し、降下中はブザー音を鳴らす。
+    /// レバーは軸で回り、上げる（入）と斜め上、落ちる（切）と斜め下を向く。降下中はブザー音を鳴らす。
     /// </summary>
     public class BreakerSwitch : MonoBehaviour, IInteractable, IPromptProvider
     {
         public string RoomId;
-        [Tooltip("レバーの見た目（上下に動かす）")]
+        [Tooltip("レバー（回転の軸に置いた親。Rotates=false の時は上下に動かす）")]
         public Transform Lever;
+        [Tooltip("レバーを軸で回す（上げる = UpAngle、落ちる = DownAngle。ユニットの Z 軸まわり）")]
+        public bool Rotates;
+        public float UpAngle = 35f;
+        public float DownAngle = 145f;
         [Tooltip("警報の音量（チュートリアルは小さめに設定される）")]
         public float AlarmVolume = 1f;
         [Tooltip("警報の可聴距離")]
@@ -23,6 +28,10 @@ namespace EscapeProto
 
         private AudioSource _alarm;
         private Vector3 _leverBase;   // レバーの基準位置（上下はここからの相対）
+        private Quaternion _leverRot0 = Quaternion.identity;
+        private bool _captured;
+        private float _angle = float.NaN;
+        private Coroutine _swing;
         private GameObject _warnLamp; // 降下中の赤い警告ランプ（見た目で判別できるように）
         private float _lastCallTime = -10f;
 
@@ -30,7 +39,7 @@ namespace EscapeProto
 
         private void Awake()
         {
-            if (Lever != null) _leverBase = Lever.localPosition;
+            Capture();
 
             // 降下中の警報音（3D・ループ）
             _alarm = gameObject.AddComponent<AudioSource>();
@@ -55,15 +64,26 @@ namespace EscapeProto
             _warnLamp.SetActive(false);
 
             // 最初の部屋のブレイカーは、必要な資料を見つけるまで静かなまま（LoopProgressが降ろす）
-            SetUp(!StartsDown, silent: true);
+            SetUp(!StartsDown, silent: true, animate: false);
         }
 
-        public void SetUp(bool up, bool silent = false)
+        /// <summary>上げる／落とす。animate=true なら表示中はレバーが倒れ込む（上げる 0.25秒、落ちる 0.12秒）</summary>
+        public void SetUp(bool up, bool silent = false, bool animate = true)
         {
             IsUp = up;
-            // 降下は大きく下げて一目で分かるように（+0.12 / -0.35）
             if (Lever != null)
-                Lever.localPosition = _leverBase + Vector3.up * (up ? 0.12f : -0.35f);
+            {
+                if (Rotates)
+                {
+                    float target = up ? UpAngle : DownAngle;
+                    if (_swing != null) { StopCoroutine(_swing); _swing = null; }
+                    if (animate && isActiveAndEnabled && !float.IsNaN(_angle))
+                        _swing = StartCoroutine(Swing(target, up ? 0.25f : 0.12f));
+                    else SetAngle(target);
+                }
+                // 旧来の見た目：降下は大きく下げて一目で分かるように（+0.12 / -0.35）
+                else { Capture(); Lever.localPosition = _leverBase + Vector3.up * (up ? 0.12f : -0.35f); }
+            }
             if (_warnLamp != null) _warnLamp.SetActive(!up);
             if (up) { if (_alarm != null && _alarm.isPlaying) _alarm.Stop(); }
             // 部屋モデルが非表示中はPlayできないため、表示時（OnEnable）にも再開する
@@ -91,6 +111,37 @@ namespace EscapeProto
             SetUp(true);
             ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 1f);
             BreakerSystem.Instance?.NotifyRaised(RoomId);
+        }
+
+        /// <summary>レバーの置かれた姿勢（回転・上下の基準）を覚える</summary>
+        private void Capture()
+        {
+            if (_captured || Lever == null) return;
+            _leverBase = Lever.localPosition;
+            _leverRot0 = Lever.localRotation;
+            _captured = true;
+        }
+
+        private void SetAngle(float a)
+        {
+            Capture();
+            _angle = a;
+            Lever.localRotation = _leverRot0 * Quaternion.Euler(0f, 0f, a);
+        }
+
+        private IEnumerator Swing(float target, float seconds)
+        {
+            float from = _angle, t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float k = Mathf.Clamp01(t / seconds);
+                SetAngle(Mathf.Lerp(from, target, k * k));   // 最後に勢いよく倒れ込む
+                yield return null;
+            }
+            SetAngle(target);
+            ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), Lever.position, 0.45f);   // ガチャン
+            _swing = null;
         }
 
         public string GetPrompt() => IsUp ? "" : "[E] ブレイカーを上げる";

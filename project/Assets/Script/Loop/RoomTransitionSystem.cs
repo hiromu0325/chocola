@@ -70,6 +70,7 @@ namespace EscapeProto
             foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == home);
             if (CorridorRoot != null) CorridorRoot.SetActive(home == null);
             LoopRooms.CurrentRoomId = home != null ? home.Id : null;
+            ReflectionProbes.RefreshActive();
         }
 
         private void Update()
@@ -107,6 +108,7 @@ namespace EscapeProto
                 LoopRooms.CurrentRoomId = tutorial.Id;
                 if (CorridorRoot != null) CorridorRoot.SetActive(false);
             }
+            ReflectionProbes.RefreshActive();
         }
 
         /// <summary>回廊の扉から部屋へ入る（exitSide=trueなら出口側の扉から入り、出口側に出現）</summary>
@@ -267,6 +269,7 @@ namespace EscapeProto
             _fade.alpha = 1f;
 
             swap();
+            ReflectionProbes.RefreshActive();                 // 着いた空間の反射を今の照明で撮り直す
             if (from != null) from.Set(0f);                   // 置いてきた扉は閉じておく
             PlacePassage(null);
             if (to != null)

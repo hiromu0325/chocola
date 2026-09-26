@@ -23,6 +23,7 @@ HW0, HD = W / 2, D / 2
 HW = HW0 - 0.075                    # 側壁の内面
 END_Z = HD - 0.5                    # 妻面（ビルダーの EndPanel の中心）
 END_FACE = END_Z - 0.05             # 妻面の室内側の面
+LEVER_PIVOT = (-0.126, 1.32, 0.0)                # 配電盤のレバーの回転軸（配電盤ユニットの座標。前 = -X）
 OPEN_W = 1.15                       # 妻面の通路の幅
 DOOR_Z, DOOR_W = 4.5, 1.3           # 側扉
 END_CLEAR = 1.5
@@ -612,8 +613,12 @@ def breaker(M, back=0.125, conduit_top=2.65):
     for y in (1.05, 1.62):
         p.append(cyl_between(f"TB_Hinge{y}", (x0 - 0.004, y - 0.03, -0.228), (x0 - 0.004, y + 0.03, -0.228), 0.006, M["sus"], 12))
     p.append(cyl_between("TB_Lock", (x0, 1.5, 0.19), (x0 - 0.012, 1.5, 0.19), 0.012, M["sus"], 16))
-    # レバーの溝（黒い縦長の穴）
-    p.append(span("TB_Slot", x0 - 0.002, x0 + 0.004, 1.0, 1.5, -0.035, 0.035, M["rubber"], 0.003))
+    # レバーの座金と溝（レバーは軸 LEVER_PIVOT で回る。上げる = 斜め上、落ちる = 斜め下）
+    py = LEVER_PIVOT[1]
+    p.append(span("TB_LeverPlate", x0 - 0.005, x0 + 0.002, py - 0.19, py + 0.19, -0.055, 0.055, M["sus"], 0.004))
+    p.append(span("TB_Slot", x0 - 0.007, x0 - 0.003, py - 0.14, py + 0.14, -0.012, 0.012, M["rubber"], 0.002))
+    for yy, key in ((py + 0.165, "lever"), (py - 0.165, "grille")):   # 上 = 入（赤）、下 = 切（黒）の目印
+        p.append(span(f"TB_Mark{key}", x0 - 0.007, x0 - 0.004, yy - 0.012, yy + 0.012, -0.03, 0.03, M[key], 0.001))
     # 天井へ上がる電線管
     p.append(pipe("TB_Conduit", [(back - 0.065, 1.75, 0.15), (back - 0.065, conduit_top, 0.15)], 0.014, M["sus"], 0.05))
     for o in p:
@@ -622,10 +627,20 @@ def breaker(M, back=0.125, conduit_top=2.65):
 
 
 def lever(M):
-    """配電盤のレバー（ビルダーの Lever 箱 0.1 x 0.22 x 0.12 の位置。前 = -X）"""
+    """配電盤のレバー（原点 = 回転の軸 LEVER_PIVOT。前 = -X）。軸から +Y へ腕が伸び、先に横向きの握り。
+    Unity 側で Z 軸まわりに回す（上げる +35度 = 斜め上、落ちる +145度 = 斜め下）"""
     p = []
-    p.append(span("TLv_Arm", -0.03, 0.05, -0.03, 0.03, -0.022, 0.022, M["sus"], 0.006))
-    p.append(span("TLv_Grip", -0.06, -0.02, -0.1, 0.1, -0.035, 0.035, M["lever"], 0.012, 4))
+    p.append(cyl_between("TLv_Hub", (0.0, 0.0, -0.042), (0.0, 0.0, 0.042), 0.026, M["sus"], 24))
+    for zs in (-1, 1):
+        p.append(cyl_between(f"TLv_HubCap{zs}", (0.0, 0.0, zs * 0.042), (0.0, 0.0, zs * 0.048), 0.018, M["sus"], 20))
+    p.append(span("TLv_Arm", -0.027, 0.003, 0.0, 0.2, -0.016, 0.016, M["sus"], 0.006))
+    p.append(cyl_between("TLv_Grip", (-0.012, 0.212, -0.068), (-0.012, 0.212, 0.068), 0.021, M["lever"], 24))
+    for zs in (-1, 1):
+        cap = lathe(f"TLv_GripEnd{zs}", (0, 0, 0), [(0.021, 0.0), (0.02, 0.006), (0.014, 0.012), (0.0, 0.014)], M["lever"], 24)
+        import mathutils
+        rot = mathutils.Euler((math.radians(90 * zs), 0, 0)).to_matrix().to_4x4()
+        cap.data.transform(mathutils.Matrix.Translation(U(-0.012, 0.212, zs * 0.068)) @ rot)
+        p.append(cap)
     for o in p:
         finish(o, 2.0, angle=40)
     return p

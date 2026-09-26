@@ -49,7 +49,7 @@ namespace EscapeProto
         // 復旧の演出
         private float _restoreStart;
         private float[] _restoreDelay;
-        private Color _darkAmbient, _ambientTarget;
+        private AmbientTrio _darkAmbient, _ambientTarget;
         private bool _ambientCaptured;
 
         private void OnDisable()
@@ -88,13 +88,13 @@ namespace EscapeProto
                 else
                 {
                     if (!_scanned) Scan();
-                    if (want == Mode.Blackout) SetAll(0f, off: true);
+                    if (want == Mode.Blackout) { SetAll(0f, off: true); ReflectionProbes.RefreshActive(); }
                 }
                 _mode = want;
             }
 
             FlickerDark = false;
-            if (_mode == Mode.Blackout) { _darkAmbient = RenderSettings.ambientLight; _ambientCaptured = true; }
+            if (_mode == Mode.Blackout) { _darkAmbient = AmbientTrio.Current; _ambientCaptured = true; }
             if (_mode == Mode.Restoring) { TickRestore(); return; }
             if (_mode != Mode.Prelude) return;
 
@@ -181,8 +181,8 @@ namespace EscapeProto
             _restoreDelay = new float[_lights.Count];
             for (int i = 0; i < _restoreDelay.Length; i++) _restoreDelay[i] = Random.Range(0f, RestoreStagger);
             // 環境光：BreakerSystem が元に戻した値を目標に、停電中の暗さから少しずつ戻す
-            _ambientTarget = RenderSettings.ambientLight;
-            if (_ambientCaptured) RenderSettings.ambientLight = _darkAmbient;
+            _ambientTarget = AmbientTrio.Current;
+            if (_ambientCaptured) _darkAmbient.Apply();
             // 器具は消えた見た目の材質のまま、発光を少しずつ強める（最後に元の材質へ戻す）
             foreach (var (r, slot, on, off) in _fixtures)
                 if (off != null && on != null && on.IsKeywordEnabled("_EMISSION")) off.EnableKeyword("_EMISSION");
@@ -218,7 +218,7 @@ namespace EscapeProto
             }
             // 環境光
             float a = Mathf.SmoothStep(0f, 1f, t / (RestoreStagger + RestoreBlink + RestoreRamp));
-            if (_ambientCaptured) RenderSettings.ambientLight = Color.Lerp(_darkAmbient, _ambientTarget, a);
+            if (_ambientCaptured) AmbientTrio.Lerp(_darkAmbient, _ambientTarget, a).Apply();
 
             if (t >= RestoreStagger + RestoreBlink + RestoreRamp)
             {
@@ -231,8 +231,9 @@ namespace EscapeProto
         /// <summary>復旧の演出を終える（途中で次の襲撃が来た時も）。明かりを完全に戻し、消えた器具の材質を元に戻す</summary>
         private void FinishRestore()
         {
-            if (_ambientCaptured) RenderSettings.ambientLight = _ambientTarget;
+            if (_ambientCaptured) _ambientTarget.Apply();
             _ambientCaptured = false;
+            ReflectionProbes.RefreshActive();   // 明かりが戻った部屋を映し直す
             SetAll(1f, off: false);
             foreach (var off in _offCache.Values)
             {
