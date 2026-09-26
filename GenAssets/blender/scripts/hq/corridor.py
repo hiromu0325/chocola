@@ -182,16 +182,19 @@ def shell(M):
         put([span(f"CS_Floor{k}", -a, a, -0.1, 0.0, I - WALL_T, O, M["floor"], 0)], yaw, 0.85, rot90=(k % 2 == 1))
         put([span(f"CS_Ceil{k}", -a, a, H, H + 0.1, I - WALL_T, O, M["ceil"], 0)], yaw, 1.0)
         # 外周の壁
-        put([span(f"CS_WallOut{k}", -O, O, 0, H, OF, O + 0.075, M["plaster"], 0)], yaw, 1.0)
+        wo = O if k % 2 == 0 else OF                     # 東西の壁は南北の壁の内面で止める（角で重ねない）
+        put([span(f"CS_WallOut{k}", -wo, wo, 0, H, OF, O + 0.075, M["plaster"], 0)], yaw, 1.0)
         # 内周の壁（扉の開口を避けて柱と欄間に分ける）
-        edges = [-I] + [e for c in DOOR_S for e in (c - OPEN_HALF, c + OPEN_HALF)] + [I]
+        ie = I if k % 2 == 0 else I - WALL_T               # 東西の辺は南北の辺の柱（角）に重ねない
+        edges = [-ie] + [e for c in DOOR_S for e in (c - OPEN_HALF, c + OPEN_HALF)] + [ie]
         piers = [span(f"CS_Pier{k}_{i}", edges[2 * i], edges[2 * i + 1], 0, H, I - WALL_T, I, M["plaster"], 0.003)
                  for i in range(len(edges) // 2)]
         heads = [span(f"CS_Head{k}_{i}", c - OPEN_HALF, c + OPEN_HALF, OPEN_H, H, I - WALL_T, I, M["plaster"], 0)
                  for i, c in enumerate(DOOR_S)]
         put(piers + heads, yaw, 1.0)
         # 内周の幅木（扉の台輪の間だけ。角では隣の辺と突き合わせる）
-        cuts = [-I - 0.02] + [e for c in DOOR_S for e in (c - 0.61, c + 0.61)] + [I + 0.02]
+        be = I + 0.02 if k % 2 == 0 else I - 0.005         # 外角は南北の幅木を回し、東西は突き付けて重ねない
+        cuts = [-be] + [e for c in DOOR_S for e in (c - 0.61, c + 0.61)] + [be]
         bases = [extrude(f"CS_BaseIn{k}_{i}", BASE_PROF, cuts[2 * i], cuts[2 * i + 1],
                          lambda d, y, t: (t, y, I + d), M["trim"]) for i in range(len(cuts) // 2)]
         put(bases, yaw, 1.0)
@@ -230,7 +233,7 @@ def shell(M):
             for (y0, y1, d, m) in ((0.0, 0.13, 0.02, M["trim"]), (0.855, 0.93, 0.04, M["wains"]), (H - 0.15, H, 0.05, M["trim"])):
                 post.append(span(f"CS_PostB{sx}{sz}{y0}", *sorted((sx * (f - d), sx * f)), y0, y1,
                                  *sorted((sz * (f - d), sz * OF)), m, 0.003))
-                post.append(span(f"CS_PostC{sx}{sz}{y0}", *sorted((sx * (f - d), sx * OF)), y0, y1,
+                post.append(span(f"CS_PostC{sx}{sz}{y0}", *sorted((sx * f, sx * OF)), y0, y1,
                                  *sorted((sz * (f - d), sz * f)), m, 0.003))
             put(post)
 
@@ -261,16 +264,16 @@ CORNICE_PROF = [(0.0, -0.002), (0.0, 0.03), (0.012, 0.034), (0.026, 0.046), (0.0
 def door_frame(M):
     p, vert = [], []
     t0 = -WALL_T
-    vert += [span("DF_JambL", -OPEN_HALF, -0.47, 0, OPEN_H, t0, 0.0, M["trim"], 0.002),
-             span("DF_JambR", 0.47, OPEN_HALF, 0, OPEN_H, t0, 0.0, M["trim"], 0.002)]
+    vert += [span("DF_JambL", -OPEN_HALF, -0.47, 0.016, 2.15, t0, 0.0, M["trim"], 0.002),       # 沓摺と上枠の間
+             span("DF_JambR", 0.47, OPEN_HALF, 0.016, 2.15, t0, 0.0, M["trim"], 0.002)]
     p.append(span("DF_Head", -OPEN_HALF, OPEN_HALF, 2.15, OPEN_H, t0, 0.0, M["trim"], 0.002))
     # 戸当たり（回廊側。扉は奥へ押して開き、閉じると戸当たりに当たって止まる）
-    vert += [span("DF_StopL", -0.47, -0.448, 0, 2.15, -0.0375, -0.012, M["trim"], 0.002),
-             span("DF_StopR", 0.448, 0.47, 0, 2.15, -0.0375, -0.012, M["trim"], 0.002)]
+    vert += [span("DF_StopL", -0.47, -0.448, 0.016, 2.115, -0.0375, -0.012, M["trim"], 0.002),  # 上の戸当たりの下まで
+             span("DF_StopR", 0.448, 0.47, 0.016, 2.115, -0.0375, -0.012, M["trim"], 0.002)]
     p.append(span("DF_StopT", -0.47, 0.47, 2.115, 2.15, -0.0375, -0.012, M["trim"], 0.002))
     # 額縁（両脇は台輪の上から、上は突き付けで重ねて留めに見せる）
     for sx in (-1, 1):
-        vert.append(extrude(f"DF_Casing{sx}", CASING_PROF, 0.2, 2.28,
+        vert.append(extrude(f"DF_Casing{sx}", CASING_PROF, 0.2, OPEN_H,                  # 上の額縁の下まで（重ねない）
                             lambda u, d, y, sx=sx: (sx * (OPEN_HALF + u), y, d), M["trim"]))
         p.append(span(f"DF_Plinth{sx}", *sorted((sx * 0.49, sx * 0.615)), 0.0, 0.2, 0.0, 0.036, M["trim"], 0.004))
     p.append(extrude("DF_CasingT", CASING_PROF, -0.6, 0.6, lambda u, d, x: (x, OPEN_H + u, d), M["trim"]))
@@ -366,8 +369,9 @@ def hallway(M):
             finish(o, uv, rot90=rot90)
         p.extend(objs)
 
-    put([span("HW_Floor", -hw - 0.08, hw + 0.08, -0.08, 0.0, -L - 0.1, zf, M["oldfloor"], 0)], 0.85, rot90=True)
-    put([span("HW_Ceil", -hw - 0.08, hw + 0.08, h, h + 0.06, -L - 0.1, zf, M["oldceil"], 0)], 1.0)
+    # 床は3mm下げる（扉の下で部屋・回廊の床と重なる所が、同じ高さでちらつかないように）
+    put([span("HW_Floor", -hw - 0.07, hw + 0.07, -0.083, -0.003, -L - 0.1, zf, M["oldfloor"], 0)], 0.85, rot90=True)
+    put([span("HW_Ceil", -hw - 0.07, hw + 0.07, h, h + 0.06, -L - 0.1, zf, M["oldceil"], 0)], 1.0)
     for s in (-1, 1):
         put([span(f"HW_Wall{s}", *sorted((s * hw, s * (hw + 0.08))), 0.0, h + 0.03, -L - 0.1, zf, M["oldwall"], 0)], 0.4)
         # 腰壁（鏡板は省き、框と板だけの簡素なもの）
@@ -389,7 +393,7 @@ def hallway(M):
     for s, zc in SIDE_DOORS.items():
         side = []
         for sz in (-1, 1):
-            side.append(span(f"HW_SCasing{s}{sz}", *sorted((s * (hw - 0.045), s * hw)), 0.0, 2.2,
+            side.append(span(f"HW_SCasing{s}{sz}", *sorted((s * (hw - 0.045), s * hw)), 0.0, 2.1,
                              *sorted((zc + sz * 0.49, zc + sz * 0.6)), M["oldwains"], 0.004))
         side.append(span(f"HW_SCasingT{s}", *sorted((s * (hw - 0.045), s * hw)), 2.1, 2.2, zc - 0.6, zc + 0.6, M["oldwains"], 0.004))
         side.append(span(f"HW_SLeaf{s}", *sorted((s * (hw - 0.03), s * (hw - 0.005))), 0.02, 2.1, zc - 0.47, zc + 0.47,
