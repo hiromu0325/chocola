@@ -9,6 +9,7 @@ namespace EscapeProto
     /// 砂嵐は照明に左右されない発光（Unlit）なので、暗転した部屋で画面だけがざらざらと光る。
     /// 停電中だけ、画面の位置から砂嵐の音（3D）も鳴る。音源は画面の子に置くので、
     /// 表示中の部屋の画面だけが鳴る（近くに並ぶ画面は1つの音源にまとめる）。
+    /// 降下の予兆の間は、照明のちらつき（OutageLighting.FlickerDark）に合わせて画面が一瞬ずつ砂嵐に乱れる。
     /// ※クラス名とファイル名の一致が必須（シーン保存時のスクリプト解決）
     /// </summary>
     public class ScreenStaticOnOutage : MonoBehaviour
@@ -37,7 +38,10 @@ namespace EscapeProto
         private const float MergeDistance = 2.0f;
         private Material _mat;
         private Texture2D _noise;
-        private bool _on;
+        private bool _on;          // 停電中（砂嵐＋音）
+        private bool _prelude;     // 予兆中（ちらつき）
+        private bool _showing;     // 今、画面が砂嵐になっているか
+        private bool _scanned;
         private float _next;
 
         public bool IsOn => _on;
@@ -59,12 +63,21 @@ namespace EscapeProto
         {
             var bs = BreakerSystem.Instance;
             bool down = bs != null && bs.DownRoomId != null;
+            bool prelude = !down && bs != null && bs.PendingRoomId != null;
             if (down != _on)
             {
-                if (down) Apply(); else Restore();
+                if (down) { Show(true); SpawnHiss(); }
+                else Restore();
                 _on = down;
             }
-            if (!_on || _mat == null || Time.time < _next) return;
+            if (prelude != _prelude)
+            {
+                _prelude = prelude;
+                if (!prelude && !_on) Restore();
+            }
+            // 予兆：照明が落ちた瞬間だけ画面が乱れる
+            if (_prelude && !_on) Show(OutageLighting.FlickerDark);
+            if (!_showing || _mat == null || Time.time < _next) return;
             // 毎コマ模様の位置を跳ばして「ざらざら動く」砂嵐にする。明るさも細かく揺らす
             _next = Time.time + 1f / 30f;
             _mat.mainTextureOffset = new Vector2(Random.value, Random.value);
@@ -72,40 +85,44 @@ namespace EscapeProto
             _mat.color = new Color(b, b, b * 1.02f);
         }
 
-        /// <summary>全部屋（非表示の部屋も含む）の画面を砂嵐に差し替える</summary>
-        private void Apply()
+        /// <summary>全部屋（非表示の部屋も含む）の画面を拾う（予兆〜停電の間は同じ一覧を使う）</summary>
+        private void Scan()
         {
-            if (!EnsureMaterial()) return;
             _swapped.Clear();
             foreach (var r in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 var mats = r.sharedMaterials;
-                bool any = false;
                 for (int i = 0; i < mats.Length; i++)
-                {
-                    if (!IsScreen(mats[i])) continue;
-                    _swapped.Add((r, i, mats[i]));
-                    mats[i] = _mat;
-                    any = true;
-                }
-                if (any) r.sharedMaterials = mats;
+                    if (IsScreen(mats[i])) _swapped.Add((r, i, mats[i]));
             }
-            SpawnHiss();
-            AttackDebugLog.Log("static", $"停電：画面{_swapped.Count}枚を砂嵐に");
+            _scanned = true;
         }
 
-        /// <summary>元の画面に戻す（途中で別の材質に替わった画面はそのまま）</summary>
-        private void Restore()
+        /// <summary>画面を砂嵐にする（true）／元の画面に戻す（false）</summary>
+        private void Show(bool on)
         {
+            if (on == _showing) return;
+            if (!EnsureMaterial()) return;
+            if (!_scanned) Scan();
             foreach (var (r, slot, orig) in _swapped)
             {
                 if (r == null) continue;
                 var mats = r.sharedMaterials;
-                if (slot >= mats.Length || mats[slot] != _mat) continue;
-                mats[slot] = orig;
+                if (slot >= mats.Length) continue;
+                // 戻す時は、途中で別の材質に替わった画面には触らない
+                if (!on && mats[slot] != _mat) continue;
+                mats[slot] = on ? _mat : orig;
                 r.sharedMaterials = mats;
             }
+            _showing = on;
+        }
+
+        /// <summary>元の画面に戻し、砂嵐の音を止める</summary>
+        private void Restore()
+        {
+            Show(false);
             _swapped.Clear();
+            _scanned = false;
             foreach (var go in _hiss) if (go != null) Destroy(go);
             _hiss.Clear();
         }
@@ -113,6 +130,7 @@ namespace EscapeProto
         /// <summary>画面ごと（近いものはまとめて）に砂嵐の音源を置く</summary>
         private void SpawnHiss()
         {
+            AttackDebugLog.Log("static", $"停電：画面{_swapped.Count}枚を砂嵐に");
             var placed = new List<(Transform room, Vector3 pos)>();
             var clip = ProceduralAudio.StaticHiss();
             foreach (var (r, slot, _) in _swapped)

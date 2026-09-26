@@ -112,7 +112,9 @@ namespace EscapeProto
 
                 if (StoryScript.AttackOnComplete.TryGetValue(room.Id, out var target))
                 {
-                    yield return new WaitForSeconds(0.5f);
+                    // 降下の前に予兆（照明とモニターのちらつき）が入るので、落ちるまで待つ
+                    yield return WaitUntil(() => bs != null && bs.DownRoomId != null,
+                        BreakerSystem.PreludeSeconds + 2f, "scripted drop");
                     if (bs == null || bs.DownRoomId != target)
                         Log($"FAIL: 脚本襲撃が起きていない（期待={target} 実際={bs?.DownRoomId ?? "-"}）");
                     else

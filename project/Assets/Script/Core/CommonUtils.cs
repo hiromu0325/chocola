@@ -350,6 +350,45 @@ namespace EscapeProto
             return _doorRattle;
         }
 
+        private static AudioClip _powerSurge;
+
+        /// <summary>
+        /// 停電の予兆（約3.4秒）。蛍光灯の安定器のようなブーンという唸りが強まり、
+        /// バチバチと火花が混じって途切れ途切れになり、最後にブレイカーが落ちる「ガチン」で消える
+        /// </summary>
+        public static AudioClip PowerSurge()
+        {
+            if (_powerSurge != null) return _powerSurge;
+            const float trip = 3.18f;
+            float gate = 1f, gateTimer = 0f;
+            _powerSurge = Generate("powersurge", 3.4f, (t, dur) =>
+            {
+                if (t >= trip)
+                {
+                    float u = t - trip;   // ブレイカーが落ちる音（重い打撃＋金属音）
+                    return Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(80f, 40f, u / 0.2f) * u) * Mathf.Exp(-14f * u) * 0.9f
+                         + LatchClick(t, trip, 0.7f);
+                }
+                float k = t / trip;
+                // 途切れ（照明のちらつきに合わせて、終わりに近いほど頻繁に落ちる）
+                gateTimer -= 1f / SampleRate;
+                if (gateTimer <= 0f)
+                {
+                    gateTimer = Random.Range(0.03f, 0.12f);
+                    gate = Random.value < Mathf.Lerp(0.08f, 0.55f, k) ? 0.15f : 1f;
+                }
+                float ph = t * 50f;
+                float buzz = Mathf.Sign(Mathf.Sin(2f * Mathf.PI * ph)) * 0.25f
+                           + Mathf.Sin(2f * Mathf.PI * ph * 2f) * 0.35f
+                           + Mathf.Sin(2f * Mathf.PI * ph * 3f) * 0.15f;
+                float crackle = Random.value < Mathf.Lerp(0.0004f, 0.004f, k) ? (Random.value * 2f - 1f) : 0f;
+                float hiss = (Random.value * 2f - 1f) * 0.05f * k;
+                float env = Mathf.Lerp(0.15f, 0.55f, k * k) * Mathf.Clamp01(t * 6f);
+                return (buzz * gate + hiss) * env + crackle * 0.6f;
+            });
+            return _powerSurge;
+        }
+
         private delegate float SampleFunc(float time, float duration);
 
         private static AudioClip Generate(string name, float duration, SampleFunc func)

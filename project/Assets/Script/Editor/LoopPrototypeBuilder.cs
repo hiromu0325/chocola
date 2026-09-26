@@ -269,6 +269,35 @@ namespace EscapeProto
                                           new Color(1f, 0.72f, 0.38f) * 2.4f);
                 signal.AlarmMaterial = HqLit("COR_SignalAlarm", new Color(0.9f, 0.2f, 0.15f), 0.85f, 0f, null, null, 1f,
                                              new Color(1f, 0.12f, 0.08f) * 2.8f);
+                // 部屋へ入れるようになると、扉板がその部屋の入口の扉（外側の面を回廊へ向けたもの）に変わる。
+                // 電車の車端扉は引き戸で、このままでは枠からはみ出すので今は回廊の扉のまま（扱いは後で決める）
+                if (!string.IsNullOrEmpty(roomId) && roomId != "train"
+                    && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel(roomId, "Door")) != null)
+                {
+                    var h = RoomDoorHinge(roomId);
+                    float t = Mathf.Max(0.02f, h.pivot.z);            // 扉板の厚みの半分
+                    float zc = -0.0375f - t;                            // 表の面を戸当たりの裏に合わせる
+                    // 部屋の扉のモデルは180度回して置くので、吊り元の左右が入れ替わる（押して奥へ開く）
+                    var pivot = new Vector3(-h.pivot.x, 0f, zc - t - 0.004f);
+                    var roomLeaf = new GameObject("RoomLeaf").transform;
+                    roomLeaf.SetParent(ut, false);
+                    roomLeaf.localPosition = pivot;
+                    Visual(roomLeaf, HqModel(roomId, "Door"), new Vector3(0f, 0.02f, zc) - pivot, 180f);
+                    // 窓のある扉から奥（中央の塊の中）が抜けて見えないよう、扉板の厚みの中に黒い芯を入れる
+                    var core = Box(roomLeaf, "Core", new Vector3(0f, 1.07f, zc) - pivot,
+                                   new Vector3(0.88f, 2.06f, 0.004f), UnlitMat("COR_Void", Color.black));
+                    Object.DestroyImmediate(core.GetComponent<Collider>());
+                    core.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    roomLeaf.gameObject.SetActive(false);
+                    var look = unit.AddComponent<DoorLook>();
+                    look.RoomId = roomId;
+                    look.Swing = swing;
+                    look.CorridorLeaf = leaf.gameObject;
+                    look.CorridorAngle = swing.OpenAngle;
+                    look.RoomLeaf = roomLeaf.gameObject;
+                    look.RoomAngle = pivot.x > 0f ? -80f : 80f;
+                }
+
                 var hqDoor = unit.AddComponent<LoopDoor>();
                 hqDoor.RoomId = roomId ?? "";
                 hqDoor.ExitSide = exitSide;
@@ -3275,6 +3304,7 @@ namespace EscapeProto
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f; cc.radius = 0.3f; cc.center = new Vector3(0f, 0.93f, 0f);
             cc.stepOffset = 0.35f;
+            cc.minMoveDistance = 0f;   // 高fpsで歩き出しの小さな移動が捨てられて動き出せない問題を防ぐ
 
             var inputs = player.AddComponent<StarterAssetsInputs>();
             inputs.cursorLocked = true; inputs.cursorInputForLook = true;
@@ -3352,6 +3382,8 @@ namespace EscapeProto
             var passage = corridor.transform.Find("Passage");
             rts.CorridorPassage = passage != null ? passage.gameObject : null;
 
+            // 襲撃：降下の予兆で照明がちらつき、降下中は部屋と回廊の照明が消える
+            New(root, "OutageLighting").AddComponent<OutageLighting>();
             // ブレイカー停止中は全部屋のPC・モニターの画面が砂嵐になる
             New(root, "ScreenStatic").AddComponent<ScreenStaticOnOutage>().StaticMaterial =
                 UnlitMat("LP_ScreenStatic", Color.white);

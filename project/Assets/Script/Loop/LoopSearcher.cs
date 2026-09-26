@@ -17,10 +17,16 @@ namespace EscapeProto
     /// ・プレイヤーが部屋に居れば、少し間を置いてその部屋へ「入ってくる」
     ///   （進行度で入れない部屋・最初の部屋には入らない）
     /// ・ブレイカー復旧で最寄りの扉へ向かい、到達すると消える
+    ///
+    /// [扉]
+    /// 部屋へ入る時は入口の扉を開け、扉の外の暗い廊下から踏み込んできて、背後で扉が閉まる。
+    /// 部屋から去る時も扉を開けて暗い廊下へ消え、扉が閉まる。回廊に現れる時は、回廊の扉の奥で
+    /// 少し待ってから扉を開けて出てくる（出入りしたばかりのプレイヤーの目の前に即座には現れない）。
+    /// プレイヤーが扉を出入りしている最中は捕まえない（RoomTransitionSystem.PlayerProtected）。
     /// </summary>
     public class LoopSearcher : MonoBehaviour
     {
-        private enum State { Roam, InspectDoor, ChaseCorridor, InRoom, Retreat, Entering, Leaving }
+        private enum State { Roam, InspectDoor, ChaseCorridor, InRoom, Retreat, Entering, Leaving, Emerging }
 
         private const float RoamSpeed = 1.7f;
         private const float ChaseSpeed = 3.2f;
@@ -28,8 +34,16 @@ namespace EscapeProto
         private const float SightRange = 11f;
         /// <summary>プレイヤーが部屋に入ってから襲撃者が追って入室するまでの猶予</summary>
         private const float EnterRoomDelay = 6f;
-        /// <summary>入場演出：扉が開いてから踏み出しきるまでの秒数（この間は追ってこない）</summary>
-        private const float EnterMotionSeconds = 2.6f;
+        /// <summary>入場演出：扉が開き、暗い廊下から踏み込み、扉が閉まるまでの秒数（この間は追ってこない）</summary>
+        private const float EnterMotionSeconds = 3.2f;
+        /// <summary>扉を開けきるまでの秒数（襲撃者の出入り）</summary>
+        private const float DoorOpenSeconds = 0.6f;
+        /// <summary>扉を閉めきるまでの秒数（襲撃者の出入り）</summary>
+        private const float DoorCloseSeconds = 0.75f;
+        /// <summary>襲撃者が開ける扉の開き具合</summary>
+        private const float DoorOpenAmount = 0.9f;
+        /// <summary>回廊の扉の奥で待ってから出てくるまでの秒数（出入りしたプレイヤーが逃げる猶予）</summary>
+        private const float EmergeDelay = 2.5f;
         /// <summary>入場演出で扉から室内へ踏み込む距離</summary>
         private const float EnterStrideDistance = 1.6f;
         /// <summary>退場演出：扉をくぐって消えるまでの秒数</summary>
@@ -56,6 +70,12 @@ namespace EscapeProto
         private float _stepTimer;
         private Vector3 _enterFrom, _enterTo, _enterDir;
         private bool _leaveThenVanish;   // 退場演出のあと消滅する（ブレイカー復旧時）
+        // 扉の出入り
+        private DoorSwing _door;         // 今この襲撃者が動かしている扉
+        private bool _doorPassage;       // 回廊の扉の裏に暗い廊下を出しているか
+        private bool _kinematic;         // 扉をくぐる間は当たり判定を切って直接動かす
+        private int _leavePhase;         // 退場：0=扉の手前へ歩く 1=扉を開ける 2=くぐる 3=扉を閉める
+        private Vector3 _leaveStand;
 
         private static float C => (LoopCorridorLayout.InnerHalf + LoopCorridorLayout.OuterHalf) * 0.5f;
 
@@ -92,6 +112,12 @@ namespace EscapeProto
         /// <summary>ブレイカー復旧：最寄りの扉へ向かい退場する</summary>
         public void Retreat()
         {
+            if (_state == State.Emerging)
+            {
+                AttackDebugLog.Log("searcher", "退場指示: 回廊の扉の奥から出てくる前に消滅 " + DebugBrief());
+                Destroy(gameObject);
+                return;
+            }
             if (_space != null)
             {
                 // 同じ部屋にプレイヤーが居るなら、消える前に扉へ引き返す姿を見せる
@@ -106,6 +132,8 @@ namespace EscapeProto
                 return;
             }
             AttackDebugLog.Log("searcher", "退場指示: 扉へ歩き出す " + DebugBrief());
+            SetKinematic(false);
+            ReleaseDoor();
             _state = State.Retreat;
             _retreatTimer = 0f;
         }
@@ -129,8 +157,9 @@ namespace EscapeProto
                     return;
                 }
                 // 演出中に見られなくなったら、演出を見せる意味がないので即座に決着させる
+                if (_state == State.Emerging) { FinishEmerging(); return; }
                 if (_state == State.Leaving) { FinishLeaving(); return; }
-                if (_state == State.Entering) { _state = State.InRoom; }
+                if (_state == State.Entering) { SetKinematic(false); ReleaseDoor(); _state = State.InRoom; }
                 // 部屋に入っていた襲撃者は、プレイヤーが出たら回廊へ戻る
                 if (_space != null) FinishLeaving();
                 else TickWaitToEnterRoom();   // 回廊で待機しつつ、入室の機を伺う
@@ -177,7 +206,13 @@ namespace EscapeProto
                 case State.Entering: TickEntering(); break;
                 case State.Leaving: TickLeaving(); break;
                 case State.Retreat: TickRetreat(); break;
+                case State.Emerging: TickEmerging(); break;
             }
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseDoor();
         }
 
         // ============= 空間の切替 =============
@@ -187,7 +222,53 @@ namespace EscapeProto
             _frozen = frozen;
             foreach (var r in _renderers) if (r != null) r.enabled = !frozen;
             foreach (var l in _lights) if (l != null) l.enabled = !frozen;
-            if (_cc != null) _cc.enabled = !frozen;   // 凍結中は重力も当たりも止める
+            if (_cc != null) _cc.enabled = !frozen && !_kinematic;   // 凍結中は重力も当たりも止める
+        }
+
+        /// <summary>扉をくぐる間は当たり判定を切り、位置を直接動かす（扉の外の廊下には床が無い）</summary>
+        private void SetKinematic(bool on)
+        {
+            _kinematic = on;
+            if (_cc != null) _cc.enabled = !on && !_frozen;
+        }
+
+        private static bool PlayerBusy => RoomTransitionSystem.Instance != null && RoomTransitionSystem.Instance.IsBusy;
+
+        /// <summary>扉の開き具合を変える（プレイヤーが出入りしている最中は、そちらの演出に任せる）</summary>
+        private void DriveDoor(float open01)
+        {
+            if (_door != null && !PlayerBusy) _door.Set(open01);
+        }
+
+        /// <summary>動かしていた扉を閉じた姿勢に戻して手放す（回廊の扉の裏の暗い廊下も片付ける）</summary>
+        private void ReleaseDoor()
+        {
+            if (_door != null && !PlayerBusy) _door.Set(0f);
+            if (_doorPassage && RoomTransitionSystem.Instance != null) RoomTransitionSystem.Instance.HidePassageFor(_door);
+            _doorPassage = false;
+            _door = null;
+        }
+
+        private void DoorSound(bool open)
+        {
+            if (_door == null) return;
+            Vector3 at = _door.transform.position + Vector3.up * 1.0f;
+            if (open)
+            {
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), at, 0.8f);
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorCreak(), at, 0.6f);
+            }
+            else ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), at, 0.85f);
+        }
+
+        private static float EaseOut(float x) { x = Mathf.Clamp01(x); return 1f - (1f - x) * (1f - x); }
+        private static float EaseIn(float x) { x = Mathf.Clamp01(x); return x * x; }
+
+        /// <summary>扉の手前・奥の水平な向き（扉のユニットの +Z）</summary>
+        private static Vector3 Flat(Vector3 v)
+        {
+            v.y = 0f;
+            return v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.forward;
         }
 
         /// <summary>回廊に居るとき：プレイヤーが入った部屋へ追って入室する</summary>
@@ -205,6 +286,8 @@ namespace EscapeProto
 
             var room = LoopRooms.Get(playerRoom);
             if (room == null) return;
+            // プレイヤーが扉を出入りしている最中は、扉の取り合いになるので待つ
+            if (PlayerBusy) return;
             Vector3 spawn = room.EntrySpawn != null ? room.EntrySpawn.position : room.transform.position;
             AttackDebugLog.Log("searcher", $"プレイヤーの部屋（{playerRoom}）へ入室開始 " + DebugBrief());
             _space = playerRoom;
@@ -214,19 +297,33 @@ namespace EscapeProto
 
             // ---- 入場演出 ----
             // いきなり部屋の中に現れて追ってくると避けようがないので、
-            // 扉の位置から室内へゆっくり踏み出す時間を挟む（この間は追跡しない）。
-            // 扉→部屋の奥へ向かうベクトルを進入方向とする
-            Vector3 inward = room.transform.position - spawn;
-            inward.y = 0f;
-            _enterFrom = spawn;
-            _enterDir = inward.sqrMagnitude > 0.01f ? inward.normalized : room.transform.forward;
-            _enterTo = _enterFrom + _enterDir * EnterStrideDistance;
+            // 入口の扉が開き、扉の外の暗い廊下から室内へ踏み込み、背後で扉が閉まるまでは追跡しない
+            _door = RoomTransitionSystem.Instance != null ? RoomTransitionSystem.Instance.RoomDoorSwing(playerRoom, false) : null;
+            if (_door != null)
+            {
+                Vector3 inward = Flat(_door.transform.forward);       // 扉のユニットの +Z = 室内
+                Vector3 doorBase = _door.transform.position;
+                doorBase.y = spawn.y;
+                _enterDir = inward;
+                _enterFrom = doorBase - inward * 0.8f;                 // 扉の外の暗い廊下
+                _enterTo = spawn + inward * (EnterStrideDistance - 0.4f);
+                DoorSound(true);
+            }
+            else
+            {
+                Vector3 inward = room.transform.position - spawn;
+                inward.y = 0f;
+                _enterDir = inward.sqrMagnitude > 0.01f ? inward.normalized : room.transform.forward;
+                _enterFrom = spawn;
+                _enterTo = _enterFrom + _enterDir * EnterStrideDistance;
+                ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), spawn, 0.6f);
+            }
             _motionTimer = 0f;
             _state = State.Entering;
 
             Teleport(_enterFrom);
+            SetKinematic(true);
             transform.rotation = Quaternion.LookRotation(_enterDir);
-            ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), spawn, 0.6f);   // 扉が開く音
         }
 
         /// <summary>
@@ -236,12 +333,24 @@ namespace EscapeProto
         private void TickEntering()
         {
             _motionTimer += Time.deltaTime;
-            float k = Mathf.Clamp01(_motionTimer / EnterMotionSeconds);
+            float t = _motionTimer;
 
-            // 前半は扉の影で立ち止まり、後半でゆっくり踏み出す
-            float stride = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.35f, 1f, k));
+            // 扉：開く → 開いたまま踏み込むのを待つ → 背後で閉まる
+            const float closeAt = 1.95f;
+            if (_door != null)
+            {
+                float open = t < DoorOpenSeconds ? EaseOut(t / DoorOpenSeconds)
+                           : t < closeAt ? 1f
+                           : 1f - EaseIn((t - closeAt) / DoorCloseSeconds);
+                DriveDoor(open * DoorOpenAmount);
+                if (t >= closeAt + DoorCloseSeconds) { DoorSound(false); ReleaseDoor(); }
+            }
+
+            // 扉が開ききってから、暗い廊下の奥からゆっくり踏み込む
+            float stride = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(DoorOpenSeconds + 0.1f, 2.7f, t));
             Vector3 target = Vector3.Lerp(_enterFrom, _enterTo, stride);
-            if (_cc != null && _cc.enabled)
+            if (_kinematic) transform.position = target;
+            else if (_cc != null && _cc.enabled)
             {
                 Vector3 delta = target - transform.position;
                 delta.y = 0f;
@@ -259,6 +368,8 @@ namespace EscapeProto
             if (_motionTimer >= EnterMotionSeconds)
             {
                 AttackDebugLog.Log("searcher", "入場演出おわり → 追跡開始 " + DebugBrief());
+                if (_door != null) { DoorSound(false); ReleaseDoor(); }
+                SetKinematic(false);
                 _state = State.InRoom;
             }
         }
@@ -267,6 +378,7 @@ namespace EscapeProto
         private void TickLeaving()
         {
             _motionTimer += Time.deltaTime;
+            if (_door != null) { TickLeavingThroughDoor(); return; }
             float k = Mathf.Clamp01(_motionTimer / LeaveMotionSeconds);
             Vector3 target = Vector3.Lerp(_enterFrom, _enterTo, Mathf.SmoothStep(0f, 1f, k));
             if (_cc != null && _cc.enabled)
@@ -276,6 +388,50 @@ namespace EscapeProto
                 _cc.Move(delta + Vector3.down * 4f * Time.deltaTime);
             }
             if (_motionTimer >= LeaveMotionSeconds) FinishLeaving();
+        }
+
+        private void TickLeavingThroughDoor()
+        {
+            switch (_leavePhase)
+            {
+                case 0:   // 扉の手前（扉板が当たらない所）まで歩く
+                    if (MoveTowards(_leaveStand, RoamSpeed * 1.2f) < 0.25f || _motionTimer > 3f)
+                    {
+                        _leavePhase = 1;
+                        _motionTimer = 0f;
+                        DoorSound(true);
+                    }
+                    break;
+                case 1:   // 扉を開ける
+                    Face(_door.transform.position);
+                    DriveDoor(EaseOut(_motionTimer / DoorOpenSeconds) * DoorOpenAmount);
+                    if (_motionTimer >= DoorOpenSeconds)
+                    {
+                        _leavePhase = 2;
+                        _motionTimer = 0f;
+                        _enterFrom = transform.position;
+                        SetKinematic(true);
+                    }
+                    break;
+                case 2:   // くぐって暗い廊下の奥へ
+                {
+                    float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_motionTimer / 1.2f));
+                    transform.position = Vector3.Lerp(_enterFrom, _enterTo, k);
+                    Face(_enterTo + (_enterTo - _enterFrom));
+                    if (_motionTimer >= 1.2f) { _leavePhase = 3; _motionTimer = 0f; }
+                    break;
+                }
+                default:  // 扉を閉める
+                    DriveDoor((1f - EaseIn(_motionTimer / DoorCloseSeconds)) * DoorOpenAmount);
+                    if (_motionTimer >= DoorCloseSeconds)
+                    {
+                        DoorSound(false);
+                        ReleaseDoor();
+                        SetKinematic(false);
+                        FinishLeaving();
+                    }
+                    break;
+            }
         }
 
         /// <summary>退場演出の完了：回廊へ実際に戻す（プレイヤーが先に出た場合もここへ来る）</summary>
@@ -289,6 +445,8 @@ namespace EscapeProto
                 return;
             }
             var room = LoopRooms.Get(_space);
+            ReleaseDoor();
+            SetKinematic(false);
             _space = null;
             _state = State.Roam;
             _decideTimer = Random.Range(4f, 8f);
@@ -296,8 +454,85 @@ namespace EscapeProto
             {
                 SetFrozen(LoopRooms.CurrentRoomId != null);
                 Teleport(LoopCorridorLayout.DoorFrontPosition(room.Side, room.Slot));
+                // プレイヤーが回廊に出た（＝追って出てくる）なら、扉の奥で少し待ってから扉を開けて出てくる
+                if (LoopRooms.InCorridor) EmergeFromRoomDoor(room.Id, EmergeDelay);
             }
             AttackDebugLog.Log("searcher", "退場演出おわり → 回廊へ " + DebugBrief());
+        }
+
+        // ============= 回廊の扉から出てくる =============
+
+        /// <summary>
+        /// 部屋に通じる回廊の扉の奥（暗い廊下）で delay 秒待ち、扉を開けて回廊へ出てくる。
+        /// プレイヤーが回廊に居ない時は演出を省いて扉の前に立つ
+        /// </summary>
+        public void EmergeFromRoomDoor(string roomId, float delay)
+        {
+            var rts = RoomTransitionSystem.Instance;
+            var door = rts != null ? rts.CorridorDoorSwing(roomId, false) : null;
+            if (door == null) return;
+            ReleaseDoor();
+            _door = door;
+            Vector3 fwd = Flat(door.transform.forward);               // 回廊の扉のユニットの +Z = 回廊側
+            Vector3 doorBase = door.transform.position;
+            _enterFrom = doorBase - fwd * 1.3f;                         // 扉の奥の暗い廊下
+            _enterTo = doorBase + fwd * 1.1f;                           // 扉の前
+            _enterDir = fwd;
+            _space = null;
+            _state = State.Emerging;
+            _motionTimer = -delay;
+            Teleport(_enterFrom);
+            SetKinematic(true);
+            transform.rotation = Quaternion.LookRotation(fwd);
+            AttackDebugLog.Log("searcher", $"回廊の扉（{roomId}）の奥で待機 {delay:0.0}秒 " + DebugBrief());
+        }
+
+        private void TickEmerging()
+        {
+            _motionTimer += Time.deltaTime;
+            if (_motionTimer < 0f) return;                 // 扉の奥で待っている
+            if (!_doorPassage)
+            {
+                // プレイヤーが扉を出入りしている最中は待つ（暗い廊下は1つしか無い）
+                if (RoomTransitionSystem.Instance == null || !RoomTransitionSystem.Instance.ShowPassageFor(_door))
+                {
+                    _motionTimer = 0f;
+                    return;
+                }
+                _doorPassage = true;
+                _motionTimer = 0f;
+                DoorSound(true);
+            }
+            float t = _motionTimer;
+            const float closeAt = 1.7f;
+            float open = t < DoorOpenSeconds ? EaseOut(t / DoorOpenSeconds)
+                       : t < closeAt ? 1f
+                       : 1f - EaseIn((t - closeAt) / DoorCloseSeconds);
+            DriveDoor(open * DoorOpenAmount);
+            float stride = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(DoorOpenSeconds * 0.8f, closeAt, t));
+            transform.position = Vector3.Lerp(_enterFrom, _enterTo, stride);
+            _stepTimer -= Time.deltaTime;
+            if (stride > 0f && stride < 1f && _stepTimer <= 0f)
+            {
+                _stepTimer = 0.6f;
+                ProceduralAudio.PlayAt(ProceduralAudio.Footstep(), transform.position, 0.55f);
+            }
+            if (t >= closeAt + DoorCloseSeconds)
+            {
+                DoorSound(false);
+                FinishEmerging();
+            }
+        }
+
+        /// <summary>出てきた（または見られていないので省いた）：扉の前に立って徘徊に戻る</summary>
+        private void FinishEmerging()
+        {
+            ReleaseDoor();
+            Teleport(_enterTo);
+            SetKinematic(false);
+            _state = State.Roam;
+            _decideTimer = Random.Range(4f, 8f);
+            AttackDebugLog.Log("searcher", "回廊の扉から出てきた " + DebugBrief());
         }
 
         /// <summary>部屋からプレイヤーが出た：回廊の扉前へ戻る</summary>
@@ -309,6 +544,23 @@ namespace EscapeProto
         {
             var room = LoopRooms.Get(_space);
             if (room == null || _space != LoopRooms.CurrentRoomId) { FinishLeaving(); return; }
+
+            // 入口の扉の手前まで歩き、扉を開けて暗い廊下へ消え、扉を閉める
+            _door = RoomTransitionSystem.Instance != null && !PlayerBusy
+                ? RoomTransitionSystem.Instance.RoomDoorSwing(room.Id, false) : null;
+            if (_door != null)
+            {
+                Vector3 inward = Flat(_door.transform.forward);
+                Vector3 doorBase = _door.transform.position;
+                doorBase.y = transform.position.y;
+                _leaveStand = doorBase + inward * 1.45f;
+                _enterTo = doorBase - inward * 1.0f;
+                _leavePhase = 0;
+                _motionTimer = 0f;
+                _state = State.Leaving;
+                AttackDebugLog.Log("searcher", "退場演出開始（扉を開けて出ていく） " + DebugBrief());
+                return;
+            }
 
             Vector3 door = room.EntrySpawn != null ? room.EntrySpawn.position : room.transform.position;
             Vector3 outward = door - room.transform.position;
@@ -359,7 +611,7 @@ namespace EscapeProto
         {
             if (player == null || !LoopRooms.InCorridor) { _state = State.Roam; return; }
             float d = MoveTowards(player.transform.position, ChaseSpeed);
-            if (d < CatchRadius) { Catch(); return; }
+            if (d < CatchRadius && !RoomTransitionSystem.PlayerProtected) { Catch(); return; }
             if (d > SightRange * 1.3f) _state = State.Roam;
         }
 
@@ -369,7 +621,7 @@ namespace EscapeProto
         {
             if (player == null) return;
             float d = MoveTowards(player.transform.position, ChaseSpeed);
-            if (d < CatchRadius) Catch();
+            if (d < CatchRadius && !RoomTransitionSystem.PlayerProtected) Catch();
         }
 
         private void Catch()

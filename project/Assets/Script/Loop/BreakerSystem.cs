@@ -22,6 +22,18 @@ namespace EscapeProto
 
         /// <summary>現在降下中の部屋Id（無ければnull）</summary>
         public string DownRoomId { get; private set; }
+
+        /// <summary>
+        /// 降下の予兆（突入演出）の秒数。照明がちらつき、PCのモニターが砂嵐に乱れ、
+        /// 電気の唸りが高まったあとでブレイカーが落ちる（OutageLighting / ScreenStaticOnOutage が演出する）
+        /// </summary>
+        public const float PreludeSeconds = 3.2f;
+        /// <summary>予兆の最中に、これから落ちる部屋Id（予兆中でなければnull）</summary>
+        public string PendingRoomId { get; private set; }
+        /// <summary>予兆の進み具合（0〜1。予兆中でなければ -1）</summary>
+        public float PreludeProgress => PendingRoomId == null ? -1f : Mathf.Clamp01((Time.time - _preludeStart) / PreludeSeconds);
+        private float _preludeStart;
+        private Coroutine _prelude;
         /// <summary>復旧後の徘徊フェーズが進行中か（異形が正当に活動している）</summary>
         public bool HuntActive => _huntLeft > 0f;
         /// <summary>徘徊フェーズ残り秒（ログ用）</summary>
@@ -165,13 +177,13 @@ namespace EscapeProto
             if (!LoopRooms.InCorridor && !Siege) return;
 
             _timeLeft -= Time.deltaTime;
-            if (_timeLeft <= 0f && DownRoomId == null) Drop();
+            if (_timeLeft <= 0f && DownRoomId == null && PendingRoomId == null) Drop();
         }
 
         /// <summary>侵入可能な部屋から1つ選んでブレイカーを降下させ、襲撃者を放つ</summary>
         public void Drop()
         {
-            if (DownRoomId != null) return;   // 二重降下（音源の取り残し）を防ぐ
+            if (DownRoomId != null || PendingRoomId != null) return;   // 二重降下（音源の取り残し）を防ぐ
             _timeLeft = -1f;
             var rooms = LoopRooms.Accessible();
             if (rooms.Count == 0) { _timeLeft = CycleSeconds; return; }
@@ -180,7 +192,7 @@ namespace EscapeProto
             // 最初の部屋は再入場できないため降下対象から除外＝詰み防止）
             var candidates = rooms.FindAll(r => r.Breaker != null && r.Id != LoopProgress.StartRoomId);
             if (candidates.Count == 0) { _timeLeft = CycleSeconds; return; }
-            DropOn(candidates[Random.Range(0, candidates.Count)], spawnSearcherNow: true);
+            BeginDrop(candidates[Random.Range(0, candidates.Count)], spawnSearcherNow: true);
         }
 
         /// <summary>
@@ -189,7 +201,7 @@ namespace EscapeProto
         /// </summary>
         public void ScriptedDrop(string roomId)
         {
-            if (DownRoomId != null) return;
+            if (DownRoomId != null || PendingRoomId != null) return;
             var target = LoopRooms.Get(roomId);
             if (target == null || target.Breaker == null)
             {
@@ -200,7 +212,36 @@ namespace EscapeProto
             _scriptedActive = true;
             AttackDebugLog.Log("drop", $"ScriptedDrop({roomId}) 警報フェーズ開始（異形も同時に放たれる）");
             // 警報中に異形が徘徊し、ブレイカーを上げれば襲撃ごと終わる
-            DropOn(target, spawnSearcherNow: true);
+            BeginDrop(target, spawnSearcherNow: true);
+        }
+
+        /// <summary>予兆（照明とモニターの乱れ、電気の唸り）を見せてからブレイカーを落とす</summary>
+        private void BeginDrop(LoopRoomRoot target, bool spawnSearcherNow)
+        {
+            if (_prelude != null) StopCoroutine(_prelude);
+            _prelude = StartCoroutine(PreludeThenDrop(target, spawnSearcherNow));
+        }
+
+        private System.Collections.IEnumerator PreludeThenDrop(LoopRoomRoot target, bool spawnSearcherNow)
+        {
+            PendingRoomId = target.Id;
+            _preludeStart = Time.time;
+            AttackDebugLog.Log("drop", $"予兆開始（{PreludeSeconds}秒後に {target.Id} が降下）");
+            var player = GameObject.FindGameObjectWithTag("Player");
+            ProceduralAudio.PlayAt(ProceduralAudio.PowerSurge(),
+                player != null ? player.transform.position : transform.position, 0.8f, spatial: false);
+            yield return new WaitForSeconds(PreludeSeconds);
+            PendingRoomId = null;
+            _prelude = null;
+            if (DownRoomId == null) DropOn(target, spawnSearcherNow);
+        }
+
+        /// <summary>予兆を取り消す（包囲の終了など）</summary>
+        private void CancelPrelude()
+        {
+            if (_prelude != null) StopCoroutine(_prelude);
+            _prelude = null;
+            PendingRoomId = null;
         }
 
         /// <summary>指定部屋のブレイカーを降下させ、警報・照明暗転・BGMを起動する</summary>
@@ -266,6 +307,10 @@ namespace EscapeProto
                 spawn = FarthestCorridorPoint(refPos);
 
             _searcher = LoopSearcher.Spawn(spawn);
+            // 部屋の扉の前に現れる時は、回廊の扉の奥（暗い廊下）から扉を開けて出てくる
+            if (farthest != null &&
+                (spawn - LoopCorridorLayout.DoorFrontPosition(farthest.Side, farthest.Slot)).sqrMagnitude < 0.01f)
+                _searcher.EmergeFromRoomDoor(farthest.Id, 0.6f);
             Debug.Log($"[BreakerSystem] 襲撃者スポーン: {(farthest != null ? farthest.DisplayName : "回廊")} " +
                       $"付近 {spawn.ToString("F1")}");
         }
@@ -309,6 +354,7 @@ namespace EscapeProto
             {
                 StoryMode = true;
                 _timeLeft = -1f;
+                CancelPrelude();
                 if (DownRoomId != null) DebugRaise();
                 EndHunt();
                 AttackDebugLog.Log("siege", "包囲モード終了");

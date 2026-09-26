@@ -8,7 +8,9 @@ namespace StarterAssets
 	/// <summary>
 	/// 入力の集約。PlayerInput のコントロールスキーム切替に依存せず、
 	/// キーボード／マウス／ゲームパッドを毎フレーム直接読む（接続状況に左右されない）。
+	/// 移動（FirstPersonController）より先に読むので、押したそのフレームから動く。
 	/// </summary>
+	[DefaultExecutionOrder(-50)]
 	public class StarterAssetsInputs : MonoBehaviour
 	{
 		[Header("Character Input Values")]

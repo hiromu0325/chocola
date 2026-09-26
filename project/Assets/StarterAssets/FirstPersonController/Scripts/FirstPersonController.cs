@@ -96,6 +96,9 @@ namespace StarterAssets
 		private void Start()
 		{
 			_controller = GetComponent<CharacterController>();
+			// 高いフレームレート（約270fps以上）だと歩き出しの1フレームの移動量が最小移動距離(既定0.001m)を
+			// 下回って捨てられ、速度0のまま加速が始まらない（Wを押しても動き出すまで遅れる）。0にして必ず動かす
+			_controller.minMoveDistance = 0f;
 			_input = GetComponent<StarterAssetsInputs>();
 
 			// reset our timeouts on start

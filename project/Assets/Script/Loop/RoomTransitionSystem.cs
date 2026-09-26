@@ -158,6 +158,46 @@ namespace EscapeProto
             }, to != null ? to.Swing : null, true));
         }
 
+        /// <summary>プレイヤーが扉を出入りしている最中か（開き始めから背後で閉まるまで）</summary>
+        public bool IsBusy => _busy;
+        /// <summary>出入りの最中はプレイヤーは捕まらない（襲撃者の捕獲判定が見る）</summary>
+        public static bool PlayerProtected => Instance != null && Instance._busy;
+
+        /// <summary>部屋の扉（入口 / 出口）の開閉</summary>
+        public DoorSwing RoomDoorSwing(string roomId, bool exitDoor)
+        {
+            var d = FindRoomDoor(roomId, exitDoor);
+            return d != null ? d.Swing : null;
+        }
+
+        /// <summary>部屋に通じる回廊の扉（入口側 / 出口側）の開閉</summary>
+        public DoorSwing CorridorDoorSwing(string roomId, bool exitSide)
+        {
+            var d = FindCorridorDoor(roomId, exitSide);
+            return d != null ? d.Swing : null;
+        }
+
+        private DoorSwing _npcPassageDoor;
+
+        /// <summary>
+        /// 襲撃者が回廊の扉から出てくる間だけ、その扉の裏に暗い廊下を置く。
+        /// プレイヤーが出入りしている最中は使えない（false）
+        /// </summary>
+        public bool ShowPassageFor(DoorSwing door)
+        {
+            if (_busy || CorridorPassage == null || door == null) return false;
+            PlacePassage(door);
+            _npcPassageDoor = door;
+            return true;
+        }
+
+        public void HidePassageFor(DoorSwing door)
+        {
+            if (_busy || door == null || _npcPassageDoor != door) return;
+            PlacePassage(null);
+            _npcPassageDoor = null;
+        }
+
         private LoopDoor FindCorridorDoor(string roomId, bool exitSide)
         {
             foreach (var d in _corridorDoors)
@@ -190,6 +230,7 @@ namespace EscapeProto
                                            DoorSwing to, bool toCorridor)
         {
             _busy = true;
+            _npcPassageDoor = null;
             _fade.blocksRaycasts = true;
             var player = GameObject.FindGameObjectWithTag("Player");
             var cc = player != null ? player.GetComponent<CharacterController>() : null;

@@ -38,6 +38,22 @@ namespace EscapeProto
             _captured = true;
         }
 
+        /// <summary>
+        /// 動かす扉板を差し替える（回廊の扉が、入れるようになって部屋の入口の扉の見た目に変わる時）。
+        /// 今の扉板は閉じた姿勢に戻してから切り替える
+        /// </summary>
+        public void UseLeaf(Transform leaf, float openAngle)
+        {
+            if (leaf == Leaf) return;
+            if (_rattle != null) { StopCoroutine(_rattle); _rattle = null; }
+            if (Leaf != null && _captured) { Leaf.localPosition = _pos0; Leaf.localRotation = _rot0; }
+            Leaf = leaf;
+            OpenAngle = openAngle;
+            _captured = false;
+            _open = 0f;
+            Capture();
+        }
+
         /// <summary>開き具合（0=閉、1=全開）。非表示の扉でも姿勢だけは変えられる</summary>
         public void Set(float open01)
         {
