@@ -302,6 +302,29 @@ namespace EscapeProto
             return slider;
         }
 
+        /// <summary>
+        /// 文章が枠（w×h）に収まる文字の大きさを見積もる（全角1文字＝1em、半角＝0.55em。折り返しも数える）。
+        /// Text の自動調整（Best Fit）は大きさを何通りも試して文字の画像を作るので、資料をたくさん開くと
+        /// 文字の画像置き場（4096px）があふれて落ちる。大きさは決め打ちの候補から1つだけ選ぶ
+        /// </summary>
+        public static int FitFontSize(string text, float w, float h, float lineSpacing, params int[] sizes)
+        {
+            var lines = (text ?? "").Replace("\r", "").Split('\n');
+            foreach (int size in sizes)
+            {
+                float perLine = w / size;   // 1行に入る em 数
+                int rows = 0;
+                foreach (var l in lines)
+                {
+                    float em = 0f;
+                    foreach (char c in l) em += c < 0x2000 ? 0.55f : 1f;
+                    rows += Mathf.Max(1, Mathf.CeilToInt(em / Mathf.Max(1f, perLine)));
+                }
+                if (rows * size * lineSpacing * 1.2f <= h) return size;
+            }
+            return sizes[sizes.Length - 1];
+        }
+
         /// <summary>小さなキー表記の枠（[E] など）。キーボードとゲームパッドで表記を変える</summary>
         public static string Key(string keyboard, string pad = null)
         {
@@ -361,6 +384,11 @@ namespace EscapeProto
         private Vector2 _textBase;
 
         private Image _box;   // 箱のボタンの地（選択中は少し明るく）
+        /// <summary>選択中に文字を右へずらすか（レイアウトグループの中では false にする）</summary>
+        public bool ShiftText = true;
+
+        /// <summary>文字の位置を変えた後に呼ぶ（ずらしの基準を取り直す）</summary>
+        public void Rebase() { if (_text != null) _textBase = _text.rectTransform.offsetMin; }
 
         public void Init(Selectable b, Text t, RectTransform mark)
         {
@@ -412,7 +440,7 @@ namespace EscapeProto
                 if (_mark != null) _mark.localScale = new Vector3(k, 1f, 1f);
                 return;
             }
-            _text.rectTransform.offsetMin = _textBase + new Vector2(10f * k, 0f);
+            if (ShiftText) _text.rectTransform.offsetMin = _textBase + new Vector2(10f * k, 0f);
             if (_mark != null) _mark.sizeDelta = new Vector2(18f * k, 2f);
         }
     }

@@ -142,6 +142,8 @@ namespace EscapeProto
             LoopProgress.ImportFound(data.loopFound);
             StoryProgress.ImportVisited(data.loopVisited);
             StoryProgress.IntroPlayed = data.loopIntroPlayed || data.loopStage > 0;
+            MemoSnippets.Import(data.memoSnippets);
+            DocState.Import(data.docsHeard, data.docsCommented);
             foreach (var f in FindObjectsByType<LoopFindable>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 f.RefreshFound();
@@ -205,6 +207,9 @@ namespace EscapeProto
             data.loopFound = LoopProgress.ExportFound();
             data.loopVisited = StoryProgress.ExportVisited();
             data.loopIntroPlayed = StoryProgress.IntroPlayed;
+            data.memoSnippets = MemoSnippets.Export();
+            data.docsHeard = DocState.ExportHeard();
+            data.docsCommented = DocState.ExportCommented();
             return data;
         }
 

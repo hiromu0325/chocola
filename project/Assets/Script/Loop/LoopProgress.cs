@@ -151,7 +151,8 @@ namespace EscapeProto
             StoryProgress.IntroPlayed = false;
             StoryProgress.PendingUnlockRoom = null;
             StoryProgress.ImportVisited(null);
-            MemoBoard.ClearConnections();
+            MemoSnippets.Clear();
+            DocState.Clear();
             foreach (var f in Object.FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 f.ResetForNewGame();
             foreach (var e in Object.FindObjectsByType<EchoScene>(FindObjectsInactive.Include, FindObjectsSortMode.None))

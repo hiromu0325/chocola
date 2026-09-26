@@ -95,8 +95,10 @@ namespace EscapeProto
             if (!AssetDatabase.IsValidFolder(MatDir))
                 AssetDatabase.CreateFolder("Assets/EscapePrototype", "MoodMaterials");
 
+            EnsureInspectLayer();
             var corridor = BuildCorridor();
             BuildRooms();
+            AttachAudioRecords();
             BuildLighting();
             var player = BuildPlayer();
             BuildManagers(player, corridor);
@@ -1474,6 +1476,7 @@ namespace EscapeProto
                 "──リナシータ。イタリア語で「再誕」。\n" +
                 "この響きを、私は知っている。\n" +
                 "祈るように口にしたことが、ある。");
+            Tape(table.transform, new Vector3(0.28f, 0.9f, -0.08f), -18f, "補完試験 口述 No.12　佐伯");
             var specGo = Findable(table.transform, "spec", "アルゴリズム仕様", new Vector3(0.75f, 0.9f, -0.25f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "補完アルゴリズム仕様（佐伯）",
@@ -1656,6 +1659,7 @@ namespace EscapeProto
                 "最後の行は、筆圧が乱れている。\n\n" +
                 "「……何をするつもりですか？」\n\n" +
                 "記録は、そこで途切れていた。");
+            Tape(desk.transform, new Vector3(0.12f, 0.755f, 0.18f), 10f, "留守番電話　4月21日");
             var unsentGo = Findable(desk.transform, "unsent", "未送信メモ", new Vector3(0.35f, 0.755f, -0.15f), paper,
                 new Vector3(0.2f, 0.01f, 0.14f),
                 "宛先のないメモ",
@@ -1803,6 +1807,7 @@ namespace EscapeProto
                         ?? Desk(t, "NurseDesk", new Vector3(1.8f, 0f, -hd + 1.6f), frameM);
                 Prop(t, "OfficeChair", new Vector3(1.8f, 0f, -hd + 0.85f));
             }
+            Tape(nurse.transform, new Vector3(0.18f, 0.76f, 0.12f), -8f, "面会用　二宮さん　No.31");
             var obsGo = Findable(nurse.transform, "obs", "観察記録", new Vector3(-0.45f, 0.76f, 0.0f), paper,
                 new Vector3(0.36f, 0.02f, 0.26f),
                 "水野の患者観察記録",
@@ -2661,6 +2666,7 @@ namespace EscapeProto
                 "「正しいことと、救うことは同じではない。\n" +
                 "　それでも私は、正しい方を選ぶ。\n" +
                 "　誰かが選ばなければならないからだ」");
+            Tape(sideb.transform, new Vector3(0.02f, 0.905f, 0.02f), 96f, "留守番電話　4月22日");
             var lastrecGo = Findable(sideb.transform, "lastrec", "対峙の記録", new Vector3(0f, 0.93f, 0.35f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "最後の対峙の記録（破損）",
@@ -3429,6 +3435,19 @@ namespace EscapeProto
         {
             var root = new GameObject("Managers");
 
+            // 調べる画面（くるくる回す）で使う実物のモデル（種類 → Prefab）
+            var libGo = new GameObject("InspectLibrary");
+            libGo.transform.SetParent(root.transform, false);
+            var lib = libGo.AddComponent<InspectLibrary>();
+            foreach (InspectKind kind in System.Enum.GetValues(typeof(InspectKind)))
+            {
+                if (kind == InspectKind.None) continue;
+                string fbx = kind == InspectKind.Helmet ? HqModel("analysis", "Helmet") : InspectModel(kind);
+                string prefab = ModelPrefabPath(fbx, ShellMat);
+                var go = prefab != null ? AssetDatabase.LoadAssetAtPath<GameObject>(prefab) : null;
+                if (go != null) lib.Models.Add(new InspectLibrary.Entry { Kind = kind, Prefab = go });
+            }
+
             // リスポーンは最初の部屋（薄暗い部屋＝人形の部屋）の入口スポーンと同じ位置
             var respawn = new GameObject("RespawnPoint");
             respawn.transform.SetParent(root.transform, false);
@@ -3750,6 +3769,101 @@ namespace EscapeProto
         }
 
         /// <summary>URP Lit の材質にテクスチャ・法線・発光を設定する</summary>
+        /// <summary>半透明の材質（カセットの窓・写真立てのガラス・名札ケース）</summary>
+        private static Material TranspLit(string name, Color color, float alpha, float smooth)
+        {
+            var m = HqLit(name, color, smooth);
+            if (IsHandTuned(m)) return m;
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_ZWrite", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            m.SetColor("_BaseColor", new Color(color.r, color.g, color.b, alpha));
+            return m;
+        }
+
+        /// <summary>調べる画面の実物のモデル（Blender の hq/build_inspect.py が書き出す）</summary>
+        private static string InspectModel(InspectKind kind) => $"{HqDir}/Inspect/Inspect_{kind}.fbx";
+
+        /// <summary>実物だけを描くレイヤー「Inspect」（8番）を用意する（メインカメラには描かせない）</summary>
+        private static void EnsureInspectLayer()
+        {
+            var tm = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tm.FindProperty("layers");
+            var slot = layers.GetArrayElementAtIndex(InspectView.Layer == 8 ? 8 : InspectView.Layer);
+            if (slot.stringValue != "Inspect" && string.IsNullOrEmpty(slot.stringValue))
+            {
+                slot.stringValue = "Inspect";
+                tm.ApplyModifiedProperties();
+            }
+        }
+
+        /// <summary>
+        /// 音声記録（DocCatalog で Audio の資料）に声を付ける：Assets/Audio/Tapes/&lt;部屋&gt;.&lt;資料&gt;_&lt;nn&gt;.wav を
+        /// 台詞の順に AudioRecord へ。カセット・レコーダーは部屋の中の見た目も実物のモデルにする（机の上に寝かせる）
+        /// </summary>
+        private static void AttachAudioRecords()
+        {
+            foreach (var f in Object.FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var info = DocCatalog.Get(f.RoomId, f.Id);
+                if (!info.Audio) continue;
+                int n = DocCatalog.Tape(f.RoomId, f.Id).Count;
+                var clips = new AudioClip[n];
+                for (int i = 0; i < n; i++)
+                    clips[i] = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/Audio/Tapes/{f.RoomId}.{f.Id}_{i:00}.wav");
+                var rec = f.GetComponent<AudioRecord>() ?? f.gameObject.AddComponent<AudioRecord>();
+                rec.Clips = clips;
+
+                if (info.Kind != InspectKind.Cassette && info.Kind != InspectKind.Recorder) continue;
+                // 部屋に専用のモデルが既にある（水野のレコーダー・黒田のICレコーダー）なら、そちらを使う
+                bool hasVisual = false;
+                foreach (var r in f.GetComponentsInChildren<Renderer>(true))
+                    if (r.gameObject != f.gameObject) { hasVisual = true; break; }
+                if (hasVisual) continue;
+                string prefab = ModelPrefabPath(InspectModel(info.Kind), ShellMat);
+                if (prefab == null) continue;
+                // 箱の見た目を消し、実物を寝かせて置く（表が上）。拾うと消える資料は子にして一緒に消えるように
+                var box = f.GetComponent<Renderer>();
+                if (box != null) box.enabled = false;
+                bool child = f.transform.localScale == Vector3.one;
+                var parent = child ? f.transform : f.transform.parent;
+                var pos = child ? Vector3.zero : f.transform.localPosition;
+                var vis = Place(prefab, parent, pos);
+                if (vis == null) continue;
+                vis.name = "Visual_" + info.Kind;
+                vis.transform.localRotation = Quaternion.Euler(90f, child ? 0f : f.transform.localEulerAngles.y + 12f, 0f);
+                foreach (var c in vis.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            }
+        }
+
+        /// <summary>
+        /// 新しい音声記録（カセットテープ）。拾うと手に入れて消える（手帳の資料一覧から何度でも聞ける）。
+        /// 見た目は AttachAudioRecords が実物のモデルにする。進行の必須ではない（聞かなくても先へ進める）
+        /// </summary>
+        private static GameObject Tape(Transform parent, Vector3 pos, float yaw, string title)
+        {
+            var go = new GameObject("Find_tape");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var col = go.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.center = new Vector3(0f, 0.01f, 0f);
+            col.size = new Vector3(0.14f, 0.05f, 0.1f);
+            var f = go.AddComponent<LoopFindable>();
+            f.Id = "tape";
+            f.DisplayName = "カセットテープ";
+            f.NoteTitle = title;
+            f.NoteBody = "";
+            f.DisappearOnPickup = true;
+            f.PickupHint = "Tab: 手帳で聞き直せる";
+            return go;
+        }
+
         private static Material HqLit(string name, Color tint, float smooth, float metal = 0f,
                                       Texture2D albedo = null, Texture2D normal = null, float bump = 1f,
                                       Color? emission = null, Texture2D emissionMap = null,
@@ -3812,6 +3926,25 @@ namespace EscapeProto
             string n = src.name;
             switch (n)
             {
+                // ---- 調べる画面の実物（紙・テープ・画面など） ----
+                case "INS_Paper":        return HqLit(n, new Color(0.97f, 0.96f, 0.92f), 0.12f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.35f);
+                case "INS_PaperCream":   return HqLit(n, new Color(0.98f, 0.93f, 0.82f), 0.1f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.35f);
+                case "INS_Newsprint":    return HqLit(n, new Color(0.85f, 0.82f, 0.75f), 0.05f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.45f);
+                case "INS_Manila":       return HqLit(n, new Color(0.88f, 0.75f, 0.52f), 0.1f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.3f);
+                case "INS_Board":        return HqLit(n, new Color(0.46f, 0.33f, 0.22f), 0.25f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.4f);
+                case "INS_Leather":      return HqLit(n, new Color(0.2f, 0.12f, 0.08f), 0.35f, 0f, HqTex("Inspect/leather"), HqTex("Inspect/leather_n", true), 0.8f);
+                case "INS_Metal":        return HqLit(n, new Color(0.5f, 0.5f, 0.52f), 0.55f, 1f);
+                case "INS_PlasticBlack": return HqLit(n, new Color(0.04f, 0.04f, 0.045f), 0.55f);
+                case "INS_PlasticSmoke": return TranspLit(n, new Color(0.1f, 0.09f, 0.08f), 0.9f, 0.85f);
+                case "INS_PlasticClear": return TranspLit(n, new Color(0.95f, 0.95f, 0.95f), 0.2f, 0.9f);
+                case "INS_Glass":        return TranspLit(n, new Color(0.9f, 0.92f, 0.95f), 0.14f, 0.95f);
+                case "INS_Tape":         return HqLit(n, new Color(0.24f, 0.14f, 0.08f), 0.6f);
+                case "INS_Label":        return HqLit(n, new Color(0.96f, 0.93f, 0.83f), 0.1f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.3f);
+                case "INS_Screen":       return HqLit(n, new Color(0.02f, 0.03f, 0.03f), 0.55f, 0f, null, null, 1f, new Color(0.02f, 0.05f, 0.04f));   // 光沢を抑えて、主光のてかりが文字に被らないように
+                case "INS_Wood":         return HqLit(n, new Color(0.62f, 0.5f, 0.4f), 0.45f, 0f, HqTex("Dim/walnut"), HqTex("Dim/walnut_n", true), 0.35f);
+                case "INS_Photo":        return HqLit(n, new Color(0.55f, 0.45f, 0.33f), 0.3f);
+                case "INS_Cardboard":    return HqLit(n, new Color(0.78f, 0.67f, 0.5f), 0.05f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.5f);
+                case "INS_Rubber":       return HqLit(n, new Color(0.1f, 0.1f, 0.1f), 0.2f);
                 // ---- 薄暗い部屋 ----
                 case "DIM_Wallpaper": return HqLit(n, Color.white, 0.12f, 0f, HqTex("Dim/wallpaper"), HqTex("Dim/wallpaper_n", true), 0.6f);
                 case "DIM_Carpet":    return HqLit(n, Color.white, 0.02f, 0f, HqTex("Dim/carpet"), HqTex("Dim/carpet_n", true), 0.8f);
@@ -4636,7 +4769,7 @@ namespace EscapeProto
             string n = src.name;
             var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat");
             if (IsHandTuned(tuned)) return tuned;   // 人が調整した材質は値を書き換えない
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_") || n.StartsWith("INS_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁

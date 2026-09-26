@@ -35,7 +35,9 @@ namespace EscapeProto
         private string TextKey => GameText.DocKey(RoomId, Id);
         public string Name => GameText.Get(TextKey + ".name", DisplayName);
         public string Title => GameText.Get(TextKey + ".title", NoteTitle);
-        public string Body => GameText.Get(TextKey + ".body", NoteBody);
+        public string Body => DocCatalog.IsAudio(RoomId, Id)
+            ? DocCatalog.Transcript(RoomId, Id)          // 音声記録は台詞の書き起こし
+            : GameText.Get(TextKey + ".body", NoteBody);
         public string Hint => GameText.Get(TextKey + ".hint", PickupHint);
 
         private void Start()
@@ -71,10 +73,15 @@ namespace EscapeProto
                 return;
             }
 
+            if (InspectView.IsOpen || NotebookUI.IsOpen) return;
+
             // 先に資料を開いてから発見扱いにする。
             // 逆順だと「発見→部屋完了→『扉が開いた』ダイアログ」が同じフレームで先に開き、
             // 肝心の資料ウィンドウが表示されない（UiQueueは開いているUIが閉じるまで待つ）
-            if (PuzzleUI.Instance != null && !string.IsNullOrEmpty(Body) &&
+            var info = DocCatalog.Get(RoomId, Id);
+            if ((info.HasModel || info.Audio) && InspectView.Instance != null)
+                InspectView.Instance.OpenFindable(this);     // 実物を回して調べる画面
+            else if (PuzzleUI.Instance != null && !string.IsNullOrEmpty(Body) &&
                 !PuzzleUI.Instance.IsOpen && !PuzzleUI.Instance.BlockReopen)
                 PuzzleUI.Instance.ShowDocument(string.IsNullOrEmpty(Title) ? Name : Title, Body);
 

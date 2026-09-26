@@ -291,6 +291,20 @@ namespace EscapeProto
             return _doorLatch;
         }
 
+        private static AudioClip _tapeButton;
+
+        /// <summary>カセットデッキのボタン（再生・停止の「ガチャッ」）。低めの打撃＋ばねの2回のカチ</summary>
+        public static AudioClip TapeButton()
+        {
+            if (_tapeButton != null) return _tapeButton;
+            _tapeButton = Generate("tapebutton", 0.22f, (t, dur) =>
+            {
+                float thump = Mathf.Sin(2f * Mathf.PI * 140f * t) * Mathf.Exp(-45f * t) * 0.35f;
+                return thump + LatchClick(t, 0f, 0.3f) * 0.6f + LatchClick(t, 0.045f, 0.4f) * 0.5f;
+            });
+            return _tapeButton;
+        }
+
         /// <summary>
         /// 蝶番のきしみ（約1秒）。張り付いては滑る摩擦の連打を、木の扉の響き（共振）に通す。
         /// 回る速さに合わせて音程が上がって下がる

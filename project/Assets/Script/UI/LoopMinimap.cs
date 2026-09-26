@@ -86,7 +86,8 @@ namespace EscapeProto
         {
             if (!_built) return;
             var gm = GameManager.Instance;
-            bool active = gm != null && gm.State == GameState.Playing && LoopProgress.NotebookOwned;
+            bool active = gm != null && gm.State == GameState.Playing && LoopProgress.NotebookOwned &&
+                          !InspectView.IsOpen && !NotebookUI.IsOpen;
             if (_panel.gameObject.activeSelf != active) _panel.gameObject.SetActive(active);
             if (!active) return;
             // 回廊にいる時と警報中だけ出す（部屋の中の探索では画面を空ける）

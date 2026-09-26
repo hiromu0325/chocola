@@ -53,6 +53,8 @@ namespace EscapeProto
         {
             // 資料/コード入力中は PuzzleUI が Esc を処理するので競合させない
             if (PuzzleUI.Instance != null && PuzzleUI.Instance.IsOpen) return;
+            // 調べる画面・手帳は自分で Esc を受ける（閉じる／戻る）
+            if (InspectView.IsOpen || NotebookUI.IsOpen || InspectView.ClosedThisFrame) return;
 
             if (WasEscPressed())
             {

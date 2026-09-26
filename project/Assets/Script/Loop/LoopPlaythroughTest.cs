@@ -317,6 +317,7 @@ namespace EscapeProto
 
         private static void ClosePuzzleUi()
         {
+            if (InspectView.IsOpen) InspectView.Instance.Close(true);   // 資料を調べる画面
             var ui = PuzzleUI.Instance;
             if (ui == null || !ui.IsOpen) return;
             typeof(PuzzleUI).GetMethod("Close", BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(ui, null);

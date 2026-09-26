@@ -48,6 +48,7 @@ namespace EscapeProto
         /// </summary>
         public static bool GlobalBusy =>
             (PuzzleUI.Instance != null && PuzzleUI.Instance.IsOpen) ||
+            InspectView.IsOpen || NotebookUI.IsOpen ||
             (CutsceneDirector.Instance != null && CutsceneDirector.Instance.IsPlaying) ||
             (RoomTitleUI.Instance != null && RoomTitleUI.Instance.IsShowing);
 

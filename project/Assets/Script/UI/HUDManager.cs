@@ -28,7 +28,7 @@ namespace EscapeProto
         private Font _font;
         private Text _stateText, _promptText, _endTitle, _endBody, _dialogText, _subtitle;
         private GameObject _memoPanel, _endPanel, _scarePanel, _dialogPanel;
-        private MemoBoard _memoBoard;
+        private NotebookUI _notebook;
         private RawImage _scareFace;
         private Image _scareFlash, _whiteout, _crosshair, _promptPlate, _subtitlePlate;
         private RectTransform _progressFill;
@@ -57,6 +57,7 @@ namespace EscapeProto
             Instance = this;
             _font = UiTheme.BodyFont;
             BuildCanvas();
+            gameObject.AddComponent<InspectView>();   // 資料を調べる画面（くるくる回す）
         }
 
         private void Start()
@@ -91,7 +92,7 @@ namespace EscapeProto
         {
             // タイトル・一時停止・終了画面では HUD を隠す（状況はメニュー側が出す）
             var gm = GameManager.Instance;
-            bool playing = gm == null || gm.State == GameState.Playing;
+            bool playing = (gm == null || gm.State == GameState.Playing) && !InspectView.IsOpen && !NotebookUI.IsOpen;
             Fade(_hudGroup, playing ? 1f : 0f, playing ? UiTheme.FadeIn : 0.12f);
             UpdateStatus();
             UpdatePrompt();
@@ -114,18 +115,16 @@ namespace EscapeProto
             if (kb == null && gp == null) return;
             bool tab = kb != null && kb.tabKey.wasPressedThisFrame;
             bool restart = kb != null && kb.rKey.wasPressedThisFrame;
+            bool esc = (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
             if (gp != null)
             {
                 if (gp.selectButton.wasPressedThisFrame) tab = true;       // 手帳
                 if (gp.startButton.wasPressedThisFrame) restart = true;    // 終了画面でリスタート
             }
-            if (tab) ToggleMemo();
-            // ページ送りは右クリックのみ（末尾まで行くとループ）。左クリックはキーワードのドラッグ用
-            if (_memoOpen && !_dialogPanel.activeSelf)
-            {
-                var mouse = Mouse.current;
-                if (mouse != null && mouse.rightButton.wasPressedThisFrame) _memoBoard.NextSpreadLooped();
-            }
+            // 調べる画面が開いている間（と閉じた瞬間）は、Tab・Esc はそちらが受ける
+            bool inspecting = InspectView.IsOpen || InspectView.ClosedThisFrame;
+            if (tab && !inspecting) ToggleMemo();
+            else if (esc && _memoOpen && !inspecting) ToggleMemo();
             if (_gameEnded && restart) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
@@ -143,9 +142,9 @@ namespace EscapeProto
                 else if (three) PickDialog(2);
             }
 #else
-            if (Input.GetKeyDown(KeyCode.Tab)) ToggleMemo();
-            if (_memoOpen && !_dialogPanel.activeSelf && Input.GetMouseButtonDown(1))
-                _memoBoard.NextSpreadLooped();
+            bool inspecting = InspectView.IsOpen || InspectView.ClosedThisFrame;
+            if (Input.GetKeyDown(KeyCode.Tab) && !inspecting) ToggleMemo();
+            else if (Input.GetKeyDown(KeyCode.Escape) && _memoOpen && !inspecting) ToggleMemo();
             if (_gameEnded && Input.GetKeyDown(KeyCode.R)) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
@@ -167,13 +166,22 @@ namespace EscapeProto
                 return;
             }
 
+            var gm = GameManager.Instance;
+            if (!_memoOpen && gm != null && gm.State != GameState.Playing) return;
             _memoOpen = !_memoOpen;
+            _memoPanel.SetActive(_memoOpen);
             if (_memoOpen)
             {
-                _memoBoard.JumpToCurrentChapter();   // 今いる部屋の章から開く
-                _memoBoard.RebuildAndShow();
+                _notebook.Show();              // 今いる部屋の章から開く
+                gm?.SetBusy(true);             // 手帳を開いている間は歩かない（カーソルを出す）
+                UiSound.Decide();
             }
-            _memoPanel.SetActive(_memoOpen);
+            else
+            {
+                _notebook.Hide();
+                gm?.SetBusy(false);
+                UiSound.Cancel();
+            }
         }
 
         // ============= 目標・人形 =============
@@ -539,20 +547,17 @@ namespace EscapeProto
             UiTheme.Stretch(memoDim.rectTransform);
             _memoPanel = memoDim.gameObject;
             var memoBg = UiTheme.Fill(_memoPanel.transform, "Book", UiTheme.Panel, raycast: true);
-            UiTheme.Place(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1260, 720));
+            UiTheme.Place(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1560, 860));
 
             // 見出しは右上（左上から並ぶ章のタブと重ならないように）
             var memoTitle = UiTheme.Label(memoBg.transform, "MemoTitle", 26, TextAnchor.UpperRight, UiTheme.TextSub, display: true);
             UiTheme.Place(memoTitle.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-32, -18), new Vector2(300, 40));
             memoTitle.text = "手 帳";
 
-            // 中央の綴じ線（細罫）
-            var spine = UiTheme.Fill(memoBg.transform, "Spine", UiTheme.WithAlpha(UiTheme.Accent, 0.45f));
-            UiTheme.Place(spine.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -8), new Vector2(UiTheme.Hairline, 580));
-
-            // ページ描画・キーワードチップ・関係線は MemoBoard が担当
-            _memoBoard = memoBg.gameObject.AddComponent<MemoBoard>();
-            _memoBoard.Init((RectTransform)memoBg.transform, _font);
+            // 資料の一覧とメモ（ラインマーカーで切り取った文）は NotebookUI が担当
+            _notebook = memoBg.gameObject.AddComponent<NotebookUI>();
+            _notebook.Init((RectTransform)memoBg.transform);
+            _notebook.RequestClose = () => { if (_memoOpen) ToggleMemo(); };
 
             _memoPanel.SetActive(false);
 
