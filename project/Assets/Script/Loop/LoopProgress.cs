@@ -54,6 +54,13 @@ namespace EscapeProto
                 !IsFound("story", "attack_" + roomId))
             {
                 FoundKeys.Add(Key("story", "attack_" + roomId));   // 一度きり
+                if (!HorrorSettings.Attacks)
+                {
+                    // デバッグ（恐怖演出なし）：襲撃を起こさず、そのまま次の部屋を開ける
+                    Debug.Log($"[LoopProgress] 恐怖演出なし: {roomId} 完了時の脚本襲撃（{target}）を飛ばす");
+                    UnlockNext(room);
+                    return;
+                }
                 StoryProgress.PendingUnlockRoom = roomId;
                 Notebook.Add("attack_" + roomId, "警報",
                     "資料を読み終えた瞬間、どこかでブレイカーの落ちる音がした。\n" +

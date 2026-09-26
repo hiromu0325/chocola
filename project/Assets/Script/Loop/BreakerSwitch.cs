@@ -87,14 +87,21 @@ namespace EscapeProto
             if (_warnLamp != null) _warnLamp.SetActive(!up);
             if (up) { if (_alarm != null && _alarm.isPlaying) _alarm.Stop(); }
             // 部屋モデルが非表示中はPlayできないため、表示時（OnEnable）にも再開する
-            else if (_alarm != null && !silent && isActiveAndEnabled) _alarm.Play();
+            else if (_alarm != null && !silent && isActiveAndEnabled) PlayAlarm();
         }
 
         private void OnEnable()
         {
             // 部屋が表示された時、降下中なら鳴らし直す（非表示中はPlayできないため）
-            if (!IsUp && _alarm != null && !_alarm.isPlaying) _alarm.Play();
+            if (!IsUp && _alarm != null && !_alarm.isPlaying) PlayAlarm();
             else if (IsUp && _alarm != null && _alarm.isPlaying) _alarm.Stop();
+        }
+
+        /// <summary>警報を鳴らす（恐怖演出の軽減中は音量を下げる）</summary>
+        private void PlayAlarm()
+        {
+            _alarm.volume = AlarmVolume * HorrorSettings.Volume;
+            _alarm.Play();
         }
 
         public void OnInteract()

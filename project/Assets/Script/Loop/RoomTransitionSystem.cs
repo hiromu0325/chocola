@@ -59,6 +59,17 @@ namespace EscapeProto
         /// </summary>
         private void HandleWhiteout(float _)
         {
+            AbortTransition();
+            var home = LoopRooms.Get(LoopProgress.StartRoomId);
+            foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == home);
+            if (CorridorRoot != null) CorridorRoot.SetActive(home == null);
+            LoopRooms.CurrentRoomId = home != null ? home.Id : null;
+            ReflectionProbes.RefreshActive();
+        }
+
+        /// <summary>扉の出入りの途中なら打ち切り、扉・暗転・操作の止めを元に戻す</summary>
+        private void AbortTransition()
+        {
             StopAllCoroutines();
             _busy = false;
             if (_fade != null) { _fade.alpha = 0f; _fade.blocksRaycasts = false; }
@@ -66,11 +77,31 @@ namespace EscapeProto
             foreach (var d in _corridorDoors) if (d != null && d.Swing != null) d.Swing.Set(0f);
             foreach (var d in _roomDoors) if (d != null && d.Swing != null) d.Swing.Set(0f);
             PlacePassage(null);
-            var home = LoopRooms.Get(LoopProgress.StartRoomId);
-            foreach (var r in LoopRooms.All) r.gameObject.SetActive(r == home);
-            if (CorridorRoot != null) CorridorRoot.SetActive(home == null);
-            LoopRooms.CurrentRoomId = home != null ? home.Id : null;
+        }
+
+        /// <summary>
+        /// デバッグ（途中から開始）：扉の演出なしでプレイヤーを置く。
+        /// inRoom=true ならその部屋の入口側の中、false なら回廊のその部屋の扉の前（廊下沿いを向く）
+        /// </summary>
+        public void DebugPlace(string roomId, bool inRoom)
+        {
+            var room = LoopRooms.Get(roomId);
+            if (room == null) return;
+            AbortTransition();
+            foreach (var r in LoopRooms.All) r.gameObject.SetActive(inRoom && r == room);
+            if (CorridorRoot != null) CorridorRoot.SetActive(!inRoom);
+            LoopRooms.CurrentRoomId = inRoom ? room.Id : null;
+            if (inRoom)
+            {
+                var spawn = room.EntrySpawn;
+                TeleportPlayer(spawn != null ? spawn.position : room.transform.position,
+                               spawn != null ? spawn.eulerAngles.y : (float?)null);
+            }
+            else
+                TeleportPlayer(LoopCorridorLayout.DoorFrontPosition(room.Side, room.Slot),
+                               LoopCorridorLayout.DoorYaw(room.Side) + 90f);
             ReflectionProbes.RefreshActive();
+            AttackDebugLog.Log("move", $"デバッグ配置: {(inRoom ? roomId : roomId + " の扉の前（回廊）")}");
         }
 
         private void Update()

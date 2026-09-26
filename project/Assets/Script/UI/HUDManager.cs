@@ -247,6 +247,7 @@ namespace EscapeProto
 
         private void PlayJumpScare(float intensity)
         {
+            if (!HorrorSettings.JumpScares) return;   // 恐怖演出の軽減・なし（デバッグ）
             if (_scareCoroutine != null) StopCoroutine(_scareCoroutine);
             _scareCoroutine = StartCoroutine(ScareRoutine(intensity));
         }

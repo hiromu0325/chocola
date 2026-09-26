@@ -30,6 +30,9 @@ namespace EscapeProto
         {
             if (Running) return "already running";
             Sb.Clear(); ErrorMsgs.Clear(); _errors = 0; Report = ""; Done = false; Running = true;
+            // 検証は恐怖演出「通常」で行う（襲撃・異形も含めて通す）。終わったら元に戻す
+            _prevHorror = HorrorSettings.Level;
+            HorrorSettings.Level = HorrorLevel.Full;
             var go = new GameObject("LoopPlaythroughTest");
             DontDestroyOnLoad(go);
             go.AddComponent<LoopPlaythroughTest>();
@@ -43,9 +46,12 @@ namespace EscapeProto
             StartCoroutine(Run());
         }
 
+        private static HorrorLevel _prevHorror;
+
         private void OnDestroy()
         {
             Application.logMessageReceived -= OnLog;
+            HorrorSettings.Level = _prevHorror;
             Running = false;
         }
 

@@ -100,6 +100,12 @@ namespace EscapeProto
 
             // 予兆：終わりに近いほど暗い時間が長く、ちらつきが速くなる
             float k = Mathf.Clamp01(bs.PreludeProgress);
+            if (!HorrorSettings.Flicker)
+            {
+                // 恐怖演出の軽減（デバッグ）：点滅させず、ゆっくり暗くなるだけ
+                SetAll(Mathf.Lerp(1f, 0.35f, k), off: false);
+                return;
+            }
             if (Time.time >= _nextFlicker)
             {
                 _nextFlicker = Time.time + Random.Range(0.03f, Mathf.Lerp(0.35f, 0.08f, k));
@@ -191,6 +197,7 @@ namespace EscapeProto
         private void TickRestore()
         {
             float t = Time.time - _restoreStart;
+            bool calm = !HorrorSettings.Flicker;   // 恐怖演出の軽減（デバッグ）：瞬かずに明るくなる
             // 光源：それぞれの遅れのあと、点灯管のように2〜3回瞬いてから明るくなる
             for (int i = 0; i < _lights.Count; i++)
             {
@@ -199,14 +206,16 @@ namespace EscapeProto
                 float local = t - _restoreDelay[i];
                 float level;
                 if (local < 0f) level = 0f;
-                else if (local < RestoreBlink) level = ((int)(local * 16f + i) % 3 == 0) ? 0.45f : 0.05f;
+                else if (local < RestoreBlink)
+                    level = calm ? Mathf.Lerp(0.05f, 0.35f, local / RestoreBlink)
+                        : ((int)(local * 16f + i) % 3 == 0) ? 0.45f : 0.05f;
                 else level = Mathf.SmoothStep(0.35f, 1f, (local - RestoreBlink) / RestoreRamp);
                 l.intensity = intensity * level;
                 l.enabled = enabled && level > 0.001f;
             }
             // 器具の発光：全体でゆっくり（はじめは少し瞬く）
             float k = Mathf.Clamp01((t - 0.2f) / (RestoreStagger + RestoreRamp));
-            if (t < 0.2f + RestoreBlink) k *= ((int)(t * 13f) % 2 == 0) ? 1f : 0.3f;
+            if (!calm && t < 0.2f + RestoreBlink) k *= ((int)(t * 13f) % 2 == 0) ? 1f : 0.3f;
             var done = new HashSet<Material>();
             foreach (var (r, slot, on, off) in _fixtures)
             {
