@@ -192,6 +192,187 @@ def pillow(name, c, s, material, puff=1.0, res=24, seed=0):
     return o
 
 
+# ============================== 曲げパイプ・板・断面 ==============================
+
+def fillet_path(pts, radius=0.08, k=6):
+    """折れ線の角を丸める（二次ベジェで近似）。pts は Unity 座標のタプル"""
+    P = [Vector(p) for p in pts]
+    out = [P[0]]
+    for i in range(1, len(P) - 1):
+        a = (P[i] - P[i - 1]); b = (P[i + 1] - P[i])
+        la, lb = a.length, b.length
+        if la < 1e-6 or lb < 1e-6:
+            continue
+        a /= la; b /= lb
+        cosang = max(-1.0, min(1.0, (-a).dot(b)))
+        theta = math.acos(cosang)
+        if theta > math.pi - 1e-3:
+            out.append(P[i]); continue
+        t = min(radius / math.tan(theta / 2), la * 0.5, lb * 0.5)
+        A, B = P[i] - a * t, P[i] + b * t
+        for s in range(k + 1):
+            u = s / k
+            out.append(A * (1 - u) ** 2 + P[i] * 2 * (1 - u) * u + B * u * u)
+    out.append(P[-1])
+    return out
+
+
+def pipe(name, pts, r, material, bend=0.08, seg=12, caps=True):
+    """Unity座標の折れ線に沿った丸パイプ（角は bend の半径で曲げる）"""
+    path = fillet_path(pts, bend)
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = r
+    cu.bevel_resolution = max(1, seg // 4 - 1)
+    cu.use_fill_caps = caps
+    sp = cu.splines.new("POLY")
+    sp.points.add(len(path) - 1)
+    for i, p in enumerate(path):
+        v = U(p.x, p.y, p.z)
+        sp.points[i].co = (v.x, v.y, v.z, 1.0)
+    co = bpy.data.objects.new(name + "_c", cu)
+    bpy.context.scene.collection.objects.link(co)
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(co.evaluated_get(dg), depsgraph=dg)
+    bpy.data.objects.remove(co, do_unlink=True)
+    bpy.data.curves.remove(cu)
+    return _obj(name, me, material)
+
+
+def quad(name, pts, material, uv=((0, 0), (1, 0), (1, 1), (0, 1)), thick=0.0):
+    """4点（Unity座標、表から見て反時計回り）の板。uv は各点のUV。thick>0 で裏にも面を張る"""
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    vs = [bm.verts.new(U(*p)) for p in pts]
+    # Unity→Blenderは鏡映なので、表を保つには並びを逆にする
+    f = bm.faces.new(list(reversed(vs)))
+    for l, t in zip(f.loops, list(reversed(uv))):
+        l[uvl].uv = t
+    if thick > 0:
+        n = f.normal.copy()
+        vb = [bm.verts.new(v.co - n * thick) for v in vs]
+        fb = bm.faces.new(vb)
+        for l, t in zip(fb.loops, [(1 - a, b) for a, b in uv]):
+            l[uvl].uv = t
+    bm.to_mesh(me); bm.free()
+    return _obj(name, me, material)
+
+
+def plate_xy(name, pts, z0, z1, material, bev=0.003):
+    """Unityのxy平面の多角形を z0〜z1 に押し出す（仕切り板・棚受けなど）"""
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    f = [bm.verts.new(U(x, y, z0)) for x, y in pts]
+    b = [bm.verts.new(U(x, y, z1)) for x, y in pts]
+    bm.faces.new(f); bm.faces.new(list(reversed(b)))
+    n = len(pts)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((f[i], b[i], b[j], f[j]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me); bm.free()
+    o = _obj(name, me, material)
+    if bev > 0:
+        bevel(o, bev, 2, 30)
+    return o
+
+
+def profile_z(name, prof, z0, z1, material, closed=True):
+    """Unityのxy断面 prof を z0〜z1 に押し出す（座面・背もたれ・天井の断面など）"""
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    a = [bm.verts.new(U(x, y, z0)) for x, y in prof]
+    b = [bm.verts.new(U(x, y, z1)) for x, y in prof]
+    n = len(prof)
+    for i in range(n if closed else n - 1):
+        j = (i + 1) % n
+        bm.faces.new((a[i], a[j], b[j], b[i]))
+    if closed:
+        bm.faces.new(a); bm.faces.new(list(reversed(b)))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me); bm.free()
+    return _obj(name, me, material)
+
+
+def rrect(w, h, r, k=6):
+    """中心原点の角丸長方形の外周点 (u, v)。反時計回り、角ごとに k 分割"""
+    r = min(r, w / 2 - 1e-4, h / 2 - 1e-4)
+    pts = []
+    for (cx, cy, a0) in ((w / 2 - r, h / 2 - r, 0), (-w / 2 + r, h / 2 - r, 90),
+                         (-w / 2 + r, -h / 2 + r, 180), (w / 2 - r, -h / 2 + r, 270)):
+        for i in range(k + 1):
+            a = math.radians(a0 + 90 * i / k)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
+
+
+def frame_ring(name, to3d, w_out, h_out, r_out, w_in, h_in, r_in, d0, d1, material, k=6):
+    """角丸の額縁（窓枠・扉窓のゴム）。to3d(u, v, d) → Unity座標。d0〜d1 の厚み"""
+    o_pts = rrect(w_out, h_out, r_out, k)
+    i_pts = rrect(w_in, h_in, r_in, k)
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    n = len(o_pts)
+    of = [bm.verts.new(U(*to3d(u, v, d0))) for u, v in o_pts]
+    ob = [bm.verts.new(U(*to3d(u, v, d1))) for u, v in o_pts]
+    inf = [bm.verts.new(U(*to3d(u, v, d0))) for u, v in i_pts]
+    inb = [bm.verts.new(U(*to3d(u, v, d1))) for u, v in i_pts]
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((of[i], of[j], inf[j], inf[i]))     # 表
+        bm.faces.new((ob[i], inb[i], inb[j], ob[j]))     # 裏
+        bm.faces.new((of[i], ob[i], ob[j], of[j]))       # 外周
+        bm.faces.new((inf[i], inf[j], inb[j], inb[i]))   # 内周
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me); bm.free()
+    return _obj(name, me, material)
+
+
+def rrect_face(name, to3d, w, h, r, d, material, k=6, uv_fit=True):
+    """角丸の板1枚（ガラスなど）。UVは外接長方形に 0〜1"""
+    pts = rrect(w, h, r, k)
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    vs = [bm.verts.new(U(*to3d(u, v, d))) for u, v in pts]
+    f = bm.faces.new(vs)
+    for l, (u, v) in zip(f.loops, pts):
+        l[uvl].uv = (u / w + 0.5, v / h + 0.5)
+    bm.to_mesh(me); bm.free()
+    return _obj(name, me, material)
+
+
+def face_toward(o, direction_u):
+    """板の法線が Unity の direction_u を向くように、逆なら面を裏返す"""
+    want = U(*direction_u) - U(0, 0, 0)
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    bm.normal_update()
+    for f in bm.faces:
+        if f.normal.dot(want) < 0:
+            f.normal_flip()
+    bm.to_mesh(o.data); bm.free()
+
+
+def plane_uv(o):
+    """板の各面に外接長方形で 0〜1 のUVを張る（デカール・ポスター用）"""
+    me = o.data
+    bm = bmesh.new(); bm.from_mesh(me)
+    uv = bm.loops.layers.uv.get("UVMap") or bm.loops.layers.uv.new("UVMap")
+    for f in bm.faces:
+        n = f.normal
+        ax = max(range(3), key=lambda k: abs(n[k]))
+        pts = [l.vert.co for l in f.loops]
+        ks = [k for k in range(3) if k != ax]
+        mn = [min(p[k] for p in pts) for k in ks]
+        mx = [max(p[k] for p in pts) for k in ks]
+        for l in f.loops:
+            p = l.vert.co
+            l[uv].uv = ((p[ks[0]] - mn[0]) / max(1e-6, mx[0] - mn[0]), (p[ks[1]] - mn[1]) / max(1e-6, mx[1] - mn[1]))
+    bm.to_mesh(me); bm.free()
+
+
 # ============================== 仕上げ ==============================
 
 def apply_mods(o):

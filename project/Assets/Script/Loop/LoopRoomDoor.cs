@@ -6,6 +6,7 @@ namespace EscapeProto
     /// <summary>
     /// 部屋側の扉。回廊へ戻る（出口扉なら入った扉と反対側の辺の回廊へワープ）。
     /// チュートリアル部屋の扉は、部屋のブレイカーが上がるまで開かない。
+    /// 部屋の扉はすべて引いて手前（室内）へ開く（開閉の動きは DoorSwing）。
     /// ※クラス名とファイル名の一致が必須（シーン保存時のスクリプト解決）
     /// </summary>
     public class LoopRoomDoor : MonoBehaviour, IInteractable, IPromptProvider
@@ -14,6 +15,8 @@ namespace EscapeProto
         public bool IsExitDoor;
         [Tooltip("trueなら自室のブレイカーが上がるまで開かない（チュートリアル用）")]
         public bool RequiresBreakerUp;
+        [Tooltip("扉板の開閉（引いて室内へ開く）")]
+        public DoorSwing Swing;
 
         private float _lastCallTime = -10f;
 
@@ -40,7 +43,8 @@ namespace EscapeProto
 
             if (Locked)
             {
-                ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.6f);
+                if (Swing != null) Swing.Rattle();
+                else ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 0.6f);
                 return;
             }
             RoomTransitionSystem.Instance?.ExitToCorridor(RoomId, IsExitDoor);
