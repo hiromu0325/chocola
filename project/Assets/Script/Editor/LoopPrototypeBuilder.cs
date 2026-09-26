@@ -479,12 +479,9 @@ namespace EscapeProto
                 breaker = BuildBreaker(t, def.id, bpos);
             }
 
-            // アクセント帯とネームプレート（TextMeshは+Z面が表なので部屋中心を向ける）
+            // アクセント帯（部屋名の浮いた文字は置かない）
             Box(t, "AccentBand_E", new Vector3(hw - 0.02f, 0.95f, 0f), new Vector3(0.06f, 0.22f, def.d - 0.4f), accent);
             Box(t, "AccentBand_W", new Vector3(-hw + 0.02f, 0.95f, 0f), new Vector3(0.06f, 0.22f, def.d - 0.4f), accent);
-            float plateY = Mathf.Min(h - 0.35f, DoorOpenH + 0.3f);
-            NamePlate(t, def.name, new Vector3(0f, plateY, -hd + 0.25f), 180f, RoomAccent(def.id));
-            NamePlate(t, def.name, new Vector3(0f, plateY, hd - 0.25f), 0f, RoomAccent(def.id));
 
             // 部屋ごとの什器と「見つけるべき情報」
             string[] required;
@@ -3394,28 +3391,6 @@ namespace EscapeProto
             var go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
             return go;
-        }
-
-        /// <summary>部屋名の3Dテキストプレート</summary>
-        private static void NamePlate(Transform parent, string text, Vector3 pos, float yaw, Color color)
-        {
-            var go = new GameObject("NamePlate");
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = pos;
-            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-            var tm = go.AddComponent<TextMesh>();
-            tm.text = text;
-            tm.fontSize = 48;
-            tm.characterSize = 0.055f;
-            tm.anchor = TextAnchor.MiddleCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = color;
-            var font = FontProvider.Get();
-            if (font != null)
-            {
-                tm.font = font;
-                go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
-            }
         }
 
         // ============================== 共通ヘルパー ==============================
