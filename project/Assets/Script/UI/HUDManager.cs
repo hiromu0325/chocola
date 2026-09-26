@@ -11,24 +11,42 @@ using UnityEngine.InputSystem.UI;
 namespace EscapeProto
 {
     /// <summary>
-    /// HUD（実行時にUGUIをコード生成。アセット不要）
-    /// ・ステータス（フェーズ・残り人形・解除数・電気・懐中電灯・香水）
-    /// ・手帳パネル / 死亡ホワイトアウト / 会話ダイアログ / ゲーム終了画面
+    /// HUD（実行時にUGUIをコード生成。アセット不要）。見た目は UiTheme の方針に従う。
+    /// ・常時出すのは中央の小さな点だけ。目標（左上）は変わった時・部屋を移った時に浮かび、しばらくして消える
+    ///   （警報中・アップロード中は出したまま）。人形（右上）は数が変わった時だけ出る
+    /// ・調べられる物に向くと、点の下に操作の案内（[E] …）と長押しの進み具合
+    /// ・タイトル・一時停止・終了画面では HUD を隠す
+    /// ・手帳パネル / 死亡ホワイトアウト / 会話ダイアログ / 終了画面
     /// </summary>
     public class HUDManager : MonoBehaviour
     {
         public static HUDManager Instance { get; private set; }
 
+        /// <summary>目標が変わってから出しておく秒数／部屋を移った時に出しておく秒数／人形の数が変わった時</summary>
+        private const float ObjectiveHold = 8f, ObjectiveOnMove = 5f, DollsHold = 6f;
+
         private Font _font;
-        private Text _topText, _stateText, _promptText, _endText, _dialogText, _subtitle;
+        private Text _stateText, _promptText, _endTitle, _endBody, _dialogText, _subtitle;
         private GameObject _memoPanel, _endPanel, _scarePanel, _dialogPanel;
         private MemoBoard _memoBoard;
         private RawImage _scareFace;
-        private Image _scareFlash, _whiteout;
+        private Image _scareFlash, _whiteout, _crosshair, _promptPlate, _subtitlePlate;
         private RectTransform _progressFill;
         private GameObject _progressRoot;
         private InteractionController _interaction;
         private PlayerStatus _player;
+
+        // 目標・人形・案内
+        private CanvasGroup _hudGroup, _objGroup, _dollsGroup, _promptGroup;
+        private Text _objLabel, _objText, _dollsText;
+        private Image _objPlate, _objRule;
+        private string _objLast;
+        private LoopObjective.Tone _objTone;
+        private float _objUntil, _dollsUntil;
+        private string _roomLast = "\0";
+        private int _dollsLast = -1;
+        private string _promptLast;
+        private Button _endButton;
 
         private bool _memoOpen, _gameEnded;
         private Action<int> _dialogCallback;
@@ -37,7 +55,7 @@ namespace EscapeProto
         private void Awake()
         {
             Instance = this;
-            _font = FontProvider.Get();
+            _font = UiTheme.BodyFont;
             BuildCanvas();
         }
 
@@ -71,9 +89,20 @@ namespace EscapeProto
 
         private void Update()
         {
-            UpdateTopBar();
+            // タイトル・一時停止・終了画面では HUD を隠す（状況はメニュー側が出す）
+            var gm = GameManager.Instance;
+            bool playing = gm == null || gm.State == GameState.Playing;
+            Fade(_hudGroup, playing ? 1f : 0f, playing ? UiTheme.FadeIn : 0.12f);
+            UpdateStatus();
             UpdatePrompt();
             HandleKeys();
+        }
+
+        /// <summary>CanvasGroup を目標の不透明度へ少しずつ寄せる（unscaled。ポーズ中でも動く）</summary>
+        private static void Fade(CanvasGroup g, float target, float seconds)
+        {
+            if (g == null || Mathf.Approximately(g.alpha, target)) return;
+            g.alpha = Mathf.MoveTowards(g.alpha, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, seconds));
         }
 
         // ============= 入力 =============
@@ -147,35 +176,100 @@ namespace EscapeProto
             _memoPanel.SetActive(_memoOpen);
         }
 
-        // ============= ステータス =============
-        private void UpdateTopBar()
-        {
-            var pm = PhaseManager.Instance;
-            var gm = GameManager.Instance;
-            // ※来訪の接近/滞在をUI文字で警告しない設計。
-            //   到達は古時計の鐘が告げ、誰が来るかはエントランスのモニター映像を目で見て判断する
-            string phase = (pm != null && pm.EventActive) ? "<color=#E060FF>…笑い声がする</color>" : "";
-            int dolls = gm != null ? gm.Dolls : 0;
-            _topText.text = $"{phase}    人形:{new string('●', Mathf.Max(0, dolls))}    {ObjectiveText()}";
+        // ============= 目標・人形 =============
+        private static readonly System.Text.RegularExpressions.Regex Digits =
+            new System.Text.RegularExpressions.Regex("[0-9０-９%％]");
+        private static readonly System.Text.RegularExpressions.Regex KeyTag =
+            new System.Text.RegularExpressions.Regex(@"\[([^\]]{1,8})\]");
 
-            // 環境ステータス（電気/懐中電灯/香水）
-            string lights = (RoomLightController.Instance == null || RoomLightController.Instance.LightsOn)
-                ? "電気:点" : "<color=#888>電気:消</color>";
-            string flash = (_player != null && _player.FlashlightOn) ? "<color=#FFE060>懐中電灯:点</color>" : "懐中電灯:消";
-            string scent = (_player != null && _player.IsScentMasked) ? "<color=#80D0FF>消臭中</color>" : "";
-            _stateText.text = $"{lights}   {flash}   {scent}";
+        private void UpdateStatus()
+        {
+            float now = Time.unscaledTime;
+            var gm = GameManager.Instance;
+
+            // ---- 目標（左上） ----
+            string text;
+            var tone = LoopObjective.Tone.Normal;
+            if (LoopObjective.IsLoopScene) text = LoopObjective.Plain(out tone);
+            else text = ObjectiveText();
+            if (text != _objLast || tone != _objTone)
+            {
+                // 数字だけの変化（アップロードの％など）では出し直さない
+                bool meaningful = _objLast == null || tone != _objTone ||
+                                  Digits.Replace(text, "") != Digits.Replace(_objLast, "");
+                SetObjective(text, tone);
+                if (meaningful) _objUntil = now + ObjectiveHold;
+            }
+            string room = LoopRooms.CurrentRoomId ?? "";
+            if (room != _roomLast) { _roomLast = room; _objUntil = Mathf.Max(_objUntil, now + ObjectiveOnMove); }
+            var fin = LoopFinale.Instance;
+            bool urgent = tone == LoopObjective.Tone.Warning || (fin != null && fin.Uploading && !fin.Completed);
+            bool showObj = !string.IsNullOrEmpty(text) && (urgent || now < _objUntil);
+            Fade(_objGroup, showObj ? 1f : 0f, showObj ? 0.35f : 0.9f);
+
+            // ---- 人形（右上）：数が変わった時だけ ----
+            int dolls = gm != null ? gm.Dolls : 0;
+            if (dolls != _dollsLast)
+            {
+                if (_dollsLast >= 0) _dollsUntil = now + DollsHold;
+                _dollsLast = dolls;
+                _dollsText.text = DollGlyphs(dolls, 5);
+            }
+            bool showDolls = now < _dollsUntil;
+            Fade(_dollsGroup, showDolls ? 1f : 0f, showDolls ? 0.3f : 0.9f);
+
+            // ---- 旧施設マップの状態（回廊のシーンでは出さない） ----
+            string st = "";
+            if (!LoopObjective.IsLoopScene)
+            {
+                var pm = PhaseManager.Instance;
+                string phase = (pm != null && pm.EventActive) ? $"<color={UiTheme.Rgb(UiTheme.Danger)}>…笑い声がする</color>　" : "";
+                string lights = (RoomLightController.Instance == null || RoomLightController.Instance.LightsOn) ? "電気 点" : "電気 消";
+                string flash = (_player != null && _player.FlashlightOn) ? "懐中電灯 点" : "懐中電灯 消";
+                string scent = (_player != null && _player.IsScentMasked) ? "　消臭中" : "";
+                st = $"{phase}{lights}　{flash}{scent}";
+            }
+            if (_stateText.text != st) _stateText.text = st;
         }
 
+        /// <summary>残りの人形は ◆、砕けた人形は ◇（色だけでなく形でも分かるように）</summary>
+        public static string DollGlyphs(int left, int total)
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < total; i++)
+                sb.Append(i < left ? "◆" : $"<color={UiTheme.Rgb(UiTheme.TextFaint)}>◇</color>");
+            return sb.ToString();
+        }
+
+        private void SetObjective(string text, LoopObjective.Tone tone)
+        {
+            _objLast = text;
+            _objTone = tone;
+            bool warn = tone == LoopObjective.Tone.Warning;
+            bool done = tone == LoopObjective.Tone.Done;
+            _objLabel.text = warn ? "警報" : done ? "完了" : "目標";
+            _objLabel.color = warn ? UiTheme.Danger : done ? UiTheme.Positive : UiTheme.Accent;
+            _objRule.color = _objLabel.color;
+            _objText.text = HighlightKeys(text ?? "");
+            // 文の長さに合わせて暗幕の大きさを変える
+            float w = Mathf.Min(_objText.preferredWidth, 760f);
+            float h = _objText.preferredHeight;
+            _objPlate.rectTransform.sizeDelta = new Vector2(w + 48f, h + 62f);
+        }
+
+        /// <summary>[E] のような操作キーを真鍮色に</summary>
+        private static string HighlightKeys(string s) =>
+            KeyTag.Replace(s, $"<color={UiTheme.Rgb(UiTheme.Accent)}>[$1]</color>");
+
+        /// <summary>旧施設マップの目標</summary>
         private static string ObjectiveText()
         {
-            // ループ回廊：進行状況から「今やること」を細かく出す
-            if (LoopObjective.IsLoopScene) return LoopObjective.Text();
             var ps = PuzzleState.Instance;
             if (ps == null) return "";
-            if (!ps.PcAccessed) return "<color=#FFD060>目標:社員情報を集めPCにログイン</color>";
-            if (!ps.HasPowerRoomKey) return "<color=#FFD060>目標:貸出記録の社員の個室(2階)で鍵を探す</color>";
-            if (!ps.PowerRestored) return "<color=#FFD060>目標:配電室を開け配電盤を復旧</color>";
-            return "<color=#7CFC8C>目標:脱出口へ向かえ</color>";
+            if (!ps.PcAccessed) return "社員情報を集めPCにログイン";
+            if (!ps.HasPowerRoomKey) return "貸出記録の社員の個室(2階)で鍵を探す";
+            if (!ps.PowerRestored) return "配電室を開け配電盤を復旧";
+            return "脱出口へ向かえ";
         }
 
         private void UpdatePrompt()
@@ -185,9 +279,22 @@ namespace EscapeProto
             if (target is IPromptProvider p) { prompt = p.GetPrompt(); progress = p.GetProgress01(); }
             else if (target != null && target.CanInteract) prompt = "[E] 使う";
 
-            _promptText.text = prompt;
-            bool showBar = progress >= 0f && progress > 0.001f;
-            _progressRoot.SetActive(showBar);
+            if (prompt != _promptLast)
+            {
+                _promptLast = prompt;
+                if (!string.IsNullOrEmpty(prompt))
+                {
+                    _promptText.text = HighlightKeys(prompt);
+                    _promptPlate.rectTransform.sizeDelta = new Vector2(_promptText.preferredWidth + 48f, 46f);
+                }
+            }
+            bool has = !string.IsNullOrEmpty(prompt);
+            Fade(_promptGroup, has ? 1f : 0f, has ? 0.1f : 0.2f);
+            // 調べられる物に向いている時は点も真鍮色に（案内の文と合わせて2つの手がかり）
+            var want = has ? UiTheme.WithAlpha(UiTheme.Accent, 0.9f) : UiTheme.WithAlpha(UiTheme.Text, 0.5f);
+            if (_crosshair.color != want) _crosshair.color = want;
+            bool showBar = progress > 0.001f;
+            if (_progressRoot.activeSelf != showBar) _progressRoot.SetActive(showBar);
             if (showBar) _progressFill.anchorMax = new Vector2(Mathf.Clamp01(progress), 1f);
         }
 
@@ -199,8 +306,8 @@ namespace EscapeProto
             string c = "";
             if (choices != null)
                 for (int i = 0; i < choices.Length; i++)
-                    c += $"\n[{i + 1}] {choices[i]}";
-            _dialogText.text = $"<color=#FFD0E0>{speaker}</color>\n\n{body}\n{c}";
+                    c += $"\n<color={UiTheme.Rgb(UiTheme.Accent)}>[{i + 1}]</color> {choices[i]}";
+            _dialogText.text = $"<color={UiTheme.Rgb(UiTheme.TextSub)}>{speaker}</color>\n\n{body}\n{c}";
             _dialogPanel.SetActive(true);
         }
 
@@ -227,8 +334,11 @@ namespace EscapeProto
         private IEnumerator SubtitleRoutine(string text, float seconds)
         {
             _subtitle.text = text;
+            _subtitlePlate.gameObject.SetActive(true);
+            _subtitlePlate.rectTransform.sizeDelta = new Vector2(Mathf.Min(_subtitle.preferredWidth, 1400f) + 64f,
+                                                                 _subtitle.preferredHeight + 28f);
             yield return new WaitForSeconds(seconds);
-            if (_subtitle.text == text) _subtitle.text = "";
+            if (_subtitle.text == text) { _subtitle.text = ""; _subtitlePlate.gameObject.SetActive(false); }
         }
 
         // ============= イベント演出 =============
@@ -304,9 +414,9 @@ namespace EscapeProto
         private void ShowGameOver()
         {
             _gameEnded = true;
-            _endPanel.SetActive(true);
-            _endText.text = "<color=#FF3020>そして誰もいなくなった</color>\n陶器の人形はすべて砕けた…\n\n[R] リスタート";
+            ShowEnd(UiTheme.Danger, "そして誰もいなくなった", "陶器の人形は、すべて砕けた。");
         }
+
         /// <summary>クリア/ゲームオーバー後にタイトルから「はじめから」「つづきから」した時、終了パネルを消す</summary>
         private void HideEndPanel()
         {
@@ -317,116 +427,173 @@ namespace EscapeProto
         private void ShowGameClear()
         {
             _gameEnded = true;
+            if (LoopObjective.IsLoopScene)
+                ShowEnd(UiTheme.Text, "アップロード完了", "娘の記憶の断片は、すべてリナシータへ送られた。\n（終章の分岐 END A/B/C は未実装）");
+            else
+                ShowEnd(UiTheme.Text, "脱出", "地下室から脱出した。");
+        }
+
+        private void ShowEnd(Color titleColor, string title, string body)
+        {
+            _endTitle.text = title;
+            _endTitle.color = titleColor;
+            _endBody.text = body;
             _endPanel.SetActive(true);
-            _endText.text = LoopObjective.IsLoopScene
-                ? "<color=#60FF80>アップロード完了</color>\n娘の記憶の断片は、すべてリナシータへ送られた。\n（終章の分岐 END A/B/C は未実装）\n\n[R] リスタート"
-                : "<color=#60FF80>ESCAPED</color>\n地下室から脱出した\n\n[R] リスタート";
+            StartCoroutine(SelectEndButton());
+        }
+
+        /// <summary>ホワイトアウトが明けてからボタンを選ぶ（ゲームパッドでも押せるように）</summary>
+        private IEnumerator SelectEndButton()
+        {
+            yield return new WaitForSecondsRealtime(0.6f);
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null && _endPanel.activeSelf)
+            {
+                UiSound.MuteMoveUntil = Time.unscaledTime + 0.1f;
+                es.SetSelectedGameObject(_endButton.gameObject);
+            }
         }
 
         // ============= UI構築 =============
         private void BuildCanvas()
         {
-            var canvasGo = new GameObject("HUDCanvas");
-            canvasGo.transform.SetParent(transform, false);
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            canvasGo.AddComponent<GraphicRaycaster>();
+            var canvas = UiTheme.Canvas(transform, "HUDCanvas", 0);
+            var root = canvas.transform;
             EnsureEventSystem();
 
-            var cross = MakeImage(canvasGo.transform, "Crosshair", new Color(1, 1, 1, 0.7f));
-            SetRect(cross.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(5, 5));
+            // ---- 探索中の HUD（まとめて隠せるように1つの親に） ----
+            var hud = UiTheme.Rect(root, "Hud");
+            UiTheme.Stretch(hud);
+            _hudGroup = hud.gameObject.AddComponent<CanvasGroup>();
+            _hudGroup.blocksRaycasts = false;
+            _hudGroup.interactable = false;
 
-            _topText = MakeText(canvasGo.transform, "TopBar", 30, TextAnchor.UpperCenter);
-            SetRect(_topText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -16), new Vector2(1500, 50));
+            _crosshair = UiTheme.Fill(hud, "Crosshair", UiTheme.WithAlpha(UiTheme.Text, 0.5f));
+            UiTheme.Place(_crosshair.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(4, 4));
 
-            _stateText = MakeText(canvasGo.transform, "StateBar", 26, TextAnchor.UpperCenter);
-            SetRect(_stateText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -58), new Vector2(1500, 40));
+            // 目標（左上。セーフエリアの内側）
+            var obj = UiTheme.Rect(hud, "Objective");
+            UiTheme.Place(obj, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(UiTheme.SafeX, -UiTheme.SafeY), new Vector2(760f, 120f));
+            _objGroup = obj.gameObject.AddComponent<CanvasGroup>();
+            _objGroup.alpha = 0f;
+            _objPlate = UiTheme.Fill(obj, "Scrim", UiTheme.WithAlpha(Color.black, 0.7f));   // 回廊の白壁の前でも読める濃さ
+            UiTheme.Place(_objPlate.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(-24f, 18f), new Vector2(400f, 90f));
+            _objRule = UiTheme.Fill(obj, "Rule", UiTheme.Accent);
+            UiTheme.Place(_objRule.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(0f, -13f), new Vector2(24f, 2f));
+            _objLabel = UiTheme.Label(obj, "Label", UiTheme.FsSmall, TextAnchor.MiddleLeft, UiTheme.Accent);
+            UiTheme.Place(_objLabel.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(34f, 0f), new Vector2(200f, 26f));
+            _objText = UiTheme.Label(obj, "Text", UiTheme.FsHud, TextAnchor.UpperLeft);
+            UiTheme.Place(_objText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, -34f), new Vector2(760f, 80f));
+            _objText.lineSpacing = 1.3f;
 
-            _promptText = MakeText(canvasGo.transform, "Prompt", 28, TextAnchor.MiddleCenter);
-            SetRect(_promptText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -90), new Vector2(1300, 44));
+            // 人形（右上）。数が変わった時だけ
+            var dolls = UiTheme.Rect(hud, "Dolls");
+            UiTheme.Place(dolls, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-UiTheme.SafeX, -UiTheme.SafeY), new Vector2(300f, 60f));
+            _dollsGroup = dolls.gameObject.AddComponent<CanvasGroup>();
+            _dollsGroup.alpha = 0f;
+            var dl = UiTheme.Label(dolls, "Label", UiTheme.FsSmall, TextAnchor.UpperRight, UiTheme.TextSub);
+            UiTheme.Place(dl.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), Vector2.zero, new Vector2(300f, 26f));
+            dl.text = "陶器の人形";
+            _dollsText = UiTheme.Label(dolls, "Glyphs", UiTheme.FsHud, TextAnchor.UpperRight);
+            UiTheme.Place(_dollsText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(0f, -28f), new Vector2(300f, 32f));
 
-            _subtitle = MakeText(canvasGo.transform, "Subtitle", 30, TextAnchor.LowerCenter);
-            SetRect(_subtitle.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 120), new Vector2(1500, 80));
-            _subtitle.color = new Color(0.9f, 0.85f, 0.9f);
+            // 操作の案内（点の下）＋長押しの進み具合
+            var prompt = UiTheme.Rect(hud, "Prompt");
+            UiTheme.Place(prompt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -96f), new Vector2(1200f, 46f));
+            _promptGroup = prompt.gameObject.AddComponent<CanvasGroup>();
+            _promptGroup.alpha = 0f;
+            _promptPlate = UiTheme.Fill(prompt, "Scrim", UiTheme.WithAlpha(Color.black, 0.7f));
+            UiTheme.Place(_promptPlate.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300f, 46f));
+            _promptText = UiTheme.Label(prompt, "Text", UiTheme.FsHud, TextAnchor.MiddleCenter);
+            UiTheme.Stretch(_promptText.rectTransform);
+            _promptText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            _progressRoot = new GameObject("ProgressBar");
-            _progressRoot.transform.SetParent(canvasGo.transform, false);
-            var barBg = _progressRoot.AddComponent<Image>();
-            barBg.color = new Color(0, 0, 0, 0.6f);
-            SetRect(barBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -135), new Vector2(420, 18));
-            var fillGo = new GameObject("Fill"); fillGo.transform.SetParent(_progressRoot.transform, false);
-            var fillImg = fillGo.AddComponent<Image>(); fillImg.color = new Color(0.95f, 0.7f, 0.2f);
-            _progressFill = fillImg.rectTransform;
+            _progressRoot = UiTheme.Rect(prompt, "Progress").gameObject;
+            var prt = (RectTransform)_progressRoot.transform;
+            UiTheme.Place(prt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -36f), new Vector2(280f, 3f));
+            var track = UiTheme.Fill(prt, "Track", UiTheme.WithAlpha(UiTheme.TextFaint, 0.8f));
+            UiTheme.Stretch(track.rectTransform);
+            var fill = UiTheme.Fill(prt, "Fill", UiTheme.Accent);
+            _progressFill = fill.rectTransform;
             _progressFill.anchorMin = Vector2.zero; _progressFill.anchorMax = new Vector2(0, 1);
-            _progressFill.offsetMin = new Vector2(2, 2); _progressFill.offsetMax = new Vector2(-2, -2);
+            _progressFill.offsetMin = Vector2.zero; _progressFill.offsetMax = Vector2.zero;
             _progressFill.pivot = new Vector2(0, 0.5f);
             _progressRoot.SetActive(false);
+
+            // 旧施設マップ用の状態表示（回廊のシーンでは空）
+            _stateText = UiTheme.Label(hud, "StateBar", UiTheme.FsSmall, TextAnchor.UpperRight, UiTheme.TextSub);
+            UiTheme.Place(_stateText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-UiTheme.SafeX, -UiTheme.SafeY - 70f), new Vector2(700f, 30f));
+
+            // 字幕（下中央。暗幕つき）
+            _subtitlePlate = UiTheme.Fill(root, "SubtitleScrim", UiTheme.WithAlpha(Color.black, 0.7f));
+            UiTheme.Place(_subtitlePlate.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, UiTheme.SafeY + 110f), new Vector2(600f, 60f));
+            _subtitlePlate.gameObject.SetActive(false);
+            _subtitle = UiTheme.Label(root, "Subtitle", UiTheme.FsBody, TextAnchor.MiddleCenter);
+            UiTheme.Place(_subtitle.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, UiTheme.SafeY + 110f), new Vector2(1400f, 80f));
 
             // 手帳（見開き2ページ。左右クリックでページ送り）
             // ※専用キャンバス（sortingOrder=60）に載せ、PuzzleUI（50）より前面に出す。
             //   社内PCのテンキー等を開いたままTabで手帳を重ねて確認できる（数字入力はキーボードで可能）
-            var memoCanvasGo = new GameObject("MemoCanvas");
-            memoCanvasGo.transform.SetParent(transform, false);
-            var memoCanvas = memoCanvasGo.AddComponent<Canvas>();
-            memoCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            memoCanvas.sortingOrder = 60;
-            var memoScaler = memoCanvasGo.AddComponent<CanvasScaler>();
-            memoScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            memoScaler.referenceResolution = new Vector2(1920, 1080);
-            memoCanvasGo.AddComponent<GraphicRaycaster>();
+            var memoCanvas = UiTheme.Canvas(transform, "MemoCanvas", 60);
+            var memoDim = UiTheme.Fill(memoCanvas.transform, "Dim", UiTheme.WithAlpha(Color.black, 0.5f));
+            UiTheme.Stretch(memoDim.rectTransform);
+            _memoPanel = memoDim.gameObject;
+            var memoBg = UiTheme.Fill(_memoPanel.transform, "Book", UiTheme.Panel, raycast: true);
+            UiTheme.Place(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1260, 720));
 
-            _memoPanel = new GameObject("MemoPanel"); _memoPanel.transform.SetParent(memoCanvasGo.transform, false);
-            var memoBg = _memoPanel.AddComponent<Image>(); memoBg.color = new Color(0.07f, 0.06f, 0.05f, 0.94f);
-            SetRect(memoBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1260, 720));
+            // 見出しは右上（左上から並ぶ章のタブと重ならないように）
+            var memoTitle = UiTheme.Label(memoBg.transform, "MemoTitle", 26, TextAnchor.UpperRight, UiTheme.TextSub, display: true);
+            UiTheme.Place(memoTitle.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-32, -18), new Vector2(300, 40));
+            memoTitle.text = "手 帳";
 
-            var memoTitle = MakeText(_memoPanel.transform, "MemoTitle", 30, TextAnchor.UpperCenter);
-            SetRect(memoTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -18), new Vector2(600, 44));
-            memoTitle.text = "■ 手帳 ■";
-            memoTitle.color = new Color(1f, 0.85f, 0.6f);
-
-            // 中央の綴じ線
-            var spineGo = new GameObject("Spine"); spineGo.transform.SetParent(_memoPanel.transform, false);
-            var spine = spineGo.AddComponent<Image>(); spine.color = new Color(0.35f, 0.3f, 0.24f, 0.9f);
-            SetRect(spine.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -8), new Vector2(3, 580));
+            // 中央の綴じ線（細罫）
+            var spine = UiTheme.Fill(memoBg.transform, "Spine", UiTheme.WithAlpha(UiTheme.Accent, 0.45f));
+            UiTheme.Place(spine.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -8), new Vector2(UiTheme.Hairline, 580));
 
             // ページ描画・キーワードチップ・関係線は MemoBoard が担当
-            _memoBoard = _memoPanel.AddComponent<MemoBoard>();
-            _memoBoard.Init((RectTransform)_memoPanel.transform, _font);
+            _memoBoard = memoBg.gameObject.AddComponent<MemoBoard>();
+            _memoBoard.Init((RectTransform)memoBg.transform, _font);
 
             _memoPanel.SetActive(false);
 
-            // 会話ダイアログ
-            _dialogPanel = new GameObject("DialogPanel"); _dialogPanel.transform.SetParent(canvasGo.transform, false);
-            var dbg = _dialogPanel.AddComponent<Image>(); dbg.color = new Color(0.04f, 0.02f, 0.06f, 0.95f);
-            SetRect(dbg.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 240), new Vector2(1200, 360));
-            _dialogText = MakeText(_dialogPanel.transform, "DialogText", 30, TextAnchor.UpperLeft);
-            SetRect(_dialogText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120, 300));
+            // 会話ダイアログ（旧施設マップ）
+            _dialogPanel = UiTheme.Fill(root, "DialogPanel", UiTheme.Panel, raycast: true).gameObject;
+            UiTheme.Place((RectTransform)_dialogPanel.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0, 240), new Vector2(1200, 360));
+            var dRule = UiTheme.Fill(_dialogPanel.transform, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.6f));
+            UiTheme.Place(dRule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(1200, UiTheme.Hairline));
+            _dialogText = UiTheme.Label(_dialogPanel.transform, "DialogText", UiTheme.FsBody, TextAnchor.UpperLeft);
+            UiTheme.Place(_dialogText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120, 300));
             _dialogPanel.SetActive(false);
 
             // ジャンプスケア
-            _scarePanel = new GameObject("ScarePanel"); _scarePanel.transform.SetParent(canvasGo.transform, false);
+            _scarePanel = new GameObject("ScarePanel"); _scarePanel.transform.SetParent(root, false);
             _scareFlash = _scarePanel.AddComponent<Image>(); _scareFlash.color = Color.clear; _scareFlash.raycastTarget = false;
-            SetRect(_scareFlash.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            UiTheme.Stretch(_scareFlash.rectTransform);
             var faceGo = new GameObject("Face"); faceGo.transform.SetParent(_scarePanel.transform, false);
             _scareFace = faceGo.AddComponent<RawImage>(); _scareFace.texture = BuildScareFaceTexture(); _scareFace.raycastTarget = false;
-            SetRect(_scareFace.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 560));
+            UiTheme.Place(_scareFace.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 560));
             _scarePanel.SetActive(false);
 
             // ホワイトアウト
-            var whiteGo = new GameObject("Whiteout"); whiteGo.transform.SetParent(canvasGo.transform, false);
-            _whiteout = whiteGo.AddComponent<Image>(); _whiteout.color = Color.clear; _whiteout.raycastTarget = false;
-            SetRect(_whiteout.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            whiteGo.SetActive(false);
+            _whiteout = UiTheme.Fill(root, "Whiteout", Color.clear);
+            UiTheme.Stretch(_whiteout.rectTransform);
+            _whiteout.gameObject.SetActive(false);
 
-            // 終了画面
-            _endPanel = new GameObject("EndPanel"); _endPanel.transform.SetParent(canvasGo.transform, false);
-            var endBg = _endPanel.AddComponent<Image>(); endBg.color = new Color(0, 0, 0, 0.85f);
-            SetRect(endBg.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _endText = MakeText(_endPanel.transform, "EndText", 52, TextAnchor.MiddleCenter);
-            SetRect(_endText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1300, 400));
+            // 終了画面（ゲームオーバー／クリア）
+            _endPanel = UiTheme.Fill(root, "EndPanel", UiTheme.WithAlpha(UiTheme.Bg, 0.9f), raycast: true).gameObject;
+            UiTheme.Stretch((RectTransform)_endPanel.transform);
+            _endTitle = UiTheme.Label(_endPanel.transform, "Title", 64, TextAnchor.LowerCenter, UiTheme.Text, display: true);
+            UiTheme.Place(_endTitle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0f), new Vector2(0, 90), new Vector2(1400, 100));
+            var endRule = UiTheme.Fill(_endPanel.transform, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
+            UiTheme.Place(endRule.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 66), new Vector2(360, UiTheme.Hairline));
+            _endBody = UiTheme.Label(_endPanel.transform, "Body", UiTheme.FsBody, TextAnchor.UpperCenter, UiTheme.TextSub);
+            UiTheme.Place(_endBody.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(0, 40), new Vector2(1200, 120));
+            _endBody.lineSpacing = 1.6f;
+            _endButton = UiTheme.MenuItem(_endPanel.transform, "タイトルへ戻る", () => GameManager.Instance?.RestartGame(), 360f);
+            UiTheme.Place((RectTransform)_endButton.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -110), new Vector2(360, 56));
+            var endGuide = UiTheme.Label(_endPanel.transform, "Guide", UiTheme.FsSmall, TextAnchor.LowerRight, UiTheme.TextSub);
+            UiTheme.Place(endGuide.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-UiTheme.SafeX, UiTheme.SafeY), new Vector2(800, 30));
+            endGuide.text = $"{UiTheme.Key("Enter")} 決定　{UiTheme.Key("R")} リスタート";
             _endPanel.SetActive(false);
         }
 
@@ -440,33 +607,6 @@ namespace EscapeProto
 #else
             es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 #endif
-        }
-
-        private Text MakeText(Transform parent, string name, int size, TextAnchor anchor)
-        {
-            var go = new GameObject(name); go.transform.SetParent(parent, false);
-            var text = go.AddComponent<Text>();
-            text.font = _font; text.fontSize = size; text.alignment = anchor;
-            text.color = Color.white; text.supportRichText = true;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            var outline = go.AddComponent<Outline>();
-            outline.effectColor = new Color(0, 0, 0, 0.9f); outline.effectDistance = new Vector2(1.5f, -1.5f);
-            return text;
-        }
-
-        private static Image MakeImage(Transform parent, string name, Color color)
-        {
-            var go = new GameObject(name); go.transform.SetParent(parent, false);
-            var img = go.AddComponent<Image>(); img.color = color; img.raycastTarget = false;
-            return img;
-        }
-
-        private static void SetRect(RectTransform rt, Vector2 aMin, Vector2 aMax, Vector2 pos, Vector2 size)
-        {
-            rt.anchorMin = aMin; rt.anchorMax = aMax; rt.anchoredPosition = pos;
-            if (size != Vector2.zero) rt.sizeDelta = size;
-            else { rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero; }
         }
 
         private static Texture2D BuildScareFaceTexture()

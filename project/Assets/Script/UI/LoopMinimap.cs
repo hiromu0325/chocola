@@ -5,9 +5,10 @@ using UnityEngine.UI;
 namespace EscapeProto
 {
     /// <summary>
-    /// 回廊のミニマップ（画面右下）。四角い回廊と各部屋の扉を描き、
-    /// 「どの扉が開いているか／今どこか／警報はどこか／断片が残っている部屋」を色で示す。
-    ///   灰=未解放  白=開いている  黄=現在地  赤(点滅)=警報  緑=完了  桃=娘のおもちゃが残っている
+    /// 回廊のミニマップ（画面右下）。四角い回廊を細い線で描き、各部屋の扉を小さな印で示す。
+    /// 回廊にいる時と警報中だけ出す（部屋の中では消える）。
+    ///   印：暗い=未解放  灰=開いている  真鍮=次に行く部屋（娘のおもちゃが残る部屋）  青緑=完了  赤(点滅)=警報
+    ///   骨の白の四角=自分
     /// </summary>
     public class LoopMinimap : MonoBehaviour
     {
@@ -21,17 +22,18 @@ namespace EscapeProto
         private Font _font;
         private bool _built;
 
-        private static readonly Color Locked = new Color(0.35f, 0.35f, 0.38f, 0.9f);
-        private static readonly Color Open = new Color(0.95f, 0.95f, 0.95f, 1f);
-        private static readonly Color Current = new Color(1f, 0.85f, 0.3f, 1f);
-        private static readonly Color Alarm = new Color(1f, 0.25f, 0.2f, 1f);
-        private static readonly Color Done = new Color(0.45f, 0.85f, 0.5f, 1f);
-        private static readonly Color Toy = new Color(1f, 0.6f, 0.8f, 1f);
-        private static readonly Color Next = new Color(0.55f, 0.8f, 1f, 1f);
+        private static readonly Color Locked = UiTheme.WithAlpha(UiTheme.TextFaint, 0.8f);
+        private static readonly Color Open = UiTheme.TextSub;
+        private static readonly Color Current = UiTheme.Accent;
+        private static readonly Color Alarm = UiTheme.Danger;
+        private static readonly Color Done = UiTheme.WithAlpha(UiTheme.Positive, 0.85f);
+        private static readonly Color Toy = UiTheme.Accent;
+        private static readonly Color Next = UiTheme.Accent;
+        private CanvasGroup _group;
 
         private void Awake()
         {
-            _font = FontProvider.Get();
+            _font = UiTheme.BodyFont;
             Build();
         }
 
@@ -49,32 +51,34 @@ namespace EscapeProto
             var panelGo = new GameObject("Panel");
             panelGo.transform.SetParent(canvasGo.transform, false);
             var bg = panelGo.AddComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 0.45f);
+            bg.color = UiTheme.WithAlpha(Color.black, 0.35f);
             bg.raycastTarget = false;
             _panel = bg.rectTransform;
             _panel.anchorMin = _panel.anchorMax = new Vector2(1f, 0f);
             _panel.pivot = new Vector2(1f, 0f);
-            _panel.anchoredPosition = new Vector2(-24f, 24f);
+            _panel.anchoredPosition = new Vector2(-UiTheme.SafeX, UiTheme.SafeY);
             _panel.sizeDelta = new Vector2(Size, Size + 34f);
+            _group = panelGo.AddComponent<CanvasGroup>();
+            _group.alpha = 0f;
 
-            // 回廊の帯（内壁〜外壁の間）を4辺のリングで描く
+            // 回廊の外壁と内壁を細い線で描く（面で塗らない）
             float inner = LoopCorridorLayout.InnerHalf * Scale, outer = LoopCorridorLayout.OuterHalf * Scale;
-            float band = outer - inner;
-            var ring = new Color(0.6f, 0.6f, 0.65f, 0.5f);
-            MakeRect(_panel, new Vector2(0f, outer - band * 0.5f), new Vector2(outer * 2f, band), ring);      // 北
-            MakeRect(_panel, new Vector2(0f, -outer + band * 0.5f), new Vector2(outer * 2f, band), ring);     // 南
-            MakeRect(_panel, new Vector2(outer - band * 0.5f, 0f), new Vector2(band, outer * 2f), ring);      // 東
-            MakeRect(_panel, new Vector2(-outer + band * 0.5f, 0f), new Vector2(band, outer * 2f), ring);     // 西
-            var n = MakeLabel(_panel, "N", 14, new Vector2(0f, outer + 10f));
-            n.color = new Color(0.8f, 0.8f, 0.85f);
+            var line = UiTheme.WithAlpha(UiTheme.TextSub, 0.35f);
+            foreach (float h in new[] { outer, inner })
+            {
+                float w = UiTheme.Hairline;
+                MakeRect(_panel, new Vector2(0f, h), new Vector2(h * 2f + w, w), line);
+                MakeRect(_panel, new Vector2(0f, -h), new Vector2(h * 2f + w, w), line);
+                MakeRect(_panel, new Vector2(h, 0f), new Vector2(w, h * 2f + w), line);
+                MakeRect(_panel, new Vector2(-h, 0f), new Vector2(w, h * 2f + w), line);
+            }
+            var n = MakeLabel(_panel, "北", 16, new Vector2(0f, outer + 12f));
+            n.color = UiTheme.TextSub;
 
-            _player = MakeRect(_panel, Vector2.zero, new Vector2(8f, 8f), Current);
+            _player = MakeRect(_panel, Vector2.zero, new Vector2(8f, 8f), UiTheme.Text);
             _player.transform.SetAsLastSibling();
 
-            _label = MakeLabel(_panel, "", 14, new Vector2(0f, -outer - 12f));
-            _legend = MakeLabel(_panel, "", 11, new Vector2(0f, -outer - 26f));
-            _legend.text = "<color=#FFD94C>■</color>現在地 <color=#F5F5F5>■</color>開 <color=#595960>■</color>未解放 <color=#73D980>■</color>完了 <color=#FF4033>■</color>警報";
-            _legend.color = Color.white;
+            _label = MakeLabel(_panel, "", 18, new Vector2(0f, -outer - 16f));
             _built = true;
         }
 
@@ -82,9 +86,15 @@ namespace EscapeProto
         {
             if (!_built) return;
             var gm = GameManager.Instance;
-            bool show = gm != null && gm.State == GameState.Playing && LoopProgress.NotebookOwned;
-            if (_panel.gameObject.activeSelf != show) _panel.gameObject.SetActive(show);
-            if (!show) return;
+            bool active = gm != null && gm.State == GameState.Playing && LoopProgress.NotebookOwned;
+            if (_panel.gameObject.activeSelf != active) _panel.gameObject.SetActive(active);
+            if (!active) return;
+            // 回廊にいる時と警報中だけ出す（部屋の中の探索では画面を空ける）
+            var bs0 = BreakerSystem.Instance;
+            bool want = LoopRooms.InCorridor || (bs0 != null && bs0.DownRoomId != null);
+            float target = want ? 1f : 0f;
+            if (!Mathf.Approximately(_group.alpha, target))
+                _group.alpha = Mathf.MoveTowards(_group.alpha, target, Time.unscaledDeltaTime / (want ? 0.3f : 0.6f));
 
             // 部屋の印（遅延生成）
             foreach (var r in LoopRooms.All)
@@ -135,9 +145,9 @@ namespace EscapeProto
                 _player.rectTransform.anchoredPosition = new Vector2(
                     Mathf.Clamp(p.x, -LoopCorridorLayout.OuterHalf, LoopCorridorLayout.OuterHalf) * Scale,
                     Mathf.Clamp(p.z, -LoopCorridorLayout.OuterHalf, LoopCorridorLayout.OuterHalf) * Scale);
-                _label.text = next != null ? $"次: {next.Name}{LoopObjective.DoorHint(next)}" : "回廊";
+                _label.text = next != null ? $"次　{next.Name}" : "回廊";
             }
-            _label.color = Color.white;
+            _label.color = UiTheme.Text;
         }
 
         private static Vector2 ToMap(Vector3 world) => new Vector2(world.x * Scale, world.z * Scale);
@@ -163,10 +173,13 @@ namespace EscapeProto
             t.font = _font; t.fontSize = size; t.text = text; t.color = Color.white;
             t.alignment = TextAnchor.MiddleCenter; t.supportRichText = true; t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var sh = go.AddComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            sh.effectDistance = new Vector2(0f, -2f);
             var rt = t.rectTransform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = pos + new Vector2(0f, 17f);
-            rt.sizeDelta = new Vector2(Size, 20f);
+            rt.sizeDelta = new Vector2(Size, 24f);
             return t;
         }
     }

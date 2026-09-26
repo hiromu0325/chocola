@@ -216,7 +216,7 @@ namespace EscapeProto
 
             string e = "";
             for (int i = 0; i < 3; i++) e += (i < _entry.Count ? _entry[i].ToString() : "＿") + (i < 2 ? "  " : "");
-            _entryText.text = $"入力: <color=#FFE060>{e}</color>";
+            _entryText.text = $"入力: <color={UiTheme.Rgb(UiTheme.Accent)}>{e}</color>";
             _footer.text = "ホイール/A・D/←→で回す　数秒止めて確定　[Esc]閉じる\n" +
                            "回すと音が鳴る——桁の位置だけ音が違う（低→中→高＝1→3桁目）";
         }

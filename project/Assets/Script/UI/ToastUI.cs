@@ -88,35 +88,36 @@ namespace EscapeProto
             var plateGo = new GameObject("Plate");
             plateGo.transform.SetParent(canvasGo.transform, false);
             _plate = plateGo.AddComponent<Image>();
-            _plate.color = new Color(0.05f, 0.05f, 0.06f, 0.82f);
+            _plate.color = UiTheme.WithAlpha(Color.black, 0.72f);
             _plate.raycastTarget = false;
             var prt = _plate.rectTransform;
-            prt.anchorMin = new Vector2(0.5f, 0f);
-            prt.anchorMax = new Vector2(0.5f, 0f);
-            prt.pivot = new Vector2(0.5f, 0f);
-            prt.anchoredPosition = new Vector2(0f, 130f);
+            // 上中央（目標＝左上・人形＝右上の間）。資料やテンキーの窓の下端のボタンに重ならない
+            prt.anchorMin = new Vector2(0.5f, 1f);
+            prt.anchorMax = new Vector2(0.5f, 1f);
+            prt.pivot = new Vector2(0.5f, 1f);
+            prt.anchoredPosition = new Vector2(0f, -UiTheme.SafeY);
             prt.sizeDelta = new Vector2(420f, 46f);
 
             // 左端の飾り線（手帳っぽい金の縦線）
             var bar = new GameObject("Accent");
             bar.transform.SetParent(plateGo.transform, false);
             var barImg = bar.AddComponent<Image>();
-            barImg.color = new Color(0.85f, 0.72f, 0.4f, 0.95f);
+            barImg.color = UiTheme.Accent;
             barImg.raycastTarget = false;
             var brt = barImg.rectTransform;
             brt.anchorMin = new Vector2(0f, 0f);
             brt.anchorMax = new Vector2(0f, 1f);
             brt.pivot = new Vector2(0f, 0.5f);
             brt.anchoredPosition = new Vector2(6f, 0f);
-            brt.sizeDelta = new Vector2(3f, -12f);
+            brt.sizeDelta = new Vector2(2f, -16f);
 
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(plateGo.transform, false);
             _text = textGo.AddComponent<Text>();
-            _text.font = FontProvider.Get();
-            _text.fontSize = 24;
+            _text.font = UiTheme.BodyFont;
+            _text.fontSize = UiTheme.FsHud;
             _text.alignment = TextAnchor.MiddleCenter;
-            _text.color = new Color(0.95f, 0.93f, 0.87f);
+            _text.color = UiTheme.Text;
             _text.raycastTarget = false;
             var trt = _text.rectTransform;
             trt.anchorMin = Vector2.zero;

@@ -12,10 +12,34 @@ namespace EscapeProto
 
         public static bool IsLoopScene => LoopRooms.Get(LoopProgress.StartRoomId) != null;
 
+        /// <summary>目標の種類（HUDの見た目を変える）</summary>
+        public enum Tone { Normal, Warning, Done }
+
+        private static Tone _tone;
+
+        /// <summary>「目標: …」の1行（色付き）。ログや検証用</summary>
         public static string Text()
         {
+            string s = Plain(out var tone);
+            if (string.IsNullOrEmpty(s)) return "";
+            var c = tone == Tone.Warning ? UiTheme.Danger : tone == Tone.Done ? UiTheme.Positive : UiTheme.Accent;
+            return $"<color={UiTheme.Rgb(c)}>目標: {s}</color>";
+        }
+
+        /// <summary>目標の文（「目標:」も色も付けない）と種類。HUD はこれを使う</summary>
+        /// <param name="anyState">true ならプレイ中以外（一時停止など）でも作る</param>
+        public static string Plain(out Tone tone, bool anyState = false)
+        {
+            _tone = Tone.Normal;
+            string s = Compute(anyState);
+            tone = _tone;
+            return s;
+        }
+
+        private static string Compute(bool anyState)
+        {
             var gm = GameManager.Instance;
-            if (gm == null || gm.State != GameState.Playing) return "";
+            if (gm == null || (!anyState && gm.State != GameState.Playing)) return "";
             string cur = LoopRooms.CurrentRoomId;
             var room = LoopRooms.Get(cur);
             var bs = BreakerSystem.Instance;
@@ -105,8 +129,8 @@ namespace EscapeProto
         public static string DoorHint(LoopRoomRoot r) =>
             r == null ? "" : $"（{SideNames[r.Side % 4]}側 {r.Slot + 1}番）";
 
-        private static string Main(string s) => $"<color=#FFD060>目標: {s}</color>";
-        private static string Warn(string s) => $"<color=#FF6060>目標: {s}</color>";
-        private static string Good(string s) => $"<color=#7CFC8C>目標: {s}</color>";
+        private static string Main(string s) { _tone = Tone.Normal; return s; }
+        private static string Warn(string s) { _tone = Tone.Warning; return s; }
+        private static string Good(string s) { _tone = Tone.Done; return s; }
     }
 }

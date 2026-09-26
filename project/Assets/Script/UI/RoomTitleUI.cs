@@ -99,7 +99,7 @@ namespace EscapeProto
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 300;   // 資料UIやカットシーン帯より下
+            canvas.sortingOrder = 45;    // HUD・ミニマップより上、資料UI（50）・手帳（60）より下（読んでいる資料に重ならない）
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -128,13 +128,13 @@ namespace EscapeProto
                 var line = new GameObject("Line");
                 line.transform.SetParent(band.transform, false);
                 var img = line.AddComponent<Image>();
-                img.color = new Color(0.78f, 0.70f, 0.48f, 0.9f);
+                img.color = UiTheme.WithAlpha(UiTheme.Accent, 0.6f);
                 img.raycastTarget = false;
                 var rt = img.rectTransform;
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.anchoredPosition = new Vector2(0f, y);
-                rt.sizeDelta = new Vector2(760f, 2f);
+                rt.sizeDelta = new Vector2(640f, UiTheme.Hairline);
             }
 
             // 章節ラベル（小・上）
@@ -142,9 +142,9 @@ namespace EscapeProto
             subGo.transform.SetParent(band.transform, false);
             _sub = subGo.AddComponent<Text>();
             _sub.font = font;
-            _sub.fontSize = 24;
+            _sub.fontSize = UiTheme.FsSmall + 2;
             _sub.alignment = TextAnchor.MiddleCenter;
-            _sub.color = new Color(0.85f, 0.80f, 0.65f);
+            _sub.color = UiTheme.TextSub;
             _sub.raycastTarget = false;
             var srt = _sub.rectTransform;
             srt.anchorMin = new Vector2(0f, 0.5f);
@@ -156,10 +156,10 @@ namespace EscapeProto
             var mainGo = new GameObject("Title");
             mainGo.transform.SetParent(band.transform, false);
             _main = mainGo.AddComponent<Text>();
-            _main.font = font;
+            _main.font = UiTheme.DisplayFont;   // 部屋名は明朝
             _main.fontSize = 58;
             _main.alignment = TextAnchor.MiddleCenter;
-            _main.color = new Color(0.96f, 0.94f, 0.88f);
+            _main.color = UiTheme.Text;
             _main.raycastTarget = false;
             var mrt = _main.rectTransform;
             mrt.anchorMin = new Vector2(0f, 0.5f);

@@ -45,7 +45,7 @@ namespace EscapeProto
         private void Awake()
         {
             Instance = this;
-            _font = FontProvider.Get();
+            _font = UiTheme.BodyFont;
             BuildUI();
         }
 
@@ -208,7 +208,7 @@ namespace EscapeProto
         private void RefreshKeypadDisplay()
         {
             string shown = _keypadInput.PadRight(_keypadLength, '＿');
-            _inputDisplay.text = $"<color=#FFE060>{string.Join("  ", shown.ToCharArray())}</color>";
+            _inputDisplay.text = $"<color={UiTheme.Rgb(UiTheme.Accent)}>{string.Join("  ", shown.ToCharArray())}</color>";
         }
 
         // ============================== 入力（キーボード）==============================
@@ -371,25 +371,32 @@ namespace EscapeProto
             _panel = new GameObject("PuzzlePanel");
             _panel.transform.SetParent(canvasGo.transform, false);
             var bg = _panel.AddComponent<Image>();
-            bg.color = new Color(0.06f, 0.05f, 0.07f, 0.96f);
+            bg.color = UiTheme.Panel;
             SetRect(bg.rectTransform, Center, Center, Vector2.zero, new Vector2(1100, 760));
 
-            _titleText = MakeText(_panel.transform, "Title", 40, TextAnchor.UpperCenter);
-            SetRect(_titleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -30), new Vector2(1040, 70));
-            _titleText.color = new Color(1f, 0.85f, 0.6f);
+            _titleText = MakeText(_panel.transform, "Title", 36, TextAnchor.UpperLeft);
+            _titleText.font = UiTheme.DisplayFont;
+            SetRect(_titleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(1000, 60));
+            _titleText.color = UiTheme.Text;
+            // 見出しの下の細罫
+            var rule = UiTheme.Fill(_panel.transform, "TitleRule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
+            UiTheme.Place(rule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 0.5f), new Vector2(-500, -104), new Vector2(120, UiTheme.Hairline));
 
-            _bodyText = MakeText(_panel.transform, "Body", 30, TextAnchor.UpperLeft);
-            SetRect(_bodyText.rectTransform, Center, Center, new Vector2(0, 40), new Vector2(1000, 520));
+            _bodyText = MakeText(_panel.transform, "Body", UiTheme.FsBody, TextAnchor.UpperLeft);
+            SetRect(_bodyText.rectTransform, Center, Center, new Vector2(0, 20), new Vector2(1000, 500));
+            _bodyText.lineSpacing = 1.5f;
+            _bodyText.color = UiTheme.Text;
 
             // 入力表示（Keypad）
             _inputDisplay = MakeText(_panel.transform, "InputDisplay", 60, TextAnchor.MiddleCenter);
             SetRect(_inputDisplay.rectTransform, Center, Center, new Vector2(0, 150), new Vector2(760, 96));
-            var inputBg = _inputDisplay.gameObject.AddComponent<Outline>();
-            inputBg.effectColor = new Color(0, 0, 0, 0.8f); inputBg.effectDistance = new Vector2(2, -2);
+            var inputLine = UiTheme.Fill(_inputDisplay.transform, "Underline", UiTheme.WithAlpha(UiTheme.TextSub, 0.6f));
+            UiTheme.Place(inputLine.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(420, UiTheme.Hairline));
 
             _footerText = MakeText(_panel.transform, "Footer", 24, TextAnchor.LowerCenter);
             SetRect(_footerText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 20), new Vector2(1040, 60));
-            _footerText.color = new Color(0.7f, 0.7f, 0.75f);
+            _footerText.color = UiTheme.TextSub;
+            _footerText.fontSize = UiTheme.FsSmall;
 
             BuildKeypadPad();
 
@@ -424,35 +431,18 @@ namespace EscapeProto
                 float y = 40f - row * 96f;
                 MakeButton(_keypadPad.transform, digit.ToString(), new Vector2(x, y), size, 40, () => KeypadAppend(digit));
             }
-            // C / 0 / ⌫
+            // C / 0 / ←（1字消す）
             MakeButton(_keypadPad.transform, "C", new Vector2(-112f, -248f), size, 34, KeypadClear);
             MakeButton(_keypadPad.transform, "0", new Vector2(0f, -248f), size, 40, () => KeypadAppend(0));
-            MakeButton(_keypadPad.transform, "⌫", new Vector2(112f, -248f), size, 38, KeypadBackspace);
+            MakeButton(_keypadPad.transform, "←", new Vector2(112f, -248f), size, 38, KeypadBackspace);   // ⌫ は字形が無いフォントがある
             // 決定
             MakeButton(_keypadPad.transform, "決定", new Vector2(0f, -330f), new Vector2(312, 60), 32, KeypadSubmit);
         }
 
         private Button MakeButton(Transform parent, string label, Vector2 pos, Vector2 size, int fontSize, Action onClick)
         {
-            var go = new GameObject("Btn_" + label);
-            go.transform.SetParent(parent, false);
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.17f, 0.22f, 1f);
-            SetRect(img.rectTransform, Center, Center, pos, size);
-
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            var colors = btn.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(0.45f, 0.55f, 0.7f, 1f);
-            colors.pressedColor = new Color(0.25f, 0.35f, 0.5f, 1f);
-            colors.selectedColor = colors.highlightedColor;
-            btn.colors = colors;
-            if (onClick != null) btn.onClick.AddListener(() => onClick());
-
-            var t = MakeText(go.transform, "L", fontSize, TextAnchor.MiddleCenter);
-            SetRect(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            t.text = label;
+            var btn = UiTheme.BoxButton(parent, label, size, Mathf.Min(fontSize, 32), onClick);
+            SetRect((RectTransform)btn.transform, Center, Center, pos, size);
             return btn;
         }
 

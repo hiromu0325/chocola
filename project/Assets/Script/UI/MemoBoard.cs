@@ -138,7 +138,7 @@ namespace EscapeProto
             _pageLabel = labelGo.AddComponent<Text>();
             _pageLabel.font = _font; _pageLabel.fontSize = 22;
             _pageLabel.alignment = TextAnchor.LowerCenter;
-            _pageLabel.color = new Color(0.7f, 0.7f, 0.75f);
+            _pageLabel.color = UiTheme.TextSub;
             var lr = _pageLabel.rectTransform;
             lr.anchorMin = new Vector2(0.5f, 0f); lr.anchorMax = new Vector2(0.5f, 0f);
             lr.anchoredPosition = new Vector2(0f, 14f); lr.sizeDelta = new Vector2(1200f, 36f);
@@ -149,7 +149,7 @@ namespace EscapeProto
             var go = new GameObject(name);
             go.transform.SetParent(_board, false);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.25f, 0.23f, 0.2f, 0.9f);
+            img.color = UiTheme.PanelDim;
             var rt = img.rectTransform;
             SetRect(rt, pos, new Vector2(112f, 40f));
             var btn = go.AddComponent<Button>();
@@ -206,15 +206,15 @@ namespace EscapeProto
                     if (Notebook.IsFlagged(e.id)) flagged = true;
                 }
                 var img = _tabs[i].GetComponent<Image>();
-                img.color = active ? new Color(0.55f, 0.45f, 0.25f, 0.95f)
-                          : hasEntries ? new Color(0.25f, 0.23f, 0.2f, 0.9f)
-                          : new Color(0.16f, 0.15f, 0.14f, 0.7f);
+                img.color = active ? UiTheme.WithAlpha(UiTheme.Accent * 0.6f, 0.95f)
+                          : hasEntries ? UiTheme.PanelDim
+                          : UiTheme.WithAlpha(UiTheme.PanelDim, 0.5f);
                 var label = _tabs[i].GetComponentInChildren<Text>();
                 if (label != null)
                 {
-                    label.text = flagged ? TabNames[i] + " <color=#FFB040>!</color>" : TabNames[i];
+                    label.text = flagged ? TabNames[i] + $" <color={UiTheme.Rgb(UiTheme.Danger)}>!</color>" : TabNames[i];
                     label.supportRichText = true;
-                    label.color = hasEntries || active ? Color.white : new Color(0.55f, 0.55f, 0.55f);
+                    label.color = active ? Color.white : hasEntries ? UiTheme.Text : UiTheme.TextFaint;
                 }
             }
         }
@@ -274,9 +274,9 @@ namespace EscapeProto
                 foreach (var t in indexed) tabEntries.Add(t.e);
             }
 
-            var chapterColor = new Color(1f, 0.85f, 0.55f);
-            var roomColor = new Color(0.75f, 0.7f, 0.6f);
-            var flagColor = new Color(1f, 0.7f, 0.3f);
+            var chapterColor = UiTheme.Accent;
+            var roomColor = UiTheme.TextSub;
+            var flagColor = UiTheme.Danger;
 
             if (_tab != EvidenceTab)
             {
@@ -437,7 +437,7 @@ namespace EscapeProto
             rt.anchoredPosition = pos + new Vector2(-2f, 2f);
             rt.sizeDelta = new Vector2(w + 4f, LineH);
 
-            var label = MakeText(rt, keyword, new Vector2(2f, -2f), w, new Color(1f, 0.88f, 0.45f));
+            var label = MakeText(rt, keyword, new Vector2(2f, -2f), w, UiTheme.Accent);
             label.raycastTarget = false;
 
             // 赤い枠（ホバー時のみ表示。上下左右の細線4本）
@@ -470,7 +470,7 @@ namespace EscapeProto
             var go = new GameObject("Edge");
             go.transform.SetParent(frame, false);
             var img = go.AddComponent<Image>();
-            img.color = new Color(1f, 0.15f, 0.15f, 0.95f);
+            img.color = UiTheme.Danger;
             img.raycastTarget = false;
             var rt = img.rectTransform;
             if (horizontal)
@@ -672,7 +672,7 @@ namespace EscapeProto
             var go = new GameObject("Link");
             go.transform.SetParent(_lineLayer, false);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.95f, 0.2f, 0.2f, 0.85f);
+            img.color = UiTheme.WithAlpha(UiTheme.Danger, 0.85f);
             img.raycastTarget = false;
             return img.rectTransform;
         }
