@@ -7,8 +7,10 @@ using UnityEngine.UI;
 namespace EscapeProto
 {
     /// <summary>
-    /// ラインマーカーを引ける本文。マウスで文字の上をドラッグすると、その範囲が
-    /// 手帳の「メモ」に書き写される（MemoSnippets）。引いたマーカーは本文の上に残り、クリックすると消せる。
+    /// ラインマーカーを引ける本文。蛍光ペンのように自由になぞれる：
+    /// なぞった軌跡（太さのある筆）に少しでも触れた文字はすべて拾い、本文の中で続いている文字
+    /// （間が空白・改行だけのものも続きとみなす）を1つのまとまりとして、手帳の「メモ」に書き写す（MemoSnippets）。
+    /// 斜めになぞっても、行をまたいでも、触れた所だけが塗られる。引いたマーカーはクリックすると消せる。
     /// 文字の位置は Text の cachedTextGenerator から取る（リッチテキストは使わない＝文字の番号がずれない）。
     /// ※AddComponent で作るのでファイル名と一致させてある
     /// </summary>
@@ -24,9 +26,15 @@ namespace EscapeProto
         private string _body = "";
         private RectTransform _layer;
         private readonly List<Image> _pool = new List<Image>();
-        private int _dragFrom = -1, _dragTo = -1;
         private bool _dragging, _moved;
         private int _dirtyFrames;
+        private int _clickIndex = -1;                                  // 押した所の文字（クリックでマーカーを消す）
+        private readonly SortedSet<int> _touched = new SortedSet<int>(); // なぞった軌跡に触れた文字
+        private readonly List<Rect> _rects = new List<Rect>();          // 文字ごとの枠（本文の基準点からの相対）
+        private Vector2 _pressLocal, _lastLocal;
+
+        /// <summary>筆の太さ（半径）。行の高さの約3割＝少しでも文字に被れば拾う</summary>
+        private float BrushRadius => Mathf.Max(3f, Text.fontSize * 0.3f);
 
         public static MarkerText Create(RectTransform parent, Text text)
         {
@@ -49,7 +57,8 @@ namespace EscapeProto
             EntryId = entryId;
             _body = (body ?? "").Replace("\r", "");
             Text.text = _body;
-            _dragFrom = _dragTo = -1;
+            _touched.Clear();
+            _rects.Clear();
             _dirtyFrames = 2;   // 文字の配置が決まってから塗る
         }
 
@@ -73,36 +82,122 @@ namespace EscapeProto
         public void OnPointerDown(PointerEventData e)
         {
             if (e.button != PointerEventData.InputButton.Left) return;
-            int i = CharAt(e.position, e.pressEventCamera);
-            _dragFrom = _dragTo = i;
-            _dragging = i >= 0;
+            if (!ToLocal(e.position, e.pressEventCamera, out var p)) return;
+            BuildRects();
+            _touched.Clear();
+            _dragging = true;
             _moved = false;
+            _pressLocal = _lastLocal = p;
+            _clickIndex = CharAt(e.position, e.pressEventCamera);
+            TouchAt(p);
         }
 
         public void OnDrag(PointerEventData e)
         {
-            if (!_dragging) return;
-            int i = CharAt(e.position, e.pressEventCamera);
-            if (i >= 0 && i != _dragTo) { _dragTo = i; _moved = true; Redraw(); }
+            if (!_dragging || !ToLocal(e.position, e.pressEventCamera, out var p)) return;
+            if (!_moved && (p - _pressLocal).magnitude < BrushRadius * 0.6f) return;   // 手ぶれはクリックのまま
+            _moved = true;
+            TouchSegment(_lastLocal, p);
+            _lastLocal = p;
+            Redraw();
         }
 
         public void OnPointerUp(PointerEventData e)
         {
             if (!_dragging) return;
             _dragging = false;
-            int a = Mathf.Min(_dragFrom, _dragTo), b = Mathf.Max(_dragFrom, _dragTo);
-            _dragFrom = _dragTo = -1;
-            if (!_moved || b <= a)
+            if (!_moved)
             {
                 // ただのクリック：マーカーの上なら消す
-                var hit = SnippetAt(a);
+                var hit = SnippetAt(_clickIndex);
                 if (hit != null) { MemoSnippets.Remove(hit.id); OnRemoved?.Invoke(); }
+                _touched.Clear();
                 Redraw();
                 return;
             }
-            var snip = MemoSnippets.Add(EntryId, _body, a, b - a + 1);
+            // 触れた文字を、本文の中で続いているまとまりごとに書き写す
+            MemoSnippet last = null;
+            foreach (var (a, b) in Groups(_touched, joinBlank: true))
+            {
+                var snip = MemoSnippets.Add(EntryId, _body, a, b - a + 1);
+                if (snip != null) last = snip;
+            }
+            _touched.Clear();
             Redraw();
-            if (snip != null) OnAdded?.Invoke(snip);
+            if (last != null) OnAdded?.Invoke(last);
+        }
+
+        /// <summary>
+        /// 文字番号の集まり → 続いている範囲 [a, b] の並び。
+        /// joinBlank = 間が空白・改行だけなら続きとみなす（行をまたいでなぞった時に1つのまとまりにする）
+        /// </summary>
+        private IEnumerable<(int a, int b)> Groups(SortedSet<int> set, bool joinBlank)
+        {
+            int a = -1, b = -1;
+            foreach (int i in set)
+            {
+                if (a < 0) { a = b = i; continue; }
+                if (i == b + 1 || (joinBlank && OnlyBlank(b + 1, i))) { b = i; continue; }
+                yield return (a, b);
+                a = b = i;
+            }
+            if (a >= 0) yield return (a, b);
+        }
+
+        private bool OnlyBlank(int from, int to)
+        {
+            for (int i = from; i < to; i++)
+                if (i < _body.Length && !char.IsWhiteSpace(_body[i])) return false;
+            return true;
+        }
+
+        // ---- 筆の当たり ----
+
+        private bool ToLocal(Vector2 screen, Camera cam, out Vector2 local) =>
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(Text.rectTransform, screen, cam, out local);
+
+        /// <summary>文字ごとの枠を作る（改行は枠なし）。本文を置き直した後の最初のクリックで作る</summary>
+        private void BuildRects()
+        {
+            _rects.Clear();
+            var gen = Text.cachedTextGenerator;
+            var lines = gen.lines;
+            var chars = gen.characters;
+            int n = Mathf.Min(chars.Count, _body.Length);
+            if (lines.Count == 0) return;
+            float ppu = Ppu;
+            int li = 0;
+            for (int i = 0; i < n; i++)
+            {
+                while (li + 1 < lines.Count && lines[li + 1].startCharIdx <= i) li++;
+                if (_body[i] == '\n') { _rects.Add(Rect.zero); continue; }
+                float x0 = chars[i].cursorPos.x / ppu;
+                float w = Mathf.Max(chars[i].charWidth / ppu, 1f);
+                float top = lines[li].topY / ppu, h = lines[li].height / ppu;
+                _rects.Add(new Rect(x0, top - h, w, h));
+            }
+        }
+
+        /// <summary>筆（点）に少しでも重なる文字を拾う</summary>
+        private void TouchAt(Vector2 p)
+        {
+            float r = BrushRadius;
+            for (int i = 0; i < _rects.Count; i++)
+            {
+                var rc = _rects[i];
+                if (rc.width <= 0f) continue;
+                float dx = Mathf.Max(rc.xMin - p.x, 0f, p.x - rc.xMax);
+                float dy = Mathf.Max(rc.yMin - p.y, 0f, p.y - rc.yMax);
+                if (dx * dx + dy * dy <= r * r) _touched.Add(i);
+            }
+        }
+
+        /// <summary>筆を a から b へ動かした間に触れた文字（素早くなぞっても抜けないよう細かく刻む）</summary>
+        private void TouchSegment(Vector2 a, Vector2 b)
+        {
+            float step = BrushRadius * 0.5f;
+            int n = Mathf.Max(1, Mathf.CeilToInt((b - a).magnitude / step));
+            for (int k = 1; k <= n; k++) TouchAt(Vector2.Lerp(a, b, (float)k / n));
         }
 
         private MemoSnippet SnippetAt(int index)
@@ -158,8 +253,10 @@ namespace EscapeProto
                 used = Paint(s.start, s.start + s.length, Marker, used);
             if (_dragging && _moved)
             {
-                int a = Mathf.Min(_dragFrom, _dragTo), b = Mathf.Max(_dragFrom, _dragTo) + 1;
-                used = Paint(a, b, new Color(Marker.r, Marker.g, Marker.b, Marker.a * 0.75f), used);
+                // なぞっている途中：触れた文字だけをその場で塗る
+                var live = new Color(Marker.r, Marker.g, Marker.b, Marker.a * 0.75f);
+                foreach (var (a, b) in Groups(_touched, joinBlank: false))
+                    used = Paint(a, b + 1, live, used);
             }
             for (int i = used; i < _pool.Count; i++) _pool[i].gameObject.SetActive(false);
         }

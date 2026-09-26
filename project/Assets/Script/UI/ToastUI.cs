@@ -43,6 +43,11 @@ namespace EscapeProto
             {
                 string msg = _queue.Dequeue();
                 _text.text = msg;
+                // 調べる画面を開いている間は右上へ（上中央は資料の見出しと重なるため）
+                var prt = _plate.rectTransform;
+                bool inspecting = InspectView.IsOpen;
+                prt.anchorMin = prt.anchorMax = prt.pivot = inspecting ? new Vector2(1f, 1f) : new Vector2(0.5f, 1f);
+                prt.anchoredPosition = inspecting ? new Vector2(-UiTheme.SafeX, -UiTheme.SafeY) : new Vector2(0f, -UiTheme.SafeY);
                 // 文字量に合わせて背景の幅を調整
                 float w = Mathf.Clamp(_text.preferredWidth + 56f, 260f, 900f);
                 _plate.rectTransform.sizeDelta = new Vector2(w, 46f);

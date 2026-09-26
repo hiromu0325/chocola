@@ -38,6 +38,14 @@ namespace EscapeProto
 
         private void OnDestroy() { if (Instance == this) Instance = null; }
 
+        /// <summary>資料を調べている・手帳を開いている間は帯を消して早送りする（下から透けて見えないように）</summary>
+        private void LateUpdate()
+        {
+            if (!IsShowing || !(InspectView.IsOpen || NotebookUI.IsOpen)) return;
+            _hurry = true;
+            _group.alpha = 0f;
+        }
+
         /// <summary>
         /// タイトルを表示する。sub（章節ラベル）はnull可。
         /// 資料ウィンドウ等が開いている間はUiQueueで待機し、閉じてから表示される。

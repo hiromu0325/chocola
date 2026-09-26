@@ -154,6 +154,7 @@ namespace EscapeProto
             _open = false;
             _closedFrame = Time.frameCount;
             StopPlayback(false);
+            PlaceSubtitle(false);   // 閉じた後も流れる独白は通常の高さで
             if (_item != null) { Destroy(_item); _item = null; }
             if (_dimCanvas != null) _dimCanvas.SetActive(false);
             if (_cam != null) _cam.enabled = false;
@@ -190,7 +191,12 @@ namespace EscapeProto
 
         private void EnsureRig()
         {
+            // 起床の場面の直後などは Camera.main が取れない瞬間がある。その時は有効な通常のカメラを探す
             var main = Camera.main;
+            if (main == null)
+                foreach (var c in Camera.allCameras)
+                    if (c != _cam && c.isActiveAndEnabled && c.GetUniversalAdditionalCameraData().renderType == CameraRenderType.Base)
+                    { main = c; break; }
             if (main != null && main != _mainCam)
             {
                 _mainCam = main;
@@ -299,6 +305,7 @@ namespace EscapeProto
         {
             if (_item != null) Destroy(_item);
             _item = null;
+            if (_spin == null) return;   // カメラが無く3Dを用意できない時は、文章だけで見せる
             var lib = InspectLibrary.Instance;
             var prefab = lib != null ? lib.Get(info.Kind) : null;
             if (prefab == null) return;
@@ -401,6 +408,7 @@ namespace EscapeProto
 
         private void UpdateModel()
         {
+            if (_pivot == null || _spin == null) return;
             // 置き台を所定の位置へ（開いた時は下から浮かび上がる）
             var target = new Vector3(0f, 0f, _distance);
             _pivot.localPosition = Vector3.Lerp(_pivot.localPosition, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 12f));
@@ -422,6 +430,7 @@ namespace EscapeProto
             bool read = m == Mode.Read;
             _readPanel.SetActive(read);
             _status.gameObject.SetActive(!read);
+            PlaceSubtitle(read);
             if (read)
             {
                 string body = _req.Info.Audio ? DocCatalog.Transcript(_req.RoomId, _req.DocId) : _req.Body;
@@ -445,7 +454,7 @@ namespace EscapeProto
             if (_mode == Mode.Read)
             {
                 string toModel = _item != null && !(_req?.StartInRead ?? false) ? $"{UiTheme.Key("Space", "Y")} 実物に戻る　　" : "";
-                _guide.text = $"ドラッグ マーカーを引く（メモへ書き写す）　　マーカーをクリック 消す　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
+                _guide.text = $"なぞる マーカー（触れた文字をメモへ）　　マーカーをクリック 消す　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
             }
             else
             {
@@ -628,6 +637,14 @@ namespace EscapeProto
 
         private void HideSubtitleNow() => _subGroup.alpha = 0f;
 
+        /// <summary>字幕の高さ：読む画面の間は本文の窓の下（操作ガイドとの間）、それ以外は少し上</summary>
+        private void PlaceSubtitle(bool reading)
+        {
+            float y = UiTheme.SafeY + (reading ? 62f : 120f);
+            _subPlate.rectTransform.anchoredPosition = new Vector2(0f, y);
+            _subText.rectTransform.anchoredPosition = new Vector2(0f, y);
+        }
+
         // ============================== 入力 ==============================
 
         private enum Act { Primary, Secondary, Close, CloseAlt, CloseAll }
@@ -731,7 +748,7 @@ namespace EscapeProto
             // 読む画面
             _readPanel = UiTheme.Fill(root, "Read", UiTheme.Panel, raycast: true).gameObject;
             var prt = (RectTransform)_readPanel.transform;
-            UiTheme.Place(prt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), new Vector2(1040f, 820f));
+            UiTheme.Place(prt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 22f), new Vector2(1040f, 800f));
             _readTitle = UiTheme.Label(prt, "Title", 32, TextAnchor.UpperLeft, UiTheme.Text, display: true);
             UiTheme.Place(_readTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(920f, 50f));
             _readNote = UiTheme.Label(prt, "Note", UiTheme.FsSmall, TextAnchor.UpperRight, UiTheme.TextSub);
@@ -739,7 +756,7 @@ namespace EscapeProto
             var rrule = UiTheme.Fill(prt, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
             UiTheme.Place(rrule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 0.5f), new Vector2(-460f, -96f), new Vector2(120f, UiTheme.Hairline));
             var body = UiTheme.Label(prt, "Body", UiTheme.FsBody, TextAnchor.UpperLeft, UiTheme.Text, shadow: false);
-            UiTheme.Place(body.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -122f), new Vector2(920f, 660f));
+            UiTheme.Place(body.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -122f), new Vector2(920f, 640f));
             body.lineSpacing = 1.35f;
             body.verticalOverflow = VerticalWrapMode.Truncate;
             _marker = MarkerText.Create(prt, body);

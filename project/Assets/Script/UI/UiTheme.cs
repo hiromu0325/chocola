@@ -320,7 +320,7 @@ namespace EscapeProto
                     foreach (char c in l) em += c < 0x2000 ? 0.55f : 1f;
                     rows += Mathf.Max(1, Mathf.CeilToInt(em / Mathf.Max(1f, perLine)));
                 }
-                if (rows * size * lineSpacing * 1.2f <= h) return size;
+                if (rows * size * lineSpacing * 1.4f <= h) return size;   // 日本語フォントの行の高さは文字の約1.3〜1.4倍
             }
             return sizes[sizes.Length - 1];
         }
