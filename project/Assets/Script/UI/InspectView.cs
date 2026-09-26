@@ -88,6 +88,15 @@ namespace EscapeProto
 
         private bool _tookControl;
 
+        // ---- カセットレコーダー（テープを入れると見た目をレコーダーに替え、再生中はリールが回る） ----
+        private bool _loaded;
+        private Transform _reelL, _reelR;
+
+        /// <summary>カセットテープ（レコーダーで聞く音声記録）か</summary>
+        private bool IsTape => _req != null && _req.Info.Audio && _req.Info.Kind == InspectKind.Cassette;
+        /// <summary>読める本文があるか（道具は実物を見るだけ）</summary>
+        private bool Readable => _req != null && (_req.Info.Audio || !string.IsNullOrEmpty(_req.Body));
+
         // ============================== 開く・閉じる ==============================
 
         /// <summary>部屋で拾った資料を開く</summary>
@@ -124,7 +133,9 @@ namespace EscapeProto
             if (_tookControl) gm.SetBusy(true);
 
             _title.text = req.Title ?? "";
-            BuildItem();
+            _loaded = false;
+            _reelL = _reelR = null;
+            BuildItem(req.Info, req.Title, req.Body);
             _group.alpha = 1f;
             _group.blocksRaycasts = true;
             _canvas.gameObject.SetActive(true);
@@ -284,26 +295,31 @@ namespace EscapeProto
         }
 
         /// <summary>実物を置く（種類のモデル＋紙面の文章）。モデルが無ければ何も置かない</summary>
-        private void BuildItem()
+        private void BuildItem(DocInfo info, string title, string body)
         {
             if (_item != null) Destroy(_item);
             _item = null;
             var lib = InspectLibrary.Instance;
-            var prefab = lib != null ? lib.Get(_req.Info.Kind) : null;
+            var prefab = lib != null ? lib.Get(info.Kind) : null;
             if (prefab == null) return;
 
             _item = Instantiate(prefab, _spin, false);
             _item.name = "Item";
             foreach (var c in _item.GetComponentsInChildren<Collider>(true)) Destroy(c);
-            float scale = _req.Info.Scale > 0f ? _req.Info.Scale : 1f;
-            InspectPrint.Apply(_item, _req, scale);
+            float scale = info.Scale > 0f ? info.Scale : 1f;
+            InspectPrint.Apply(_item, new Request { Title = title, Body = body, Info = info }, scale);
             SetLayer(_item.transform, Layer);
             foreach (var r in _item.GetComponentsInChildren<Renderer>(true))
             {
                 r.renderingLayerMask = RenderingBit;
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 r.receiveShadows = false;
-                if (_req.Info.Tint != Color.white) TintPaper(r, _req.Info.Tint);
+                if (info.Tint != Color.white) TintPaper(r, info.Tint);
+            }
+            foreach (var t in _item.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "ReelL") _reelL = t;
+                else if (t.name == "ReelR") _reelR = t;
             }
 
             // 大きさをそろえ、見た目の中心を回転の中心に
@@ -366,14 +382,21 @@ namespace EscapeProto
                     if (_mode == Mode.Model)
                     {
                         if (_req.Info.Audio) TogglePlayback();
-                        else SetMode(Mode.Read);
+                        else if (Readable) SetMode(Mode.Read);
                     }
                     else if (_item != null) SetMode(Mode.Model);
                 }
                 else if (Pressed(Act.Secondary) && _mode == Mode.Model && _req.Info.Audio && DocState.Heard(_req.EntryId))
                     SetMode(Mode.Read);
             }
-            if (_playing) UpdateStatus();
+            if (_playing)
+            {
+                UpdateStatus();
+                // 再生中はリールが回る（巻き取る右は少し速く）
+                float dt = Time.unscaledDeltaTime;
+                if (_reelL != null) _reelL.Rotate(0f, 0f, 150f * dt, Space.Self);
+                if (_reelR != null) _reelR.Rotate(0f, 0f, 175f * dt, Space.Self);
+            }
         }
 
         private void UpdateModel()
@@ -426,9 +449,12 @@ namespace EscapeProto
             }
             else
             {
-                string primary = _req.Info.Audio ? (_playing ? "停止" : "再生") : "読む";
-                string transcript = _req.Info.Audio && DocState.Heard(_req.EntryId) ? $"　　{UiTheme.Key("R", "X")} 書き起こし" : "";
-                _guide.text = $"ドラッグ 回す　　ホイール 寄せる　　{UiTheme.Key("Space", "Y")} {primary}{transcript}　　{UiTheme.Key("E", "B")} {back}{closeAll}";
+                string primary = _req.Info.Audio
+                    ? (_playing ? "停止" : IsTape && !LoopProgress.TapePlayerOwned ? "再生（レコーダーが要る）" : IsTape && !_loaded ? "レコーダーで再生" : "再生")
+                    : "読む";
+                string primaryKey = _req.Info.Audio || Readable ? $"{UiTheme.Key("Space", "Y")} {primary}　　" : "";
+                string transcript = _req.Info.Audio && DocState.Heard(_req.EntryId) ? $"{UiTheme.Key("R", "X")} 書き起こし　　" : "";
+                _guide.text = $"ドラッグ 回す　　ホイール 寄せる　　{primaryKey}{transcript}{UiTheme.Key("E", "B")} {back}{closeAll}";
             }
             _guideBar.rectTransform.sizeDelta = new Vector2(_guide.preferredWidth + 80f, 52f);
         }
@@ -450,7 +476,29 @@ namespace EscapeProto
         private void TogglePlayback()
         {
             if (_playing) { StopPlayback(true); UpdateGuide(); return; }
+            if (IsTape)
+            {
+                // カセットテープはレコーダーが要る（最初の部屋の机にある）
+                if (!LoopProgress.TapePlayerOwned)
+                {
+                    UiSound.Error();
+                    ToastUI.Show("再生する機械がない……（最初の部屋の机に、カセットレコーダーがあったはず）");
+                    return;
+                }
+                LoadIntoRecorder();
+            }
             _play = StartCoroutine(Playback());
+        }
+
+        /// <summary>テープをレコーダーに入れる：実物の見た目をカセットレコーダー（窓からこのテープのラベルが見える）に替える</summary>
+        private void LoadIntoRecorder()
+        {
+            if (_loaded) return;
+            _loaded = true;
+            var info = new DocInfo { Kind = InspectKind.TapeRecorder, Ink = InkStyle.Hand, Scale = 1f, Tint = Color.white, Audio = true };
+            if (InspectLibrary.Instance == null || InspectLibrary.Instance.Get(InspectKind.TapeRecorder) == null) return;
+            BuildItem(info, _req.Title, "");
+            ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), Ear, 0.35f, spatial: false);   // カセットを差し込む「カチャ」
         }
 
         private IEnumerator Playback()

@@ -9,6 +9,7 @@ namespace EscapeProto
         None,        // 実物なし（文章だけ）
         Sheet, Report, Folder, Letter, Notebook, Card, Photo, Newspaper,
         Monitor, Cassette, Recorder, Poster, Clipboard, Drawing,
+        TapeRecorder,   // カセットレコーダー（最初の部屋で拾う装備。テープはこれで聞く。リールが回る）
         Helmet,      // 部屋にある専用モデル（解析室のヘルメット）
     }
 
@@ -52,6 +53,7 @@ namespace EscapeProto
         {
             // 序
             { "dim.news", D(InspectKind.Newspaper) },
+            { "dim.tapeplayer", D(InspectKind.TapeRecorder) },
             { "train.ad", D(InspectKind.Poster) },
             { "lab.summary", D(InspectKind.Report) },
             { "lab.members", D(InspectKind.Clipboard) },

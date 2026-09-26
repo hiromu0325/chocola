@@ -24,6 +24,10 @@ UV は実寸の箱投影（1m = 1。Unity の紙・革・段ボールのテク�
   Poster     中吊り広告（厚紙、上の2つのハトメ）
   Clipboard  クリップボード（ばね金具と挟んだ紙）
   Drawing    子どもの絵の画用紙（ゆるい波、上の角にマスキングテープ）
+  TapeRecorder  携帯用カセットテープレコーダー（中のカセットのリールは別の物体 ReelL / ReelR）
+
+回る部品のあるアイテムは fn(M) が3つめに {"名前": {"objs": [...], "pivot": (x,y,z)}} を返す。
+ビルダーはそれぞれを別の物体（原点＝pivot）として同じ FBX に書き出す（本体は "Body"）。
 """
 import bisect
 import math
@@ -65,6 +69,9 @@ def mats():
     m("INS_Photo", (0.55, 0.42, 0.27), 0.5)
     m("INS_Cardboard", (0.62, 0.52, 0.36), 0.85)
     m("INS_Rubber", (0.035, 0.035, 0.04), 0.75)
+    m("INS_PlasticGrey", (0.40, 0.41, 0.43), 0.45, 0.15)          # 銀灰色の胴（テープレコーダー）
+    m("INS_PlasticRed", (0.55, 0.035, 0.025), 0.4)                # 録音キー
+    m("INS_LampRed", (0.45, 0.02, 0.01), 0.2, emit=(1.0, 0.08, 0.03), emit_strength=2.0)   # 録音ランプ（点けると光る）
     return M
 
 
@@ -324,6 +331,39 @@ def cut(o, cutters, op="DIFFERENCE"):
     for c in cutters:
         bpy.data.objects.remove(c, do_unlink=True)
     bpy.context.view_layer.update()          # 消した物が view_layer に残って join で None になるのを防ぐ
+    return o
+
+
+def hard_surface(o, angle=35):
+    """ブーリアンで穴を空けた大きな平面の仕上げ：多角形を三角形にしてから、面積で重みを付けた法線にする
+    （面取りの丸みの法線が大きな平面の三角形に広がって、面がゆがんで見えるのを防ぐ）"""
+    hq.apply_mods(o)
+    hq.box_uv(o, 1.0)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    ng = [f for f in bm.faces if len(f.verts) > 4]
+    if ng:
+        bmesh.ops.triangulate(bm, faces=ng, quad_method="BEAUTY", ngon_method="BEAUTY")
+    bm.to_mesh(o.data)
+    bm.free()
+    hq.smooth(o, angle)
+    # 軸に平らな大きな面と面取りの境目は折り目にする（面取りの中はなめらかなまま）
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.normal_update()
+    for e in bm.edges:
+        if len(e.link_faces) != 2:
+            continue
+        n0, n1 = e.link_faces[0].normal, e.link_faces[1].normal
+        if n0.dot(n1) < 0.9995 and any(max(abs(n.x), abs(n.y), abs(n.z)) > 0.9999 for n in (n0, n1)):
+            e.smooth = False
+    bm.to_mesh(o.data)
+    bm.free()
+    wn = o.modifiers.new("Weighted", "WEIGHTED_NORMAL")
+    wn.mode = "FACE_AREA"
+    wn.weight = 100
+    wn.keep_sharp = True
+    hq.apply_mods(o)
     return o
 
 
@@ -1019,9 +1059,18 @@ def monitor(M):
 # ============================== 10. カセットテープ ==============================
 
 def cassette(M):
-    """カセットテープ（100 x 64 x 12mm）。スモークの殻（下の台形の張り出し、合わせ目の溝、窓、軸の穴、ヘッドの開口、
-    つめの切り欠き）、5本のねじ、中の巻いたテープとハブとローラー、表のラベル（上の書き込み欄が印字面）"""
+    """カセットテープ（100 x 64 x 12mm）。スモークの殻（下の台形の張り出し、合わせ目の溝、表裏に抜けた透明の窓、軸の穴、
+    ヘッドの開口、つめの切り欠き）、5本のねじ、中の巻いたテープとハブとローラー、表のラベル（上の書き込み欄が印字面）"""
+    out, reels, rects, _ = cassette_parts(M)
+    return out + reels[-1] + reels[1], rects
+
+
+def cassette_parts(M, hub_mat=None):
+    """カセットの部品（中心が原点、表は -Z）。戻り値 (動かない部品, {-1: 左のリール, 1: 右のリール}, 印字面, {-1/1: 軸の中心})。
+    リール＝巻いたテープ＋ハブ＋歯（テープレコーダーでは回すので別にしておく）"""
     out = []
+    reels = {-1: [], 1: []}
+    hub_mat = hub_mat or M["INS_PlasticBlack"]
     W, H = 0.1004, 0.0638
     hx, hy = W / 2, H / 2
     zt = 0.0045
@@ -1040,10 +1089,11 @@ def cassette(M):
     ring = hq.frame_ring("ICasSeam", lambda u, v, d: (u, v, d), W + 0.004, H + 0.004, 0.003, W - 0.0008, H - 0.0008, 0.0018,
                          -0.0002, 0.0002, M["INS_PlasticSmoke"])
     cutters.append(ring)
-    # 窓のくぼみ（表裏）・軸の穴
+    # 窓（表裏のくぼみと、表から裏まで抜けた窓。透明の板は後で入れる）・軸の穴
     for zs in (-1, 1):
         cutters.append(pxy(f"ICasWin{zs}", rr(0.056, 0.017, 0.004, 6), *sorted((zs * 0.0041, zs * 0.008)), M["INS_PlasticSmoke"],
                            c=(0.0, hub_y)))
+    cutters.append(pxy("ICasWinThrough", rr(0.054, 0.015, 0.003, 6), -0.006, 0.006, M["INS_PlasticSmoke"], c=(0.0, hub_y)))
     for sx in (-1, 1):
         cutters.append(hq.cyl_between(f"ICasHole{sx}", (sx * hub_x, hub_y, -0.01), (sx * hub_x, hub_y, 0.01), 0.0045,
                                       M["INS_PlasticSmoke"], 32))
@@ -1059,6 +1109,13 @@ def cassette(M):
         cutters.append(hq.cyl_between(f"ICasBore{i}", (x, y, z - 0.002), (x, y, z + 0.0005), 0.0017, M["INS_PlasticSmoke"], 24))
     cut(shell, cutters)
     out.append(finish(shell, 1.0, angle=35))
+    # 窓の透明板（表裏。ハブの所は丸く抜けていて、歯と軸が直に見える）
+    for zs in (-1, 1):
+        pn = pxy(f"ICasPane{zs}", rr(0.0559, 0.0169, 0.00395, 6), *sorted((zs * 0.00405, zs * 0.00435)), M["INS_PlasticClear"],
+                 c=(0.0, hub_y))
+        cut(pn, [hq.cyl_between(f"ICasPaneHole{zs}{sx}", (sx * hub_x, hub_y, -0.01), (sx * hub_x, hub_y, 0.01), 0.0045,
+                                M["INS_PlasticClear"], 32) for sx in (-1, 1)])
+        out.append(finish(pn, 1.0, angle=40))
     # ねじ（十字の溝つきの頭と、殻の中へ伸びる軸）
     for i, (x, y, z) in enumerate(screws):
         zh = z + 0.0005
@@ -1076,17 +1133,17 @@ def cassette(M):
         c = (sx * hub_x, hub_y, 0.0)
         pk = revolve(f"ICasPack{sx}", c, (0, 0, 1), [(0.01055, -0.0019), (R, -0.0019), (R, 0.0019), (0.01055, 0.0019)],
                      M["INS_Tape"], 48, closed=True)
-        out.append(finish(pk, 1.0, angle=40))
+        reels[sx].append(finish(pk, 1.0, angle=40))
         hb = revolve(f"ICasHub{sx}", c, (0, 0, 1), [(0.0047, -0.0021), (0.0105, -0.0021), (0.0105, 0.0021), (0.0047, 0.0021)],
-                     M["INS_PlasticBlack"], 32, closed=True)
-        out.append(finish(hb, 1.0, angle=40))
+                     hub_mat, 32, closed=True)
+        reels[sx].append(finish(hb, 1.0, angle=40))
         for k in range(6):
             a = math.radians(60 * k + 15)
             tooth = pxy(f"ICasTooth{sx}{k}", [(-0.0006, 0.0), (0.0006, 0.0), (0.0005, 0.0014), (-0.0005, 0.0014)], -0.0021, 0.0021,
-                        M["INS_PlasticBlack"])
+                        hub_mat)
             xform(tooth, lambda p, a=a, c=c: (c[0] + (p.x * math.cos(a) - (p.y + 0.0035) * math.sin(a)),
                                                c[1] + (p.x * math.sin(a) + (p.y + 0.0035) * math.cos(a)), p.z))
-            out.append(finish(tooth, 1.0, angle=40))
+            reels[sx].append(finish(tooth, 1.0, angle=40))
     for sx in (-1, 1):
         ro = revolve(f"ICasRoller{sx}", (sx * 0.034, -0.0262, 0.0), (0, 0, 1), [(0.0, -0.0025), (0.0018, -0.0025), (0.0018, 0.0025), (0.0, 0.0025)],
                      M["INS_PlasticBlack"], 20)
@@ -1111,7 +1168,7 @@ def cassette(M):
     cut(lb, [wc])
     out.append(finish(lb, 1.0, angle=40))
     zl = -zt - 0.00014
-    return out, [rect((0.0, 0.0209, zl), (0.083, 0.0128))]
+    return out, reels, [rect((0.0, 0.0209, zl), (0.083, 0.0128))], {sx: (sx * hub_x, hub_y, 0.0) for sx in (-1, 1)}
 
 
 # ============================== 11. IC レコーダー ==============================
@@ -1361,6 +1418,197 @@ def drawing(M):
     return out, [rect((0, (fy0 + fy1) / 2, 0), (2 * fx, fy1 - fy0))]
 
 
+# ============================== 15. カセットテープレコーダー ==============================
+
+def tr_screw(name, x, y, z, axis, M, r=0.0017):
+    """十字の溝つきのなべねじの頭（axis の向きに出る。axis は ±Z）"""
+    hd = revolve(name, (x, y, z), axis, [(0.0, 0.0), (r, 0.0), (r, 0.00025), (r * 0.8, 0.00045), (r * 0.45, 0.00055), (0.0, 0.00058)],
+                 M["INS_Metal"], 20)
+    c = Vector((x, y, z)) + Vector(axis) * 0.0006
+    xs_ = [hq.box(f"{name}X{k}", tuple(c), (r * 1.4, r * 0.3, 0.0006) if k == 0 else (r * 0.3, r * 1.4, 0.0006), M["INS_Metal"], bev=0)
+           for k in (0, 1)]
+    cut(hd, [one(xs_, f"{name}Xs")])
+    return finish(hd, 1.0, angle=35)
+
+
+def tape_recorder(M):
+    """1980〜90年代の携帯用カセットテープレコーダー（横 0.16 x 縦 0.10 x 奥行 0.04、立てて置く。底は平らでゴム足つき）。
+    表：左に窓つきのカセットのふた（中のカセットのラベル・ハブ・巻いたテープが見える）、右にスピーカーの格子（横の溝）、
+        その上に 3 桁のテープカウンター（リセットボタン）・マイクの穴・赤い録音ランプ。
+    上：ピアノキー 6 つ（録音＝赤、再生、巻き戻し、早送り、停止／取り出し、一時停止。高さが少しずつ違い、記号が浮き出る）と小さなスライドスイッチ。
+    右：音量のダイヤル（ぎざぎざ）、イヤホンと電源の差し込み口。左：革の手ひも（金具の棒に掛けて留め具でまとめた輪）。
+    裏：電池ぶたの合わせ目とつまみ、ねじ2本。胴の周りに前後の殻の合わせ目。
+    リール（ハブ＋歯＋巻いたテープ＋一緒に回る軸）は別の物体 ReelL / ReelR にする（原点＝回転の中心、回転軸は Unity の Z）。
+    印字面はふたの窓から見えるカセットのラベルの書き込み欄（窓の透明板より奥）"""
+    out = []
+    W, H, D = 0.16, 0.10, 0.04
+    hw, hh, hd = W / 2, H / 2, D / 2
+    G, K = M["INS_PlasticGrey"], M["INS_PlasticBlack"]
+    cx, cy, zc = -0.018, -0.003, -0.0102             # ふた（＝カセット）の中心と、カセットの厚みの中心
+    wy = cy + 0.009                                   # ふたの窓の中心 y
+    gx, gy = 0.059, -0.016                            # スピーカー
+    mx, my, lx_, ly_ = 0.068, 0.0395, 0.05, 0.0395    # マイク・録音ランプ
+    ctx, cty = 0.059, 0.0245                          # カウンター
+    kw, kg, kx0 = 0.0118, 0.0008, -0.071              # ピアノキー
+    kx1 = kx0 + 6 * kw + 5 * kg
+    wx, wyy = 0.0738, 0.012                           # 音量ダイヤルの中心
+    jacks = ((-0.016, 0.0018), (-0.033, 0.0015))      # イヤホン・電源（y, 穴の半径）
+    # ---- 胴（ブーリアンでくぼみ・穴を空ける）----
+    body = pxy("ITrBody", rr(W, H, 0.007, 8), -hd, hd, G, bev=0.002, segs_=3, angle=40)
+    hq.apply_mods(body)
+    cz = [pxy("ITrDoorSeat", rr(0.1108, 0.0768, 0.0034, 6), -0.03, -0.0172, G, c=(cx, cy)),
+          pxy("ITrWell", rr(0.1026, 0.0658, 0.002, 6), -0.03, -0.0041, G, c=(cx, cy)),
+          hq.span("ITrKeySlot", kx0 - 0.0006, kx1 + 0.0006, hh - 0.006, hh + 0.01, -0.018, 0.005, G, bev=0),
+          pxy("ITrGrilleSeat", rr(0.032, 0.054, 0.003, 6), -0.03, -0.017, G, c=(gx, gy)),
+          pxy("ITrCounterWin", rr(0.017, 0.0072, 0.0012, 4), -0.03, -0.0115, G, c=(ctx, cty)),
+          hq.cyl_between("ITrLampHole", (lx_, ly_, -0.025), (lx_, ly_, -0.0175), 0.0016, G, 20),
+          hq.span("ITrWheelSlot", 0.068, 0.09, wyy - 0.0108, wyy + 0.0108, 0.0008, 0.0072, G, bev=0),
+          hq.span("ITrSlideSlot", 0.040, 0.054, hh - 0.003, hh + 0.01, -0.0055, -0.0025, G, bev=0),
+          hq.frame_ring("ITrBatCut", lambda u, v, d: (u, v - 0.006, d), 0.0904, 0.0604, 0.004, 0.0896, 0.0596, 0.0036,
+                        hd - 0.0004, hd + 0.001, G),
+          hq.frame_ring("ITrSeam", lambda u, v, d: (u, v, d), W + 0.004, H + 0.004, 0.009, W - 0.0008, H - 0.0008, 0.0066,
+                        0.0056, 0.0064, G)]
+    mic = [(0.0, 0.0)] + [(0.0019 * math.cos(math.pi * k / 3), 0.0019 * math.sin(math.pi * k / 3)) for k in range(6)]
+    for i, (dx, dy) in enumerate(mic):
+        cz.append(hq.cyl_between(f"ITrMicHole{i}", (mx + dx, my + dy, -0.025), (mx + dx, my + dy, -0.017), 0.00042, G, 10))
+    for i, (jy, jr) in enumerate(jacks):
+        cz.append(hq.cyl_between(f"ITrJack{i}", (hw - 0.0095, jy, 0.0), (hw + 0.01, jy, 0.0), jr, G, 24))
+    screws_b = [(-0.066, 0.038), (0.066, 0.038)]
+    for i, (x, y) in enumerate(screws_b):
+        cz.append(hq.cyl_between(f"ITrBore{i}", (x, y, hd - 0.0005), (x, y, hd + 0.002), 0.0021, G, 24))
+    cut(body, cz)
+    out.append(hard_surface(body))
+    # ---- カセットのふた（黒）・窓の縁（銀）・透明の窓・指掛けの溝 ----
+    door = pxy("ITrDoor", rr(0.110, 0.076, 0.003, 6), -0.0199, -0.0172, K, c=(cx, cy), bev=0.0005, segs_=2, angle=40)
+    hq.apply_mods(door)
+    cut(door, [pxy("ITrDoorWin", rr(0.094, 0.044, 0.005, 8), -0.03, -0.01, K, c=(cx, wy))])
+    out.append(hard_surface(door, 40))
+    trim = pxy("ITrDoorTrim", rr(0.086, 0.0013, 0.0006, 4), -0.0202, -0.0197, G, c=(cx - 0.004, cy - 0.024), bev=0.00015, segs_=1)
+    out.append(finish(trim, 1.0, angle=40))
+    bez = hq.frame_ring("ITrWinBezel", lambda u, v, d: (u + cx, v + wy, d), 0.0976, 0.0476, 0.0066, 0.094, 0.044, 0.005,
+                        -0.0203, -0.0198, G)
+    out.append(finish(bez, 1.0, angle=40))
+    pane = pxy("ITrWinPane", rr(0.0939, 0.0439, 0.00495, 8), -0.0194, -0.0177, M["INS_PlasticClear"], c=(cx, wy))
+    out.append(finish(pane, 1.0, angle=40))
+    for i in range(5):
+        g = hq.box(f"ITrGrip{i}", (cx + 0.044 + i * 0.0016, cy - 0.034, -0.0201), (0.0007, 0.005, 0.0006), K, bev=0.0002, segs=1)
+        out.append(finish(g, 1.0, angle=40))
+    # ---- 中のカセット（リールは別）と、リールと一緒に回る軸 ----
+    c_out, c_reels, c_rects, c_ctr = cassette_parts(M, hub_mat=G)
+    z_floor = -0.0041 - zc
+    for sx in (-1, 1):
+        hx_, hy_, _ = c_ctr[sx]
+        sp = hq.cyl_between(f"ITrSpindle{sx}", (hx_, hy_, z_floor), (hx_, hy_, -0.0028), 0.0025, G, 20)
+        hq.bevel(sp, 0.0002, 1, 40)
+        c_reels[sx].append(finish(sp, 1.0, angle=40))
+        for k in range(3):
+            a = math.radians(120 * k + 30)
+            key = pxy(f"ITrSpKey{sx}{k}", [(-0.0004, 0.0), (0.0004, 0.0), (0.0004, 0.0009), (-0.0004, 0.0009)], -0.0026, z_floor, G)
+            xform(key, lambda p, a=a, hx_=hx_, hy_=hy_: (hx_ + p.x * math.cos(a) - (p.y + 0.0024) * math.sin(a),
+                                                        hy_ + p.x * math.sin(a) + (p.y + 0.0024) * math.cos(a), p.z))
+            c_reels[sx].append(finish(key, 1.0, angle=40))
+    for o in c_out + c_reels[-1] + c_reels[1]:
+        xform(o, lambda p: (p.x + cx, p.y + cy, p.z + zc))
+    out += c_out
+    # ---- スピーカー：奥の黒い布と、横の溝の格子 ----
+    out.append(finish(pxy("ITrCloth", rr(0.0318, 0.0538, 0.003, 6), -0.0176, -0.0170, M["INS_Rubber"], c=(gx, gy)), 1.0, angle=40))
+    gr = pxy("ITrGrille", rr(0.0314, 0.0534, 0.0028, 6), -0.0199, -0.0187, K, c=(gx, gy), bev=0.0003, segs_=2, angle=40)
+    hq.apply_mods(gr)
+    slots = [pxy(f"ITrSlot{i}", rr(0.0245, 0.0016, 0.0008, 4), -0.03, -0.015, K, c=(gx, gy - 0.0228 + i * 0.0038)) for i in range(13)]
+    cut(gr, [one(slots, "ITrSlots")])
+    out.append(hard_surface(gr, 40))
+    # ---- カウンター（数字の輪 3 つ・窓・黒い縁・リセット）----
+    for i in range(3):
+        x = ctx + (i - 1) * 0.0054
+        dg = hq.cyl_between(f"ITrDigit{i}", (x - 0.0021, cty, -0.0114), (x + 0.0021, cty, -0.0114), 0.0046, M["INS_Label"], 28)
+        out.append(finish(dg, 1.0, angle=40))
+    out.append(finish(pxy("ITrCounterPane", rr(0.0169, 0.0071, 0.00115, 4), -0.0195, -0.0186, M["INS_PlasticClear"], c=(ctx, cty)),
+                      1.0, angle=40))
+    out.append(finish(hq.frame_ring("ITrCounterBezel", lambda u, v, d: (u + ctx, v + cty, d), 0.0196, 0.0098, 0.002,
+                                    0.017, 0.0072, 0.0012, -0.0204, -0.0198, K), 1.0, angle=40))
+    rs = hq.cyl_between("ITrReset", (0.0745, cty, -0.0196), (0.0745, cty, -0.0209), 0.0017, K, 20)
+    hq.bevel(rs, 0.0003, 2, 40)
+    out.append(finish(rs, 1.0, angle=40))
+    # ---- マイクの輪・録音ランプ ----
+    out.append(finish(revolve("ITrMicRing", (mx, my, -hd), (0, 0, -1),
+                              [(0.0028, -0.0001), (0.0036, -0.0001), (0.0036, 0.0002), (0.0033, 0.0004), (0.0028, 0.0004)],
+                              M["INS_Metal"], 32, closed=True), 1.0, angle=40))
+    out.append(finish(revolve("ITrLampBezel", (lx_, ly_, -hd), (0, 0, -1),
+                              [(0.0017, -0.0001), (0.0025, -0.0001), (0.0025, 0.0003), (0.0017, 0.0004)], K, 24, closed=True),
+                      1.0, angle=40))
+    out.append(finish(revolve("ITrLamp", (lx_, ly_, -hd), (0, 0, -1),
+                              [(0.0, -0.002), (0.0015, -0.002), (0.0015, 0.0002), (0.0011, 0.0007), (0.0, 0.0009)],
+                              M["INS_LampRed"], 20), 1.0, angle=40))
+    # ---- ピアノキー（録音・再生・巻き戻し・早送り・停止/取り出し・一時停止）と浮き出た記号 ----
+    def tri(d, sgn):
+        return [(d - sgn * 0.0012, -0.0014), (d + sgn * 0.0012, 0.0), (d - sgn * 0.0012, 0.0014)]
+
+    def bar(a0, a1, b):
+        return [(a0, -b), (a1, -b), (a1, b), (a0, b)]
+    dot = [(0.0016 * math.cos(2 * math.pi * i / 16), 0.0016 * math.sin(2 * math.pi * i / 16)) for i in range(16)]
+    keys = [("Rec", 0.0048, M["INS_PlasticRed"], [dot]),
+            ("Play", 0.0060, K, [[(-0.0013, -0.0016), (0.0016, 0.0), (-0.0013, 0.0016)]]),
+            ("Rew", 0.0052, K, [tri(-0.0012, -1), tri(0.0012, -1)]),
+            ("Ff", 0.0052, K, [tri(-0.0012, 1), tri(0.0012, 1)]),
+            ("StopEject", 0.0066, K, [bar(-0.0028, -0.0005, 0.0012), [(0.0005, -0.001), (0.0029, -0.001), (0.0017, 0.0012)]]),
+            ("Pause", 0.0044, K, [bar(-0.0013, -0.0004, 0.0015), bar(0.0004, 0.0013, 0.0015)])]
+    for i, (nm, h, mt, shapes) in enumerate(keys):
+        x0 = kx0 + i * (kw + kg)
+        x1 = x0 + kw
+        yt = hh + h
+        prof = [(0.0046, hh - 0.004), (0.0046, yt - 0.0018), (0.0028, yt), (-0.0115, yt), (-0.0172, yt - 0.0032), (-0.0172, hh - 0.004)]
+        key = plate(f"ITrKey{nm}", prof, (0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 0, 0), x0, x1, mt, bev=0.0004, segs_=2, angle=35)
+        out.append(finish(key, 1.0, angle=40))
+        for j, pts in enumerate(shapes):
+            sm = plate(f"ITrSym{nm}{j}", pts, ((x0 + x1) / 2, yt, -0.0045), (1, 0, 0), (0, 0, 1), (0, 1, 0), -0.0001, 0.00022, G)
+            out.append(finish(sm, 1.0, angle=60))
+    sl = hq.box("ITrSlide", (0.0445, hh - 0.0005, -0.004), (0.004, 0.004, 0.0024), K, bev=0.0005, segs=2)
+    out.append(finish(sl, 1.0, angle=40))
+    # ---- 右：音量ダイヤル（ぎざぎざ）と差し込み口 ----
+    wp = []
+    for i in range(80):
+        a = math.pi * i / 40
+        r = 0.0095 if i % 2 == 0 else 0.0090
+        wp.append((r * math.cos(a), r * math.sin(a)))
+    out.append(finish(pxy("ITrVolume", wp, 0.0015, 0.0065, K, c=(wx, wyy), bev=0.00012, segs_=1, angle=30), 1.0, angle=30))
+    out.append(finish(hq.cyl_between("ITrVolAxle", (wx, wyy, 0.0008), (wx, wyy, 0.0072), 0.0012, M["INS_Metal"], 12), 1.0, angle=40))
+    for i, (jy, jr) in enumerate(jacks):
+        out.append(finish(revolve(f"ITrJackRing{i}", (hw, jy, 0.0), (1, 0, 0),
+                                  [(jr, -0.0002), (jr + 0.0009, -0.0002), (jr + 0.0009, 0.0003), (jr + 0.0002, 0.0004)],
+                                  M["INS_Metal"], 24, closed=True), 1.0, angle=40))
+        out.append(finish(hq.cyl_between(f"ITrJackIn{i}", (hw - 0.0095, jy, 0.0), (hw - 0.0085, jy, 0.0), jr + 0.0001, K, 16),
+                          1.0, angle=40))
+    # ---- 左：手ひも（金具の棒に掛けた革の輪、根元を金具でまとめる）----
+    bx, by, bz = -hw - 0.0035, 0.036, 0.011
+    for zz in (0.0055, 0.0148):
+        out.append(finish(hq.box(f"ITrLug{zz}", (-hw - 0.0022, by, zz + 0.00085), (0.0048, 0.005, 0.0017), G, bev=0.0005, segs=2),
+                          1.0, angle=40))
+    out.append(finish(hq.cyl_between("ITrLugBar", (bx, by, 0.0055), (bx, by, 0.0165), 0.001, M["INS_Metal"], 12), 1.0, angle=40))
+    loop = [(-0.0826, 0.029), (-0.0821, 0.0335)]
+    loop += [(bx + 0.0016 * math.cos(math.radians(a)), by + 0.0016 * math.sin(math.radians(a))) for a in range(0, 181, 20)]
+    loop += [(-0.0851, 0.0335), (-0.0845, 0.029), (-0.0868, 0.02), (-0.0898, 0.004), (-0.0912, -0.012), (-0.0899, -0.0245),
+             (-0.0868, -0.0288), (-0.0838, -0.0255), (-0.0825, -0.012), (-0.0822, 0.004), (-0.0824, 0.02), (-0.0826, 0.029)]
+    strap = ribbon("ITrStrap", [(x, y, bz) for x, y in loop], (0, 0, 1), 0.007, M["INS_Leather"], 0.0012, 0.0, nu=3, fillet=0.003)
+    out.append(finish(strap, 1.0, angle=45))
+    out.append(finish(hq.box("ITrKeeper", (-0.08355, 0.029, bz), (0.0041, 0.004, 0.0082), M["INS_Metal"], bev=0.0006, segs=2),
+                      1.0, angle=40))
+    # ---- 裏：電池ぶたのつまみ・ねじ／底：ゴム足 ----
+    out.append(finish(hq.box("ITrBatTab", (0.0, -0.032, hd + 0.0002), (0.014, 0.004, 0.0008), G, bev=0.0003, segs=2), 1.0, angle=40))
+    for i, (x, y) in enumerate(screws_b):
+        out.append(tr_screw(f"ITrScrew{i}", x, y, hd - 0.0005, (0, 0, 1), M))
+    for fx_ in (-0.066, 0.066):
+        for fz in (-0.012, 0.012):
+            out.append(finish(revolve(f"ITrFoot{fx_}{fz}", (fx_, -hh + 0.0002, fz), (0, -1, 0),
+                                      [(0.0, 0.0), (0.0042, 0.0), (0.0042, 0.0007), (0.0037, 0.001), (0.0, 0.001)],
+                                      M["INS_Rubber"], 24), 1.0, angle=40))
+    # 印字面（カセットのラベルの書き込み欄。窓の透明板より 2.5mm ほど奥）と、リールの回転の中心
+    r = c_rects[0]
+    r["center"] = [r["center"][0] + cx, r["center"][1] + cy, r["center"][2] + zc]
+    parts = {"ReelL": {"objs": c_reels[-1], "pivot": (c_ctr[-1][0] + cx, c_ctr[-1][1] + cy, zc)},
+             "ReelR": {"objs": c_reels[1], "pivot": (c_ctr[1][0] + cx, c_ctr[1][1] + cy, zc)}}
+    return out, [r], parts
+
+
 ITEMS = {"Sheet": sheet, "Report": report, "Folder": folder, "Letter": letter, "Notebook": notebook, "Card": card,
          "Photo": photo, "Newspaper": newspaper, "Monitor": monitor, "Cassette": cassette, "Recorder": recorder,
-         "Poster": poster, "Clipboard": clipboard, "Drawing": drawing}
+         "Poster": poster, "Clipboard": clipboard, "Drawing": drawing, "TapeRecorder": tape_recorder}

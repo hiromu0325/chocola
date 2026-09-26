@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cffd8fd805b313946b039d6611fd0129
+guid: 44ccff5f811147e4c94b4b9180b21458
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -9,6 +9,16 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: INS_Label
     second: {fileID: 2100000, guid: f5deb637b66c7dc49af9b80c2c039d4e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: INS_LampRed
+    second: {fileID: 2100000, guid: 816a96287f7ab144ab0c4e374faed028, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: INS_Leather
+    second: {fileID: 2100000, guid: 8a4690a5582a71f4e91d534621f587d6, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -24,6 +34,16 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: INS_PlasticClear
     second: {fileID: 2100000, guid: 79d01616eae6d164a9fa517065e88467, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: INS_PlasticGrey
+    second: {fileID: 2100000, guid: 2b509489883532145bfab3bc2f0e8ef3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: INS_PlasticRed
+    second: {fileID: 2100000, guid: 2671fd29a5cfa0d41a2158135951119f, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

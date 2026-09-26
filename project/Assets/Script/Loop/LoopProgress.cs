@@ -31,6 +31,9 @@ namespace EscapeProto
         /// <summary>手帳を拾ったか（拾うまでTabの手帳UIは開けず、資料も綴じられない）</summary>
         public static bool NotebookOwned => IsFound(StartRoomId, "notebook");
 
+        /// <summary>カセットレコーダーを拾ったか（拾うまでカセットテープは再生できない）</summary>
+        public static bool TapePlayerOwned => IsFound(StartRoomId, "tapeplayer");
+
         /// <summary>アイテム発見。その部屋の必須が揃えば次の部屋を解放する</summary>
         public static void NotifyFound(string roomId, string id)
         {

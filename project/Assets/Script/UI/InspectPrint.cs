@@ -53,6 +53,10 @@ namespace EscapeProto
                 case InspectKind.Cassette:
                     Put(item.transform, area.rects[0], "", title, InkStyle.Hand, 0, labelOnly: true);
                     return;
+                case InspectKind.TapeRecorder:
+                    // 入れたテープのラベル（テープを入れていない時は白いまま）
+                    if (req.Info.Audio) Put(item.transform, area.rects[0], "", title, InkStyle.Hand, 0, labelOnly: true);
+                    return;
                 case InspectKind.Recorder:
                     Put(item.transform, area.rects[0], "", "▶ VOICE 03", InkStyle.Screen, 0, labelOnly: true);
                     return;

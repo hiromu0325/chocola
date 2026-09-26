@@ -1,13 +1,16 @@
 """
-調べる画面の実物 14 種（hq/inspect_items.py）を作って Unity に書き出す。
+調べる画面の実物（hq/inspect_items.py の ITEMS）を作って Unity に書き出す。
 
     blender --background --factory-startup --python GenAssets/blender/scripts/hq/build_inspect.py -- [Sheet,Report,...] [--preview[=出力先]]
 
 出力:
   project/Assets/Models/HQ/Inspect/Inspect_<名前>.fbx
       1メッシュ（材質ごとのサブメッシュ）。外接箱の中心が原点、表は -Z、上は +Y
+      回る部品のあるアイテム（TapeRecorder）は本体 "Body"（原点 0,0,0）と、原点を回転の中心に置いた別の物体
+      （ReelL / ReelR）を同じ FBX に入れる
   GenAssets/blender/scripts/hq/inspect_print_areas.json と project/Assets/Resources/InspectPrintAreas.json
       印字面 {"items": [{"name", "rects": [{"center","size","normal","up"}], "bounds": [x,y,z]}]}（InspectPrint.cs が読む）
+      回る部品があるときは "pivots": {"ReelL": [x,y,z], ...}（部品の原点＝回転の中心、Unity のローカル座標）も
       名前を絞って作ったときは、その名前の分だけ差し替える
   --preview[=出力先]: 確認レンダー（EEVEE、斜め前から。印字面には文字の行の見本を重ねる）<出力先>/<名前>.png
       出力先を省くと一時フォルダの inspect_previews。--check を足すと正面・横・裏下からも（<出力先>/check/）
@@ -61,22 +64,35 @@ def clear_scene():
                 coll.remove(d)
 
 
-def unity_bounds(o):
+def unity_bounds(objs):
     xs, ys, zs = [], [], []
-    for v in o.data.vertices:
-        xs.append(-v.co.x); ys.append(v.co.z); zs.append(-v.co.y)
+    for o in objs:
+        for v in o.data.vertices:
+            xs.append(-v.co.x); ys.append(v.co.z); zs.append(-v.co.y)
     return Vector((min(xs), min(ys), min(zs))), Vector((max(xs), max(ys), max(zs)))
 
 
-def recenter(o, rects):
-    """外接箱の中心を原点へ。印字面も同じだけずらす。戻り値は外接箱の寸法"""
-    lo, hi = unity_bounds(o)
+def recenter(o, rects, parts=None):
+    """外接箱（別の部品も含めた全体）の中心を原点へ。印字面も同じだけずらす。
+    parts={名前: (物体, pivot)} は、メッシュを pivot 基準に直して物体の位置を pivot に置く（回す部品）。
+    戻り値 (外接箱の寸法, {名前: 新しい pivot})"""
+    parts = parts or {}
+    objs = [o] + [po for po, _ in parts.values()]
+    lo, hi = unity_bounds(objs)
     c = (lo + hi) / 2
-    o.data.transform(Matrix.Translation(-hq.U(*c)))
-    o.data.update()
+    for ob in objs:
+        ob.data.transform(Matrix.Translation(-hq.U(*c)))
+        ob.data.update()
     for r in rects:
         r["center"] = [r["center"][k] - c[k] for k in range(3)]
-    return hi - lo
+    pivots = {}
+    for pn, (po, pv) in parts.items():
+        p2 = Vector(pv) - c
+        po.data.transform(Matrix.Translation(-hq.U(*p2)))
+        po.data.update()
+        po.location = hq.U(*p2)
+        pivots[pn] = p2
+    return hi - lo, pivots
 
 
 def triangulate_ngons(o):
@@ -226,20 +242,31 @@ def main():
         if names and name not in names:
             continue
         clear_scene()
-        objs, rects = fn(M)
-        for o in objs:
+        res = fn(M)
+        objs, rects = res[0], res[1]
+        parts_in = res[2] if len(res) > 2 else {}
+        for o in objs + [q for pd in parts_in.values() for q in pd["objs"]]:
             o.location = (0, 0, 0)
             o.rotation_euler = (0, 0, 0)
-        obj = hq.join(objs, f"Inspect_{name}")
+        obj = hq.join(objs, "Body" if parts_in else f"Inspect_{name}")
         triangulate_ngons(obj)
-        size = recenter(obj, rects)
-        kb = hq.export([obj], os.path.join(OUT, f"Inspect_{name}.fbx")) // 1024
+        parts = {}
+        for pn, pd in parts_in.items():
+            po = hq.join(pd["objs"], pn)
+            triangulate_ngons(po)
+            parts[pn] = (po, pd["pivot"])
+        size, pivots = recenter(obj, rects, parts)
+        kb = hq.export([obj] + [po for po, _ in parts.values()], os.path.join(OUT, f"Inspect_{name}.fbx")) // 1024
         total += kb
         data[name] = {"name": name, "rects": [{"center": rnd(r["center"]), "size": rnd(r["size"]), "normal": rnd(r["normal"], 4),
                                                "up": rnd(r["up"], 4)} for r in rects], "bounds": rnd(size, 4)}
-        nf = len(obj.data.polygons)
+        if pivots:
+            data[name]["pivots"] = {pn: rnd(pv) for pn, pv in pivots.items()}
+        nf = len(obj.data.polygons) + sum(len(po.data.polygons) for po, _ in parts.values())
         print(f"[inspect] {name}: {kb} KB, {nf} faces, bounds {tuple(round(v, 4) for v in size)}, "
-              f"mats {[m.name for m in obj.data.materials]}, rects {len(rects)}")
+              f"mats {[m.name for m in obj.data.materials]}, rects {len(rects)}"
+              + "".join(f", {pn} at {tuple(round(v, 5) for v in pv)} mats {[m.name for m in parts[pn][0].data.materials]}"
+                        for pn, pv in pivots.items()))
         if preview:
             render(name, size, data[name]["rects"], preview, check)
     items = [data[n] for n in inspect_items.ITEMS if n in data]

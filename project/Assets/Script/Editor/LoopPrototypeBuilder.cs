@@ -794,6 +794,9 @@ namespace EscapeProto
                 HideRenderers(desk.transform, nbGo.name);
             }
 
+            // カセットレコーダー（机の上。最初の装備。拾うと消える。これが無いとカセットテープを聞けない）
+            TapePlayer(desk.transform, new Vector3(-0.02f, 0.75f, 0.22f), -12f);   // 表（-Z）を椅子の側へ
+
             // ---- セーブPC（記録端末。北西の隅の小さな台の上）----
             var saveMat = GetMat("LP_SavePc", new Color(0.3f, 0.32f, 0.34f), 0.4f);
             var screenMat = GetMat("LP_SaveScreen", new Color(0.1f, 0.3f, 0.15f), 0.2f);
@@ -867,7 +870,7 @@ namespace EscapeProto
             // ---- 起床カットシーン（ベッドから起き上がる）----
             BuildIntroCutscene(t, new Vector3(-hw + 1.2f, 0f, -1.0f), hd);
 
-            return new[] { "news", "flashlight", "notebook" };
+            return new[] { "news", "flashlight", "notebook", "tapeplayer" };
         }
 
         /// <summary>書斎：机／文書（机の上）</summary>
@@ -3841,6 +3844,46 @@ namespace EscapeProto
         }
 
         /// <summary>
+        /// カセットレコーダー（最初の部屋の机の上に立てて置く装備）。拾うと手に入れて消え、カセットテープを再生できるようになる。
+        /// 見た目は調べる画面と同じ実物のモデル（Inspect_TapeRecorder）
+        /// </summary>
+        private static GameObject TapePlayer(Transform parent, Vector3 pos, float yaw)
+        {
+            var go = new GameObject("Find_tapeplayer");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var col = go.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.center = new Vector3(0f, 0.05f, 0f);
+            col.size = new Vector3(0.2f, 0.12f, 0.08f);
+            var f = go.AddComponent<LoopFindable>();
+            f.Id = "tapeplayer";
+            f.DisplayName = "カセットレコーダー";
+            f.DisappearOnPickup = true;
+            f.PickupHint = "カセットテープを聞ける";
+            string prefab = ModelPrefabPath(InspectModel(InspectKind.TapeRecorder), ShellMat);
+            if (prefab != null)
+            {
+                var vis = Place(prefab, go.transform, Vector3.zero);
+                if (vis != null)
+                {
+                    vis.name = "Visual_TapeRecorder";
+                    // モデルの原点は見た目の中心なので、底が机の天板に乗るよう持ち上げる
+                    var rs = vis.GetComponentsInChildren<Renderer>();
+                    if (rs.Length > 0)
+                    {
+                        var b = rs[0].bounds;
+                        foreach (var r in rs) b.Encapsulate(r.bounds);
+                        vis.transform.position += Vector3.up * (go.transform.position.y - b.min.y);
+                    }
+                    foreach (var c in vis.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+                }
+            }
+            return go;
+        }
+
+        /// <summary>
         /// 新しい音声記録（カセットテープ）。拾うと手に入れて消える（手帳の資料一覧から何度でも聞ける）。
         /// 見た目は AttachAudioRecords が実物のモデルにする。進行の必須ではない（聞かなくても先へ進める）
         /// </summary>
@@ -3936,7 +3979,7 @@ namespace EscapeProto
                 case "INS_Metal":        return HqLit(n, new Color(0.5f, 0.5f, 0.52f), 0.55f, 1f);
                 case "INS_PlasticBlack": return HqLit(n, new Color(0.04f, 0.04f, 0.045f), 0.55f);
                 case "INS_PlasticSmoke": return TranspLit(n, new Color(0.1f, 0.09f, 0.08f), 0.9f, 0.85f);
-                case "INS_PlasticClear": return TranspLit(n, new Color(0.95f, 0.95f, 0.95f), 0.2f, 0.9f);
+                case "INS_PlasticClear": { var m = TranspLit(n, new Color(0.95f, 0.95f, 0.95f), 0.2f, 0.9f); m.renderQueue = 3001; return m; }   // 窓はカセットの殻より後に描く
                 case "INS_Glass":        return TranspLit(n, new Color(0.9f, 0.92f, 0.95f), 0.14f, 0.95f);
                 case "INS_Tape":         return HqLit(n, new Color(0.24f, 0.14f, 0.08f), 0.6f);
                 case "INS_Label":        return HqLit(n, new Color(0.96f, 0.93f, 0.83f), 0.1f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.3f);
@@ -3945,6 +3988,9 @@ namespace EscapeProto
                 case "INS_Photo":        return HqLit(n, new Color(0.55f, 0.45f, 0.33f), 0.3f);
                 case "INS_Cardboard":    return HqLit(n, new Color(0.78f, 0.67f, 0.5f), 0.05f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.5f);
                 case "INS_Rubber":       return HqLit(n, new Color(0.1f, 0.1f, 0.1f), 0.2f);
+                case "INS_PlasticGrey":  return HqLit(n, new Color(0.62f, 0.63f, 0.65f), 0.45f, 0.15f);   // カセットレコーダーの銀色の本体
+                case "INS_PlasticRed":   return HqLit(n, new Color(0.72f, 0.1f, 0.08f), 0.5f);            // 録音キー
+                case "INS_LampRed":      return HqLit(n, new Color(0.6f, 0.05f, 0.04f), 0.85f);           // 録音ランプ（消えている）
                 // ---- 薄暗い部屋 ----
                 case "DIM_Wallpaper": return HqLit(n, Color.white, 0.12f, 0f, HqTex("Dim/wallpaper"), HqTex("Dim/wallpaper_n", true), 0.6f);
                 case "DIM_Carpet":    return HqLit(n, Color.white, 0.02f, 0f, HqTex("Dim/carpet"), HqTex("Dim/carpet_n", true), 0.8f);
