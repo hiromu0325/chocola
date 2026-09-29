@@ -46,6 +46,8 @@ namespace EscapeProto
         private string _roomLast = "\0";
         private int _dollsLast = -1;
         private string _promptLast;
+        private Component _promptTarget;   // 案内を出している物（縁取る）
+        private InteractOutline _outline;
         private Button _endButton;
 
         private bool _memoOpen, _gameEnded;
@@ -58,6 +60,7 @@ namespace EscapeProto
             _font = UiTheme.BodyFont;
             BuildCanvas();
             gameObject.AddComponent<InspectView>();   // 資料を調べる画面（くるくる回す）
+            _outline = gameObject.AddComponent<InteractOutline>();   // E で何かできる物の縁取り
         }
 
         private void Start()
@@ -96,6 +99,8 @@ namespace EscapeProto
             Fade(_hudGroup, playing ? 1f : 0f, playing ? UiTheme.FadeIn : 0.12f);
             UpdateStatus();
             UpdatePrompt();
+            // 案内が出ている物だけを縁取る（資料・手帳・一時停止などで HUD を隠している間は出さない）
+            if (_outline != null) _outline.SetTarget(playing ? _promptTarget : null);
             HandleKeys();
         }
 
@@ -321,6 +326,7 @@ namespace EscapeProto
                 }
             }
             bool has = !string.IsNullOrEmpty(prompt);
+            _promptTarget = has ? target as Component : null;
             Fade(_promptGroup, has ? 1f : 0f, has ? 0.1f : 0.2f);
             // 調べられる物に向いている時は点も真鍮色に（案内の文と合わせて2つの手がかり）
             var want = has ? UiTheme.WithAlpha(UiTheme.Accent, 0.9f) : UiTheme.WithAlpha(UiTheme.Text, 0.5f);
