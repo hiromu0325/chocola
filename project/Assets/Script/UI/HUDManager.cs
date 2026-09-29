@@ -124,7 +124,7 @@ namespace EscapeProto
             // 調べる画面が開いている間（と閉じた瞬間）は、Tab・Esc はそちらが受ける
             bool inspecting = InspectView.IsOpen || InspectView.ClosedThisFrame;
             if (tab && !inspecting) ToggleMemo();
-            else if (esc && _memoOpen && !inspecting) ToggleMemo();
+            else if (esc && _memoOpen && !inspecting && !NotebookUI.DocWindowBusy) ToggleMemo();   // 引用元の文章を開いている時はそちらが閉じる
             if (_gameEnded && restart) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {
@@ -144,7 +144,7 @@ namespace EscapeProto
 #else
             bool inspecting = InspectView.IsOpen || InspectView.ClosedThisFrame;
             if (Input.GetKeyDown(KeyCode.Tab) && !inspecting) ToggleMemo();
-            else if (Input.GetKeyDown(KeyCode.Escape) && _memoOpen && !inspecting) ToggleMemo();
+            else if (Input.GetKeyDown(KeyCode.Escape) && _memoOpen && !inspecting && !NotebookUI.DocWindowBusy) ToggleMemo();
             if (_gameEnded && Input.GetKeyDown(KeyCode.R)) GameManager.Instance?.RestartGame();
             if (_dialogPanel.activeSelf)
             {

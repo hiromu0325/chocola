@@ -15,7 +15,8 @@ namespace EscapeProto
     /// ・メモ … 資料の本文にラインマーカーを引いて切り取った文のボード。最初は一覧のように並び、
     ///          ドラッグ（Shift＋矢印・右スティック）で上下左右に自由に動かせる。ほかのカードにぶつかると
     ///          重ならずにその境目で止まり、横に貼り付く（ぶつかられた方は動かない）。
-    ///          右クリック（Delete）で消す。ダブルクリック（Enter）で元の資料を開く。R で一覧の並びに戻す。
+    ///          右クリック（Delete）で消す。ダブルクリック（Enter）で引用元の資料の文章をボードの右に開く
+    ///          （書き写した所が白く浮き上がり、その位置まで送られる）。R で一覧の並びに戻す。
     ///          読んでいる資料の画面からも直接開ける（ShowOverlay。閉じるとその資料へ戻る）
     /// 付箋（装置の誤答で立つ目印）は資料の一覧に出る。
     /// ※AddComponent で作るのでファイル名と一致させてある
@@ -63,6 +64,19 @@ namespace EscapeProto
         private const float MoveSpeed = 700f;   // キー・スティックで動かす速さ（/秒）
         private Vector2 _grab;                  // ドラッグ：つかんだ所とカードの左上の差
 
+        // ---- 引用元の文章ウィンドウ（カードをダブルクリック） ----
+        private GameObject _docWin;
+        private Text _docTitle, _docBody;
+        private ScrollRect _docScroll;
+        private const float DocWinH = 700f, DocViewTop = 120f, DocViewBottom = 84f;
+        private MarkerGlyphs _docGlyphs;
+        private MemoSnippet _docSnippet;
+        private int _docClosedFrame = -1;
+
+        /// <summary>引用元の文章ウィンドウが Esc を受けている（手帳ごと閉じない）</summary>
+        public static bool DocWindowBusy => Instance != null &&
+            ((Instance._docWin != null && Instance._docWin.activeSelf) || Instance._docClosedFrame == Time.frameCount);
+
         /// <summary>手帳を閉じる時（HUD が面倒を見る）</summary>
         public Action RequestClose;
 
@@ -87,6 +101,7 @@ namespace EscapeProto
 
             BuildDocsPage(book);
             BuildMemoPage(book);
+            BuildDocWindow(book);
 
             _guide = UiTheme.Label(book, "Guide", UiTheme.FsSmall, TextAnchor.LowerCenter, UiTheme.TextSub, shadow: false);
             UiTheme.Place(_guide.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(1400f, 30f));
@@ -220,6 +235,7 @@ namespace EscapeProto
         public void Hide()
         {
             _shown = false;
+            HideDoc();
             SetNavigation(true);
         }
 
@@ -252,6 +268,7 @@ namespace EscapeProto
             if (!_overlay) return;
             _overlay = false;
             _tabDocs.interactable = true;
+            HideDoc();
             SetNavigation(true);
             _shown = _ovPrevShown;
             SetTab(_ovPrevTab);   // 元のタブへ（手帳を開いていなかった時は選択はしない）
@@ -265,6 +282,7 @@ namespace EscapeProto
         private void SetTab(Tab t)
         {
             _tab = t;
+            if (t != Tab.Memo) HideDoc();
             _docsPage.SetActive(t == Tab.Docs);
             _memoPage.SetActive(t == Tab.Memo);
             SetNavigation(true);
@@ -303,8 +321,8 @@ namespace EscapeProto
             _guide.text = _tab == Tab.Docs
                 ? $"{UiTheme.Key("Enter", "A")} 調べる　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる"
                 : _overlay
-                    ? $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 元の資料　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("M", "RB")}{UiTheme.Key("Esc", "B")} 資料に戻る"
-                    : $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 元の資料　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる";
+                    ? $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 引用元を見る　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("M", "RB")}{UiTheme.Key("Esc", "B")} 資料に戻る"
+                    : $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 引用元を見る　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる";
         }
 
         // ---- 資料の一覧 ----
@@ -496,6 +514,7 @@ namespace EscapeProto
                 _rows.Add(card.Button);
             }
             LayoutBoard();
+            RefreshDoc();
             if (_reselectSnippet >= 0)
             {
                 foreach (var c in _cards) if (c.Snippet.id == _reselectSnippet) { Select(c.Button); ScrollTo(c); break; }
@@ -678,6 +697,179 @@ namespace EscapeProto
             return entryId;
         }
 
+        // ---- 引用元の文章ウィンドウ ----
+
+        private void BuildDocWindow(RectTransform book)
+        {
+            // ボードの右側に重ねる（左側のカードは見えたまま・動かせる）。枠は項目の Image、内側を黒で塗る
+            var frame = UiTheme.Fill(book, "DocWindow", UiTheme.WithAlpha(UiTheme.Accent, 0.55f), raycast: true);
+            _docWin = frame.gameObject;
+            var rt = frame.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-32f, -100f);
+            rt.sizeDelta = new Vector2(640f, DocWinH);
+            var fill = UiTheme.Fill(rt, "Fill", UiTheme.Hex(0x050506));
+            UiTheme.Stretch(fill.rectTransform, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline);
+
+            var kind = UiTheme.Label(rt, "Kind", UiTheme.FsSmall, TextAnchor.UpperLeft, UiTheme.TextSub, shadow: false);
+            UiTheme.Place(kind.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -22f), new Vector2(300f, 28f));
+            kind.text = "引用元";
+            _docTitle = UiTheme.Label(rt, "Title", 26, TextAnchor.UpperLeft, UiTheme.Text, display: true);
+            UiTheme.Place(_docTitle.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -50f), new Vector2(520f, 40f));
+            var close = UiTheme.MenuItem(rt, "×", () => { HideDoc(); UiSound.Cancel(); }, 64f, 52f, 30);
+            var crt = (RectTransform)close.transform;
+            crt.anchorMin = crt.anchorMax = new Vector2(1f, 1f);
+            crt.pivot = new Vector2(1f, 1f);
+            crt.anchoredPosition = new Vector2(-12f, -14f);
+            var rule = UiTheme.Fill(rt, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
+            UiTheme.Place(rule.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(32f, -100f), new Vector2(90f, UiTheme.Hairline));
+
+            // 本文（長ければホイールで送る）
+            var view = UiTheme.Fill(rt, "View", new Color(0f, 0f, 0f, 0f), raycast: true);
+            UiTheme.Stretch(view.rectTransform, 32f, 28f, DocViewTop, DocViewBottom);
+            view.gameObject.AddComponent<RectMask2D>();
+            _docBody = UiTheme.Label(view.rectTransform, "Body", 22, TextAnchor.UpperLeft,
+                                     Color.Lerp(UiTheme.TextSub, UiTheme.Text, 0.25f), shadow: false);
+            var brt = _docBody.rectTransform;
+            brt.anchorMin = new Vector2(0f, 1f); brt.anchorMax = new Vector2(1f, 1f);
+            brt.pivot = new Vector2(0.5f, 1f);
+            brt.anchoredPosition = Vector2.zero;
+            brt.sizeDelta = Vector2.zero;
+            _docBody.lineSpacing = 1.45f;
+            _docBody.supportRichText = false;   // 文字の番号を本文とそろえる（マーカーの白い文字）
+            _docBody.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _docBody.verticalOverflow = VerticalWrapMode.Overflow;
+            _docBody.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            _docGlyphs = _docBody.gameObject.AddComponent<MarkerGlyphs>();
+            _docScroll = view.gameObject.AddComponent<ScrollRect>();
+            _docScroll.viewport = view.rectTransform;
+            _docScroll.content = brt;
+            _docScroll.horizontal = false;
+            _docScroll.movementType = ScrollRect.MovementType.Clamped;
+            _docScroll.scrollSensitivity = 40f;
+            _docScroll.inertia = false;
+
+            // 下：実物の資料を開く
+            var open = UiTheme.MenuItem(rt, "資料を開く", () => { var sn = _docSnippet; HideDoc(); if (sn != null) OpenSource(sn); }, 220f, 52f, UiTheme.FsSmall);
+            var ort = (RectTransform)open.transform;
+            ort.anchorMin = ort.anchorMax = new Vector2(0f, 0f);
+            ort.pivot = new Vector2(0f, 0f);
+            ort.anchoredPosition = new Vector2(16f, 16f);
+            var hint = UiTheme.Label(rt, "Hint", UiTheme.FsSmall, TextAnchor.LowerRight, UiTheme.TextSub, shadow: false);
+            UiTheme.Place(hint.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-28f, 26f), new Vector2(340f, 30f));
+            hint.text = $"{UiTheme.Key("Esc", "B")} 閉じる";
+            _docWin.SetActive(false);
+        }
+
+        /// <summary>カードの引用元の資料の文章を開く（書き写した所が白く浮き上がり、その位置まで送る）</summary>
+        internal void ShowDoc(MemoSnippet s)
+        {
+            if (s == null || !SourceText(s.entryId, out var title, out var body)) { UiSound.Error(); return; }
+            bool same = _docWin.activeSelf && _docSnippet != null && _docSnippet.entryId == s.entryId;
+            _docSnippet = s;
+            _docTitle.text = title;
+            _docBody.text = body;
+            _docWin.SetActive(true);
+            _docWin.transform.SetAsLastSibling();
+            RefreshDoc();
+            StartCoroutine(ScrollDocTo(s.start));
+            if (!same) UiSound.Decide();
+        }
+
+        private void HideDoc()
+        {
+            if (_docWin == null || !_docWin.activeSelf) return;
+            _docWin.SetActive(false);
+            _docSnippet = null;
+            _docClosedFrame = Time.frameCount;
+        }
+
+        /// <summary>開いている文章の白い文字（その資料のメモ全部）を今のメモに合わせる。元のメモが消えたら閉じる</summary>
+        private void RefreshDoc()
+        {
+            if (_docWin == null || !_docWin.activeSelf || _docSnippet == null) return;
+            var mine = MemoSnippets.ForEntry(_docSnippet.entryId);
+            if (mine.Count == 0) { HideDoc(); return; }
+            if (MemoSnippets.IndexOf(_docSnippet.id) < 0) _docSnippet = mine[0];
+            string body = _docBody.text;
+            var lit = new HashSet<int>();
+            foreach (var m in mine)
+                for (int c = m.start; c < m.start + m.length && c < body.Length; c++)
+                    if (!char.IsWhiteSpace(body[c])) lit.Add(c);
+            _docGlyphs.Set(lit);
+        }
+
+        /// <summary>
+        /// 本文のその文字の行が見えるよう送る（文字の配置が決まってから）。先頭から見えるなら送らない。
+        /// 送る時は窓の上端を行の境目にそろえる（上の行が半分切れないように）
+        /// </summary>
+        private System.Collections.IEnumerator ScrollDocTo(int index)
+        {
+            _docBody.rectTransform.anchoredPosition = Vector2.zero;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            var gen = _docBody.cachedTextGenerator;
+            var lines = gen.lines;
+            if (lines.Count == 0) yield break;
+            float ppu = _docBody.pixelsPerUnit > 0f ? _docBody.pixelsPerUnit : 1f;
+            int li = 0;
+            while (li + 1 < lines.Count && lines[li + 1].startCharIdx <= index) li++;
+            // 窓の高さを行送りの倍数にする（上端を行の境目にそろえれば、下端でも行が切れない）
+            float full = DocWinH - DocViewTop - DocViewBottom;
+            if (lines.Count >= 2)
+            {
+                float pitch = (lines[0].topY - lines[1].topY) / ppu;
+                if (pitch > 1f)
+                {
+                    float h = Mathf.Max(1, Mathf.FloorToInt(full / pitch)) * pitch;
+                    var vrt = _docScroll.viewport;
+                    vrt.offsetMin = new Vector2(vrt.offsetMin.x, DocViewBottom + (full - h));
+                }
+            }
+            float viewH = _docScroll.viewport.rect.height;
+            float top = -lines[li].topY / ppu, bottom = top + lines[li].height / ppu;
+            float scroll = 0f;
+            if (bottom > viewH - 8f)
+            {
+                float want = top - viewH * 0.3f;   // その行が窓の上から3割あたりに来る
+                for (int k = li; k >= 0; k--)
+                {
+                    float t = -lines[k].topY / ppu;
+                    if (t <= want) { scroll = t; break; }
+                }
+            }
+            // 送りすぎる時（本文の終わりが見えている）も、上端は行の境目にする（下の行が少し切れる方がよい）
+            float max = Mathf.Max(0f, _docBody.rectTransform.rect.height - viewH);
+            if (scroll > max)
+            {
+                scroll = 0f;
+                for (int k = 0; k < lines.Count; k++)
+                {
+                    float t = -lines[k].topY / ppu;
+                    if (t <= max) scroll = t; else break;
+                }
+            }
+            _docBody.rectTransform.anchoredPosition = new Vector2(0f, scroll);
+        }
+
+        /// <summary>手帳エントリの題と本文（読む画面と同じ本文＝音声記録は書き起こし）</summary>
+        private static bool SourceText(string entryId, out string title, out string body)
+        {
+            title = null; body = null;
+            foreach (var e in Notebook.Entries)
+                if (e.id == entryId) { title = e.title; body = e.body; break; }
+            if (body == null)
+                foreach (var f in FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    if ($"{f.RoomId}_{f.Id}" == entryId) { title = string.IsNullOrEmpty(f.Title) ? f.Name : f.Title; body = f.Body; break; }
+            if (DocCatalog.TryParseEntry(entryId, out var room, out var doc) && DocCatalog.Get(room, doc).Audio)
+                body = DocCatalog.Transcript(room, doc);
+            if (body == null) return false;
+            body = body.Replace("\r", "");
+            title = title ?? entryId;
+            return true;
+        }
+
         internal void RemoveSnippet(MemoSnippet s)
         {
             int i = MemoSnippets.IndexOf(s.id);
@@ -759,6 +951,13 @@ namespace EscapeProto
                 if (Input.GetKey(KeyCode.DownArrow)) move.y -= 1f;
             }
 #endif
+            bool closeDoc = false;
+#if ENABLE_INPUT_SYSTEM
+            closeDoc = (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
+#else
+            closeDoc = Input.GetKeyDown(KeyCode.Escape);
+#endif
+            if (closeDoc && _docWin.activeSelf) { HideDoc(); UiSound.Cancel(); return; }
             if (_overlay)
             {
                 // 資料の画面から開いている：閉じると資料へ戻る（開いた時と同じキーでは閉じない）
@@ -829,7 +1028,9 @@ namespace EscapeProto
         private static readonly Color CardBg = UiTheme.Hex(0x050506);
         private static readonly Color CardBgOn = UiTheme.Hex(0x121110);
         private static readonly Color CardFrame = UiTheme.WithAlpha(UiTheme.Text, 0.12f);
-        private const int PadL = 22, PadR = 20, PadT = 12, PadB = 12;
+        // 余白：Text は行の上に行間ぶんの空きを持つので、上の余白はその分だけ小さくして上下をそろえる
+        private const int PadL = 20, PadR = 20, PadT = 8, PadB = 20;
+        private const float LineSpacing = 1.12f;   // 行送りは約1.5文字（日本語の読みやすい幅）
 
         public Vector2 Size => ((RectTransform)transform).rect.size;
         /// <summary>ボード上の場所（左上が原点、下が +y）</summary>
@@ -859,10 +1060,12 @@ namespace EscapeProto
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             go.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+            // 改行は自分で入れる（語の途中で切らない。JaLineBreak）。Text には折り返させない
             var text = go.transform.Find("Label").GetComponent<Text>();
             text.alignment = TextAnchor.UpperLeft;
-            text.lineSpacing = 1.3f;
-            text.text = "「" + s.text + "」";
+            text.lineSpacing = LineSpacing;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.text = JaLineBreak.Wrap("「" + s.text + "」", (maxW - PadL - PadR) / text.fontSize);
             var lift = text.GetComponent<Shadow>();
             if (lift == null) lift = text.gameObject.AddComponent<Shadow>();
             lift.effectColor = new Color(0f, 0f, 0f, 0.8f);
@@ -872,8 +1075,8 @@ namespace EscapeProto
             var mark = go.transform.Find("Mark");
             if (mark != null) mark.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            // 幅は文の長さに合わせる（上限を超えたら折り返す）→ 高さは中身から決まる
-            float w = Mathf.Clamp(Mathf.Max(text.preferredWidth, src.preferredWidth) + PadL + PadR + 4f, minW, maxW);
+            // 幅はいちばん長い行に合わせる → 高さは中身から決まる
+            float w = Mathf.Clamp(Mathf.Max(text.preferredWidth, src.preferredWidth) + PadL + PadR, minW, maxW + 40f);
             var le = go.GetComponent<LayoutElement>();
             le.preferredWidth = w;
             le.preferredHeight = -1f;   // 高さは中身から（項目の既定の高さを使わない）
@@ -900,7 +1103,7 @@ namespace EscapeProto
                 var gp = Gamepad.current;
                 if ((kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) ||
                     (gp != null && gp.buttonSouth.wasPressedThisFrame))
-                    owner.OpenSource(s);
+                    owner.ShowDoc(s);
 #endif
             });
             return card;
@@ -921,7 +1124,7 @@ namespace EscapeProto
         public void OnPointerClick(PointerEventData e)
         {
             if (e.button == PointerEventData.InputButton.Right) _owner.RemoveSnippet(Snippet);
-            else if (e.button == PointerEventData.InputButton.Left && e.clickCount >= 2) _owner.OpenSource(Snippet);
+            else if (e.button == PointerEventData.InputButton.Left && e.clickCount >= 2) _owner.ShowDoc(Snippet);
         }
     }
 }
