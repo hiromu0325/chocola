@@ -454,7 +454,7 @@ namespace EscapeProto
             if (_mode == Mode.Read)
             {
                 string toModel = _item != null && !(_req?.StartInRead ?? false) ? $"{UiTheme.Key("Space", "Y")} 実物に戻る　　" : "";
-                _guide.text = $"なぞる マーカー（触れた文字をメモへ）　　マーカーをクリック 消す　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
+                _guide.text = $"なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
             }
             else
             {

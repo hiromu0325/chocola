@@ -35,6 +35,7 @@ namespace EscapeProto
         public List<string> loopVisited = new List<string>(); // 初入室タイトルを表示済みの部屋
         public bool loopIntroPlayed;                        // 起床カットシーン再生済み
         public List<MemoSnippet> memoSnippets = new List<MemoSnippet>(); // マーカーで切り取った文（並び順のまま）
+        public List<MarkerStroke> memoStrokes = new List<MarkerStroke>(); // 資料の上に引いたマーカーの線
         public List<string> docsHeard = new List<string>();     // 最後まで聞いた音声記録
         public List<string> docsCommented = new List<string>(); // 主人公のひと言を出した資料
 
