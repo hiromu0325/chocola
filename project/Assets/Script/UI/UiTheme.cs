@@ -386,6 +386,10 @@ namespace EscapeProto
         private Image _box;   // 箱のボタンの地（選択中は少し明るく）
         /// <summary>選択中に文字を右へずらすか（レイアウトグループの中では false にする）</summary>
         public bool ShiftText = true;
+        /// <summary>文字の色（ふだん／選択中）。既定は骨の白→真鍮</summary>
+        public Color TextNormal = UiTheme.Text, TextOn = UiTheme.Accent;
+        /// <summary>選択の度合い（0〜1）で項目ごとの見た目を変える（枠の色など）</summary>
+        public Action<float> OnFx;
 
         /// <summary>文字の位置を変えた後に呼ぶ（ずらしの基準を取り直す）</summary>
         public void Rebase() { if (_text != null) _textBase = _text.rectTransform.offsetMin; }
@@ -433,7 +437,8 @@ namespace EscapeProto
             if (_text == null) return;
             bool enabled = _btn == null || _btn.interactable;
             float k = 1f - (1f - _k) * (1f - _k);
-            _text.color = !enabled ? UiTheme.TextFaint : Color.Lerp(UiTheme.Text, UiTheme.Accent, k) * (1f - 0.15f * _press);
+            _text.color = !enabled ? UiTheme.TextFaint : Color.Lerp(TextNormal, TextOn, k) * (1f - 0.15f * _press);
+            OnFx?.Invoke(k);
             if (_box != null)
             {
                 _box.color = Color.Lerp(UiTheme.PanelDim, UiTheme.Hex(0x2A2723, 0.97f), k) * (1f - 0.2f * _press);

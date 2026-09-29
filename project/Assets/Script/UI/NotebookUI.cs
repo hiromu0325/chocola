@@ -434,6 +434,9 @@ namespace EscapeProto
         private static string SourceTitle(string entryId)
         {
             foreach (var e in Notebook.Entries) if (e.id == entryId) return e.title;
+            // 手帳に載っていない資料（途中から始めた時など）は部屋に置いてある資料の名前
+            foreach (var f in FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if ($"{f.RoomId}_{f.Id}" == entryId) return string.IsNullOrEmpty(f.Title) ? f.Name : f.Title;
             return entryId;
         }
 
@@ -580,6 +583,11 @@ namespace EscapeProto
         private int _index, _dropAt;
         private CanvasGroup _cg;
 
+        // 内側の地は不透明（枠の色の上に重ねるので、透けると枠の色が中まで滲む）
+        private static readonly Color CardBg = UiTheme.Hex(0x050506);
+        private static readonly Color CardBgOn = UiTheme.Hex(0x121110);
+        private static readonly Color CardFrame = UiTheme.WithAlpha(UiTheme.Text, 0.12f);
+
         public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, int index, string source)
         {
             var btn = UiTheme.MenuItem(parent, "", null, 1300f, 60f, 24);
@@ -587,9 +595,14 @@ namespace EscapeProto
             go.name = "Card_" + s.id;
             var le = go.GetComponent<LayoutElement>();
             le.preferredHeight = -1f;
-            // 地（ほんのり明るい紙片）
-            var bg = go.GetComponent<Image>();
-            bg.color = UiTheme.WithAlpha(UiTheme.PanelDim, 0.9f);
+            // 地は黒、細い枠。文字は白（読む画面でマーカーを引いて浮き上がった文字と同じ見た目）。
+            // 項目の Image を枠の色にして、内側を黒で塗る（どの解像度でも枠が同じ太さで出る）
+            var frame = go.GetComponent<Image>();
+            frame.color = CardFrame;
+            var bg = UiTheme.Fill(go.transform, "Fill", CardBg);
+            bg.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            UiTheme.Stretch(bg.rectTransform, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline);
+            bg.transform.SetAsFirstSibling();
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(28, 24, 12, 12);
             v.spacing = UiTheme.Sp1;
@@ -600,12 +613,24 @@ namespace EscapeProto
             text.alignment = TextAnchor.UpperLeft;
             text.lineSpacing = 1.3f;
             text.text = "「" + s.text + "」";
+            var lift = text.GetComponent<Shadow>();
+            if (lift == null) lift = text.gameObject.AddComponent<Shadow>();
+            lift.effectColor = new Color(0f, 0f, 0f, 0.8f);
+            lift.effectDistance = new Vector2(1f, -1.5f);
             var src = UiTheme.Label(go.transform, "Source", UiTheme.FsSmall, TextAnchor.UpperRight, UiTheme.TextSub, shadow: false);
             src.text = "── " + source;
             var mark = go.transform.Find("Mark");
             if (mark != null) mark.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            go.GetComponent<UiItemFx>().ShiftText = false;   // 並びはレイアウトが決めるので文字はずらさない
+            var fx = go.GetComponent<UiItemFx>();
+            fx.ShiftText = false;   // 並びはレイアウトが決めるので文字はずらさない
+            // 選択中：文字は白のまま、枠が真鍮色になり地が少し明るくなる（＋左の細罫）
+            fx.TextNormal = fx.TextOn = Color.white;
+            fx.OnFx = k =>
+            {
+                frame.color = Color.Lerp(CardFrame, UiTheme.WithAlpha(UiTheme.Accent, 0.85f), k);
+                bg.color = Color.Lerp(CardBg, CardBgOn, k);
+            };
             var card = go.AddComponent<SnippetCard>();
             card.Snippet = s;
             card.Button = btn;

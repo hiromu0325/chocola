@@ -10,7 +10,7 @@ namespace EscapeProto
     /// ラインマーカーを引ける本文。蛍光ペンのように自由になぞれる：
     /// なぞった軌跡はそのまま太い線（リボン）として資料の上に残り（MarkerStroke）、
     /// 線に少しでも被った文字はすべて拾って、本文の中で続いている文字（間が空白・改行だけのものも続きとみなす）を
-    /// 1つのまとまりとして手帳の「メモ」に書き写す（MemoSnippets）。
+    /// 1つのまとまりとして手帳の「メモ」に書き写す（MemoSnippets）。拾った文字は白く浮き上がる（MarkerGlyphs）。
     /// 線をクリックすると、その線と、その線だけが拾っていた文字のメモが消える。
     /// 文字の位置は Text の cachedTextGenerator から取る（リッチテキストは使わない＝文字の番号がずれない）。
     /// ※AddComponent で作るのでファイル名と一致させてある
@@ -19,7 +19,8 @@ namespace EscapeProto
     {
         public Text Text;
         public string EntryId;
-        public Color Marker = new Color(0.72f, 0.56f, 0.25f, 0.42f);
+        /// <summary>線の色（a = 紙に重ねる濃さ）。本文の文字と同系色にして、拾った文字だけを白く浮き上がらせる</summary>
+        public Color Marker = new Color(0.9f, 0.88f, 0.84f, 0.3f);
         /// <summary>本文の下の紙（パネル）の色。線はこの上に Marker を重ねた色で不透明に塗る（線が重なっても濃くならない）</summary>
         public Color Paper = UiTheme.Panel;
         /// <summary>書き写した／消した時（トーストや音を出す）</summary>
@@ -29,6 +30,8 @@ namespace EscapeProto
         private string _body = "";
         private RectTransform _layer, _boxes;
         private MarkerRibbon _ribbon;
+        private MarkerGlyphs _glyphs;
+        private readonly HashSet<int> _lit = new HashSet<int>();        // 白く浮き上がらせる文字
         private readonly List<Image> _pool = new List<Image>();
         private readonly List<Vector2> _live = new List<Vector2>();     // なぞっている線の点
         private readonly HashSet<int> _boxed = new HashSet<int>();      // 線ではなく帯で塗っている文字（クリックで消す）
@@ -47,7 +50,7 @@ namespace EscapeProto
         {
             get
             {
-                var c = Color.Lerp(Paper, Marker, Mathf.Max(Marker.a, 0.5f));
+                var c = Color.Lerp(Paper, Marker, Marker.a);
                 c.a = 1f;
                 return c;
             }
@@ -78,6 +81,7 @@ namespace EscapeProto
             m._layer = layer;
             m._boxes = boxes;
             m._ribbon = ribbon;
+            m._glyphs = text.gameObject.AddComponent<MarkerGlyphs>();
             return m;
         }
 
@@ -351,9 +355,12 @@ namespace EscapeProto
                 _ribbon.Lines.Add(line);
             }
             // 線で描けていないメモ（線の無い古いマーカー・組み方が変わった線）は文字の帯で塗る
+            _lit.Clear();
             foreach (var s in MemoSnippets.ForEntry(EntryId))
             {
                 int end = Mathf.Min(s.start + s.length, _body.Length);
+                for (int c = s.start; c < end; c++)
+                    if (!char.IsWhiteSpace(_body[c])) _lit.Add(c);
                 if (drawn.Count == 0)
                 {
                     for (int c = s.start; c < end; c++) _boxed.Add(c);
@@ -370,11 +377,10 @@ namespace EscapeProto
             }
             if (_dragging && _moved)
             {
-                // なぞっている途中：線に触れた文字をうっすら示す（線からはみ出した所で「拾う文字」が分かる）
-                var faint = new Color(Marker.r, Marker.g, Marker.b, Marker.a * 0.45f);
-                foreach (var (a, b) in Groups(_touched, joinBlank: false))
-                    used = Paint(a, b + 1, faint, used);
-                var line = new MarkerRibbon.Line { Width = RibbonWidth, Color = Color.Lerp(RibbonColor, Marker, 0.18f) };
+                // なぞっている途中：線に触れた文字がその場で浮き上がる（どこまで拾うかが分かる）
+                foreach (int c in _touched)
+                    if (c < _body.Length && !char.IsWhiteSpace(_body[c])) _lit.Add(c);
+                var line = new MarkerRibbon.Line { Width = RibbonWidth, Color = Color.Lerp(RibbonColor, Marker, 0.12f) };
                 line.Color.a = 1f;
                 line.Points.AddRange(_live);
                 line.Points.Add(_lastLocal);
@@ -382,6 +388,7 @@ namespace EscapeProto
             }
             for (int i = used; i < _pool.Count; i++) _pool[i].gameObject.SetActive(false);
             _ribbon.Refresh();
+            _glyphs.Set(_lit);
         }
 
         /// <summary>[from, to) を行ごとの帯で塗る。蛍光ペンのように行の下寄り 7 割だけ</summary>

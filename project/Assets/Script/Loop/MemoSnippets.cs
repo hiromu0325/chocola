@@ -113,6 +113,7 @@ namespace EscapeProto
                     _list.RemoveAt(i);
                 }
             }
+            end = Mathf.Min(end, body.Length);   // 本文が変わっていた時の保険
             var snip = new MemoSnippet
             {
                 id = _nextId++, entryId = entryId, start = start, length = end - start,

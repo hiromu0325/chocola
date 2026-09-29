@@ -755,12 +755,13 @@ namespace EscapeProto
             UiTheme.Place(_readNote.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(920f, 30f));
             var rrule = UiTheme.Fill(prt, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
             UiTheme.Place(rrule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 0.5f), new Vector2(-460f, -96f), new Vector2(120f, UiTheme.Hairline));
-            var body = UiTheme.Label(prt, "Body", UiTheme.FsBody, TextAnchor.UpperLeft, UiTheme.Text, shadow: false);
+            // 本文はふだん少し落ち着いた色。マーカーで拾った文字だけが白く浮き上がる（MarkerGlyphs）
+            var body = UiTheme.Label(prt, "Body", UiTheme.FsBody, TextAnchor.UpperLeft, Color.Lerp(UiTheme.TextSub, UiTheme.Text, 0.25f), shadow: false);
             UiTheme.Place(body.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -122f), new Vector2(920f, 640f));
             body.lineSpacing = 1.35f;
             body.verticalOverflow = VerticalWrapMode.Truncate;
             _marker = MarkerText.Create(prt, body);
-            _marker.Marker = UiTheme.WithAlpha(UiTheme.Accent, 0.4f);
+            _marker.Marker = UiTheme.WithAlpha(UiTheme.Text, 0.22f);   // 文字と同系色の控えめな線。拾った文字は白く浮き上がる
             _marker.OnAdded = s => { UiSound.Decide(); ToastUI.Show("メモに書き写した"); };
             _marker.OnRemoved = () => UiSound.Cancel();
             _readPanel.SetActive(false);
