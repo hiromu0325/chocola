@@ -13,6 +13,16 @@ namespace EscapeProto
         public int start;        // 資料の本文の何文字目から
         public int length;
         public string text;
+        // 手帳のメモのボード上の置き場所（左上の角。x は右、y は下が正）。placed = 置き場所が決まっている
+        public bool placed;
+        public float x, y;
+
+        public void TakePlaceOf(MemoSnippet o)
+        {
+            placed = o.placed;
+            x = o.x;
+            y = o.y;
+        }
     }
 
     /// <summary>
@@ -101,6 +111,7 @@ namespace EscapeProto
             // 重なる・接するマーカーは合わせて1本にする（同じ所を二重に書き写さない）
             int end = start + length;
             int insertAt = _list.Count;
+            MemoSnippet merged = null;   // まとめた先（ボード上の置き場所を引き継ぐ）
             for (int i = _list.Count - 1; i >= 0; i--)
             {
                 var s = _list[i];
@@ -110,6 +121,7 @@ namespace EscapeProto
                     start = Mathf.Min(start, s.start);
                     end = Mathf.Max(end, s.start + s.length);
                     insertAt = i;
+                    merged = s;
                     _list.RemoveAt(i);
                 }
             }
@@ -119,6 +131,7 @@ namespace EscapeProto
                 id = _nextId++, entryId = entryId, start = start, length = end - start,
                 text = Clean(body.Substring(start, end - start)),
             };
+            if (merged != null) snip.TakePlaceOf(merged);
             _list.Insert(Mathf.Min(insertAt, _list.Count), snip);
             OnChanged?.Invoke();
             return snip;
@@ -219,11 +232,13 @@ namespace EscapeProto
                         continue;
                     }
                     if (a < 0) continue;
-                    parts.Add(new MemoSnippet
+                    var part = new MemoSnippet
                     {
                         id = parts.Count == 0 ? s.id : _nextId++, entryId = s.entryId, start = a, length = b - a + 1,
                         text = Clean(body.Substring(a, b - a + 1)),
-                    });
+                    };
+                    if (parts.Count == 0) part.TakePlaceOf(s);   // 残った先頭は元の置き場所に
+                    parts.Add(part);
                     a = -1;
                 }
                 _list.InsertRange(k, parts);
@@ -244,6 +259,13 @@ namespace EscapeProto
         }
 
         public static int IndexOf(int snippetId) => _list.FindIndex(s => s.id == snippetId);
+
+        /// <summary>手帳のボードの置き場所を全部忘れる（一覧の並びに戻す）</summary>
+        public static void ResetPlacement()
+        {
+            foreach (var s in _list) s.placed = false;
+            OnChanged?.Invoke();
+        }
 
         /// <summary>その資料に引いたマーカー（本文の位置順）</summary>
         public static List<MemoSnippet> ForEntry(string entryId)

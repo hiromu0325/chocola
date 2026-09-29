@@ -184,6 +184,30 @@ namespace EscapeProto
             }
         }
 
+        /// <summary>
+        /// 調べる画面から手帳の「メモ」だけを開く（閉じると onClosed → 調べる画面へ戻る）。
+        /// 手帳を持っていなければ開かない（false）
+        /// </summary>
+        public bool OpenMemoOverlay(Action onClosed)
+        {
+            if (LoopRooms.Get(LoopProgress.StartRoomId) != null && !LoopProgress.NotebookOwned)
+            {
+                ToastUI.Show("手帳を持っていない（最初の部屋の机にあったはず）");
+                UiSound.Error();
+                return false;
+            }
+            _memoPanel.SetActive(true);
+            _notebook.ShowOverlay(() =>
+            {
+                if (!_memoOpen) _memoPanel.SetActive(false);   // 手帳から資料を開いていた時は手帳を残す
+                onClosed?.Invoke();
+            });
+            UiSound.Decide();
+            return true;
+        }
+
+        public void CloseMemoOverlay() => _notebook.CloseOverlay();
+
         // ============= 目標・人形 =============
         private static readonly System.Text.RegularExpressions.Regex Digits =
             new System.Text.RegularExpressions.Regex("[0-9０-９%％]");

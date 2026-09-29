@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
@@ -88,6 +89,11 @@ namespace EscapeProto
 
         private bool _tookControl;
 
+        // ---- 手帳のメモを上に開いている間 ----
+        private bool _memoOpen;
+        private int _memoClosedFrame = -1;
+        private Text _memoLabel;
+
         // ---- カセットレコーダー（テープを入れると見た目をレコーダーに替え、再生中はリールが回る） ----
         private bool _loaded;
         private Transform _reelL, _reelR;
@@ -147,11 +153,55 @@ namespace EscapeProto
             ProceduralAudio.PlayAt(ProceduralAudio.Click(), Ear, 0.3f, spatial: false);
         }
 
+        /// <summary>今開いている資料（手帳エントリId）。開いていなければ null</summary>
+        public string CurrentEntryId => _open ? _req?.EntryId : null;
+
+        /// <summary>
+        /// 開いたまま別の資料に替える（メモのカードから別の資料へ飛ぶ時）。
+        /// 閉じた時の戻り先（手帳から開いたか・閉じた後の処理）は元の資料のまま
+        /// </summary>
+        public void SwitchTo(Request next)
+        {
+            if (!_open) { Open(next); return; }
+            next.FromNotebook = _req.FromNotebook;
+            next.OnClosed = _req.OnClosed;
+            bool took = _tookControl;
+            _req.OnClosed = null;
+            _tookControl = false;   // 閉じても歩けるようにしない（すぐ次を開く）
+            Close();
+            Open(next);
+            _tookControl = took;
+        }
+
+        // ---- 手帳のメモ（読んでいる資料から直接開き、閉じるとこの資料へ戻る） ----
+
+        private void OpenMemo()
+        {
+            if (!_open || _memoOpen || HUDManager.Instance == null) return;
+            if (!HUDManager.Instance.OpenMemoOverlay(OnMemoClosed)) return;
+            _memoOpen = true;
+            _canvas.gameObject.SetActive(false);
+            if (_item != null) _item.SetActive(false);
+            if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        private void OnMemoClosed()
+        {
+            _memoOpen = false;
+            _memoClosedFrame = Time.frameCount;
+            if (!_open) return;
+            _canvas.gameObject.SetActive(true);
+            if (_item != null) _item.SetActive(true);
+            _memoLabel.color = UiTheme.Text;
+            UpdateGuide();
+        }
+
         /// <summary>閉じる。closeAll = 手帳ごと閉じる</summary>
         public void Close(bool closeAll = false)
         {
             if (!_open) return;
             _open = false;
+            if (_memoOpen) HUDManager.Instance?.CloseMemoOverlay();
             _closedFrame = Time.frameCount;
             StopPlayback(false);
             PlaceSubtitle(false);   // 閉じた後も流れる独白は通常の高さで
@@ -371,8 +421,9 @@ namespace EscapeProto
 
         private void Update()
         {
-            if (!_open) return;
-            bool fresh = Time.unscaledTime - _openedAt < 0.2f;   // 開いた瞬間の [E] で閉じない
+            if (!_open || _memoOpen) return;   // 手帳のメモを開いている間は資料の操作を止める
+            // 開いた瞬間の [E] で閉じない／メモを閉じたキーで資料まで閉じない
+            bool fresh = Time.unscaledTime - _openedAt < 0.2f || Time.frameCount == _memoClosedFrame;
 
             if (_mode == Mode.Model) UpdateModel();
 
@@ -384,6 +435,7 @@ namespace EscapeProto
                     else Close();
                 }
                 else if (Pressed(Act.CloseAll) && _req.FromNotebook) Close(true);
+                else if (Pressed(Act.Memo)) OpenMemo();
                 else if (Pressed(Act.Primary))
                 {
                     if (_mode == Mode.Model)
@@ -454,7 +506,7 @@ namespace EscapeProto
             if (_mode == Mode.Read)
             {
                 string toModel = _item != null && !(_req?.StartInRead ?? false) ? $"{UiTheme.Key("Space", "Y")} 実物に戻る　　" : "";
-                _guide.text = $"なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
+                _guide.text = $"なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す　　{UiTheme.Key("M", "RB")} メモ　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
             }
             else
             {
@@ -463,7 +515,7 @@ namespace EscapeProto
                     : "読む";
                 string primaryKey = _req.Info.Audio || Readable ? $"{UiTheme.Key("Space", "Y")} {primary}　　" : "";
                 string transcript = _req.Info.Audio && DocState.Heard(_req.EntryId) ? $"{UiTheme.Key("R", "X")} 書き起こし　　" : "";
-                _guide.text = $"ドラッグ 回す　　ホイール 寄せる　　{primaryKey}{transcript}{UiTheme.Key("E", "B")} {back}{closeAll}";
+                _guide.text = $"ドラッグ 回す　　ホイール 寄せる　　{primaryKey}{transcript}{UiTheme.Key("M", "RB")} メモ　　{UiTheme.Key("E", "B")} {back}{closeAll}";
             }
             _guideBar.rectTransform.sizeDelta = new Vector2(_guide.preferredWidth + 80f, 52f);
         }
@@ -637,6 +689,13 @@ namespace EscapeProto
 
         private void HideSubtitleNow() => _subGroup.alpha = 0f;
 
+        private static void AddTrigger(EventTrigger t, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> a)
+        {
+            var e = new EventTrigger.Entry { eventID = type };
+            e.callback.AddListener(a);
+            t.triggers.Add(e);
+        }
+
         /// <summary>字幕の高さ：読む画面の間は本文の窓の下（操作ガイドとの間）、それ以外は少し上</summary>
         private void PlaceSubtitle(bool reading)
         {
@@ -647,7 +706,7 @@ namespace EscapeProto
 
         // ============================== 入力 ==============================
 
-        private enum Act { Primary, Secondary, Close, CloseAlt, CloseAll }
+        private enum Act { Primary, Secondary, Close, CloseAlt, CloseAll, Memo }
 
         private static bool Pressed(Act a)
         {
@@ -661,6 +720,7 @@ namespace EscapeProto
                 case Act.Close: return (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
                 case Act.CloseAlt: return kb != null && kb.eKey.wasPressedThisFrame;
                 case Act.CloseAll: return (kb != null && kb.tabKey.wasPressedThisFrame) || (gp != null && gp.selectButton.wasPressedThisFrame);
+                case Act.Memo: return (kb != null && kb.mKey.wasPressedThisFrame) || (gp != null && gp.rightShoulder.wasPressedThisFrame);
             }
             return false;
 #else
@@ -671,6 +731,7 @@ namespace EscapeProto
                 case Act.Close: return Input.GetKeyDown(KeyCode.Escape);
                 case Act.CloseAlt: return Input.GetKeyDown(KeyCode.E);
                 case Act.CloseAll: return Input.GetKeyDown(KeyCode.Tab);
+                case Act.Memo: return Input.GetKeyDown(KeyCode.M);
             }
             return false;
 #endif
@@ -744,6 +805,17 @@ namespace EscapeProto
             _guide = UiTheme.Label(root, "Guide", UiTheme.FsSmall, TextAnchor.MiddleCenter, UiTheme.Text);
             UiTheme.Place(_guide.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, UiTheme.SafeY + 10f), new Vector2(1700f, 40f));
             _guide.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // 手帳のメモを開く（右下。マウスで押せる。選択はしない＝Space で押されない）
+            var memoBtn = UiTheme.Fill(root, "MemoButton", UiTheme.WithAlpha(Color.black, 0.55f), raycast: true);
+            UiTheme.Place(memoBtn.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0.5f), new Vector2(-UiTheme.SafeX, UiTheme.SafeY + 10f), new Vector2(230f, 52f));
+            _memoLabel = UiTheme.Label(memoBtn.transform, "Label", UiTheme.FsSmall, TextAnchor.MiddleCenter, UiTheme.Text);
+            UiTheme.Stretch(_memoLabel.rectTransform);
+            _memoLabel.text = $"{UiTheme.Key("M", "RB")} メモを開く";
+            var trig = memoBtn.gameObject.AddComponent<EventTrigger>();
+            AddTrigger(trig, EventTriggerType.PointerClick, _ => { UiSound.Decide(); OpenMemo(); });
+            AddTrigger(trig, EventTriggerType.PointerEnter, _ => _memoLabel.color = UiTheme.Accent);
+            AddTrigger(trig, EventTriggerType.PointerExit, _ => _memoLabel.color = UiTheme.Text);
 
             // 読む画面
             _readPanel = UiTheme.Fill(root, "Read", UiTheme.Panel, raycast: true).gameObject;

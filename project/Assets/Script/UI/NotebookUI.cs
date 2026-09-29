@@ -12,8 +12,11 @@ namespace EscapeProto
     /// <summary>
     /// 手帳（Tab）。2つの使い方に分かれている。
     /// ・資料 … 見つけた資料の一覧（章ごと）。選ぶと調べる画面で実物を回して読める。音声記録は再生できる
-    /// ・メモ … 資料の本文にラインマーカーを引いて切り取った文の一覧。ドラッグ（または Shift＋↑↓）で並び替え、
-    ///          右クリック（Delete）で消す。ダブルクリック（Enter）で元の資料のその場所を開く
+    /// ・メモ … 資料の本文にラインマーカーを引いて切り取った文のボード。最初は一覧のように並び、
+    ///          ドラッグ（Shift＋矢印・右スティック）で上下左右に自由に動かせる。ほかのカードにぶつかると
+    ///          重ならずにその境目で止まり、横に貼り付く（ぶつかられた方は動かない）。
+    ///          右クリック（Delete）で消す。ダブルクリック（Enter）で元の資料を開く。R で一覧の並びに戻す。
+    ///          読んでいる資料の画面からも直接開ける（ShowOverlay。閉じるとその資料へ戻る）
     /// 付箋（装置の誤答で立つ目印）は資料の一覧に出る。
     /// ※AddComponent で作るのでファイル名と一致させてある
     /// </summary>
@@ -46,9 +49,19 @@ namespace EscapeProto
         private readonly List<Button> _chapterButtons = new List<Button>();
         private readonly List<Selectable> _rows = new List<Selectable>();
         private readonly List<SnippetCard> _cards = new List<SnippetCard>();
-        private Image _insertLine;
         private string _reselectEntry;
         private int _reselectSnippet = -1;
+
+        // ---- 資料の画面から開いた時（メモだけを上に重ねる） ----
+        private bool _overlay, _ovPrevShown, _ovPrevBook;
+        private Tab _ovPrevTab;
+        private Action _ovClosed;
+        private int _ovOpenedFrame = -1;
+
+        // ---- ボード ----
+        private const float CardMaxW = 460f, CardMinW = 200f, BoardGap = 12f, BoardMaxY = 4000f;
+        private const float MoveSpeed = 700f;   // キー・スティックで動かす速さ（/秒）
+        private Vector2 _grab;                  // ドラッグ：つかんだ所とカードの左上の差
 
         /// <summary>手帳を閉じる時（HUD が面倒を見る）</summary>
         public Action RequestClose;
@@ -138,17 +151,27 @@ namespace EscapeProto
             _memoPage = UiTheme.Rect(book, "MemoPage").gameObject;
             var page = (RectTransform)_memoPage.transform;
             UiTheme.Stretch(page, 32f, 32f, 100f, 60f);
-            _memoScroll = MakeScroll(page, Vector2.zero, out _memoContent);
+            // ボード：カードを自由に置く（並びはレイアウトに任せない）。下へはみ出したらホイールで送る
+            var view = UiTheme.Fill(page, "Board", new Color(0f, 0f, 0f, 0f), raycast: true);
+            UiTheme.Stretch(view.rectTransform);
+            view.gameObject.AddComponent<RectMask2D>();
+            _memoContent = UiTheme.Rect(view.rectTransform, "Content");
+            _memoContent.anchorMin = new Vector2(0f, 1f); _memoContent.anchorMax = new Vector2(1f, 1f);
+            _memoContent.pivot = new Vector2(0f, 1f);
+            _memoContent.anchoredPosition = Vector2.zero;
+            _memoContent.sizeDelta = Vector2.zero;
+            _memoScroll = view.gameObject.AddComponent<ScrollRect>();
+            _memoScroll.viewport = view.rectTransform;
+            _memoScroll.content = _memoContent;
+            _memoScroll.horizontal = false;
+            _memoScroll.movementType = ScrollRect.MovementType.Clamped;
+            _memoScroll.scrollSensitivity = 40f;
+            _memoScroll.inertia = false;
+
             _memoHint = UiTheme.Label(page, "Empty", UiTheme.FsBody, TextAnchor.MiddleCenter, UiTheme.TextSub, shadow: false);
             UiTheme.Stretch(_memoHint.rectTransform);
             _memoHint.lineSpacing = 1.6f;
-            _memoHint.text = "まだ何も書き写していない。\n資料を開いて「読む」と、本文をなぞってラインマーカーを引ける。\n引いた文はここに並び、自由に並べ替えて考えをまとめられる。";
-            _insertLine = UiTheme.Fill(_memoContent, "Insert", UiTheme.Accent);
-            _insertLine.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            _insertLine.rectTransform.anchorMin = new Vector2(0f, 1f); _insertLine.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _insertLine.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _insertLine.rectTransform.sizeDelta = new Vector2(0f, 3f);
-            _insertLine.gameObject.SetActive(false);
+            _memoHint.text = "まだ何も書き写していない。\n資料を開いて「読む」と、本文をなぞってラインマーカーを引ける。\n引いた文はここに並び、自由に動かして考えをまとめられる。";
         }
 
         private static ScrollRect MakeScroll(RectTransform page, Vector2 leftTop, out RectTransform content)
@@ -197,7 +220,46 @@ namespace EscapeProto
         public void Hide()
         {
             _shown = false;
-            _insertLine.gameObject.SetActive(false);
+            SetNavigation(true);
+        }
+
+        /// <summary>
+        /// 資料の画面から「メモ」だけを開く（資料の一覧には切り替えない）。閉じると onClosed が呼ばれ、
+        /// 手帳を開いていた時は元のタブ・表示に戻る
+        /// </summary>
+        public void ShowOverlay(Action onClosed)
+        {
+            if (_overlay) return;
+            _ovPrevShown = _shown;
+            _ovPrevBook = _book.gameObject.activeSelf;
+            _ovPrevTab = _tab;
+            _ovClosed = onClosed;
+            _overlay = true;
+            _ovOpenedFrame = Time.frameCount;
+            _shown = true;
+            _book.gameObject.SetActive(true);
+            _tabDocs.interactable = false;
+            // 今読んでいる資料のメモがあれば、それを選んでおく
+            var cur = InspectView.Instance != null ? InspectView.Instance.CurrentEntryId : null;
+            var mine = cur != null ? MemoSnippets.ForEntry(cur) : null;
+            if (mine != null && mine.Count > 0) _reselectSnippet = mine[mine.Count - 1].id;
+            if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            SetTab(Tab.Memo);
+        }
+
+        public void CloseOverlay()
+        {
+            if (!_overlay) return;
+            _overlay = false;
+            _tabDocs.interactable = true;
+            SetNavigation(true);
+            _shown = _ovPrevShown;
+            SetTab(_ovPrevTab);   // 元のタブへ（手帳を開いていなかった時は選択はしない）
+            _book.gameObject.SetActive(_ovPrevBook);
+            UiSound.Cancel();
+            var cb = _ovClosed;
+            _ovClosed = null;
+            cb?.Invoke();
         }
 
         private void SetTab(Tab t)
@@ -205,6 +267,7 @@ namespace EscapeProto
             _tab = t;
             _docsPage.SetActive(t == Tab.Docs);
             _memoPage.SetActive(t == Tab.Memo);
+            SetNavigation(true);
             var active = t == Tab.Docs ? _tabDocs : _tabMemo;
             var art = (RectTransform)active.transform;
             _tabMark.rectTransform.anchoredPosition = new Vector2(art.anchoredPosition.x + 28f, -80f);
@@ -239,7 +302,9 @@ namespace EscapeProto
         {
             _guide.text = _tab == Tab.Docs
                 ? $"{UiTheme.Key("Enter", "A")} 調べる　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる"
-                : $"ドラッグ／{UiTheme.Key("Shift＋↑↓")} 並べ替え　　右クリック／{UiTheme.Key("Delete")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 元の資料　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる";
+                : _overlay
+                    ? $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 元の資料　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("M", "RB")}{UiTheme.Key("Esc", "B")} 資料に戻る"
+                    : $"ドラッグ／{UiTheme.Key("Shift＋矢印", "右スティック")} 動かす　　右クリック／{UiTheme.Key("Delete", "Y")} 消す　　ダブルクリック／{UiTheme.Key("Enter", "A")} 元の資料　　{UiTheme.Key("R", "X")} 並べ直す　　{UiTheme.Key("Q", "LB")}{UiTheme.Key("E", "RB")} 資料／メモ　　{UiTheme.Key("Tab", "View")} 閉じる";
         }
 
         // ---- 資料の一覧 ----
@@ -382,6 +447,17 @@ namespace EscapeProto
         {
             var iv = InspectView.Instance;
             if (iv == null) return;
+            var req = BuildRequest(r, read);
+            _book.gameObject.SetActive(false);
+            _reselectEntry = r.Entry.id;
+            req.FromNotebook = true;
+            req.OnClosed = all => { if (all) RequestClose?.Invoke(); else { _book.gameObject.SetActive(true); Rebuild(); FocusFirst(); } };
+            iv.Open(req);
+        }
+
+        /// <summary>手帳の行 → 調べる画面を開く内容（戻り先は呼ぶ側で決める）</summary>
+        private InspectView.Request BuildRequest(Row r, bool read)
+        {
             var info = r.Doc != null ? DocCatalog.Get(r.Room, r.Doc)
                                      : new DocInfo { Kind = InspectKind.Notebook, Ink = InkStyle.Hand, Scale = 1f, Tint = Color.white };
             // 残響・記録（主人公が手帳に書き留めたもの）は手帳のページとして見せる
@@ -396,15 +472,12 @@ namespace EscapeProto
                         if (rec != null) clips = rec.Clips;
                         break;
                     }
-            _book.gameObject.SetActive(false);
-            _reselectEntry = r.Entry.id;
-            iv.Open(new InspectView.Request
+            return new InspectView.Request
             {
                 EntryId = r.Entry.id, RoomId = r.Room, DocId = r.Doc ?? r.Entry.id,
                 Title = r.Entry.title, Body = r.Entry.body, Info = info, Clips = clips,
-                FromNotebook = true, StartInRead = read,
-                OnClosed = all => { if (all) RequestClose?.Invoke(); else { _book.gameObject.SetActive(true); Rebuild(); FocusFirst(); } },
-            });
+                StartInRead = read,
+            };
         }
 
         // ---- メモ ----
@@ -418,17 +491,182 @@ namespace EscapeProto
             var all = MemoSnippets.All;
             for (int i = 0; i < all.Count; i++)
             {
-                var card = SnippetCard.Create(_memoContent, this, all[i], i, SourceTitle(all[i].entryId));
+                var card = SnippetCard.Create(_memoContent, this, all[i], SourceTitle(all[i].entryId), CardMinW, CardMaxW);
                 _cards.Add(card);
                 _rows.Add(card.Button);
             }
-            UiTheme.ChainVertical(_rows);
-            _insertLine.transform.SetAsLastSibling();
+            LayoutBoard();
             if (_reselectSnippet >= 0)
             {
-                foreach (var c in _cards) if (c.Snippet.id == _reselectSnippet) { Select(c.Button); break; }
+                foreach (var c in _cards) if (c.Snippet.id == _reselectSnippet) { Select(c.Button); ScrollTo(c); break; }
                 _reselectSnippet = -1;
             }
+        }
+
+        private float BoardW => _memoContent.rect.width;
+        private float ViewH => _memoScroll.viewport.rect.height;
+
+        /// <summary>
+        /// 置き場所の決まっていないカード（新しく書き写したもの・並べ直し）を、一覧のように左上から縦に、
+        /// 空いている所へ置く。一度置いたカードはプレイヤーが動かすまで動かない
+        /// </summary>
+        private void LayoutBoard()
+        {
+            var taken = new List<Rect>();
+            foreach (var c in _cards) if (c.Snippet.placed) taken.Add(c.Rect);
+            int cols = Mathf.Max(1, Mathf.FloorToInt((BoardW + BoardGap) / (CardMaxW + BoardGap)));
+            foreach (var c in _cards)
+            {
+                if (c.Snippet.placed) continue;
+                var pos = FindSlot(c.Size, taken, cols);
+                c.Snippet.x = pos.x;
+                c.Snippet.y = pos.y;
+                c.Snippet.placed = true;
+                taken.Add(c.Rect);
+            }
+            foreach (var c in _cards)
+            {
+                // ボードの幅に収める（画面の大きさが変わった時など）
+                c.Snippet.x = Mathf.Clamp(c.Snippet.x, 0f, Mathf.Max(0f, BoardW - c.Size.x));
+                c.Snippet.y = Mathf.Clamp(c.Snippet.y, 0f, BoardMaxY);
+                c.Apply();
+            }
+            UpdateBoardHeight();
+        }
+
+        /// <summary>一覧の並び：列ごとに上から空きを探す。どの列にも見える範囲で入らなければ、いちばん左の列の下へ</summary>
+        private Vector2 FindSlot(Vector2 size, List<Rect> taken, int cols)
+        {
+            float viewH = ViewH;
+            for (int pass = 0; pass < 2; pass++)
+                for (int col = 0; col < (pass == 0 ? cols : 1); col++)
+                {
+                    float x = col * (CardMaxW + BoardGap), y = 0f;
+                    while (y < BoardMaxY)
+                    {
+                        var r = new Rect(x, y, size.x, size.y);
+                        float blockBottom = -1f;
+                        foreach (var t in taken)
+                            if (r.xMin < t.xMax + BoardGap - 0.01f && t.xMin < r.xMax + BoardGap - 0.01f &&
+                                r.yMin < t.yMax + BoardGap - 0.01f && t.yMin < r.yMax + BoardGap - 0.01f)
+                                blockBottom = Mathf.Max(blockBottom, t.yMax);
+                        if (blockBottom < 0f)
+                        {
+                            if (pass == 1 || y + size.y <= viewH) return new Vector2(x, y);
+                            break;
+                        }
+                        y = blockBottom + BoardGap;
+                        if (pass == 0 && y + size.y > viewH) break;
+                    }
+                }
+            return Vector2.zero;
+        }
+
+        private void UpdateBoardHeight()
+        {
+            float bottom = 0f;
+            foreach (var c in _cards) bottom = Mathf.Max(bottom, c.Snippet.y + c.Size.y);
+            _memoContent.sizeDelta = new Vector2(0f, Mathf.Max(ViewH, bottom + BoardGap));
+        }
+
+        /// <summary>
+        /// カードを動かす。ほかのカードにぶつかる所では、その境目で止まって横に貼り付く（相手は動かない）。
+        /// 横と縦を分けて少しずつ進めるので、角ではぶつかった方向だけ止まり、もう一方へは滑る
+        /// </summary>
+        internal void MoveCard(SnippetCard card, Vector2 delta)
+        {
+            if (delta.sqrMagnitude < 0.0001f) return;
+            var r = card.Rect;
+            int steps = Mathf.Max(1, Mathf.CeilToInt(delta.magnitude / 16f));
+            var step = delta / steps;
+            for (int k = 0; k < steps; k++)
+            {
+                r.x += Sweep(r, step.x, card, horizontal: true);
+                r.y += Sweep(r, step.y, card, horizontal: false);
+            }
+            card.Snippet.x = r.x;
+            card.Snippet.y = r.y;
+            card.Apply();
+            UpdateBoardHeight();
+        }
+
+        /// <summary>r を d だけ動かせる量（ぶつかるカード・ボードの端で止める）</summary>
+        private float Sweep(Rect r, float d, SnippetCard self, bool horizontal)
+        {
+            const float Eps = 0.01f;
+            if (Mathf.Abs(d) < 0.0001f) return 0f;
+            foreach (var o in _cards)
+            {
+                if (o == self) continue;
+                var b = o.Rect;
+                if (horizontal)
+                {
+                    if (r.yMin >= b.yMax - Eps || b.yMin >= r.yMax - Eps) continue;   // 縦に重なっていない＝当たらない
+                    if (d > 0f && b.xMin >= r.xMax - Eps) d = Mathf.Min(d, Mathf.Max(0f, b.xMin - r.xMax));
+                    else if (d < 0f && b.xMax <= r.xMin + Eps) d = Mathf.Max(d, Mathf.Min(0f, b.xMax - r.xMin));
+                }
+                else
+                {
+                    if (r.xMin >= b.xMax - Eps || b.xMin >= r.xMax - Eps) continue;
+                    if (d > 0f && b.yMin >= r.yMax - Eps) d = Mathf.Min(d, Mathf.Max(0f, b.yMin - r.yMax));
+                    else if (d < 0f && b.yMax <= r.yMin + Eps) d = Mathf.Max(d, Mathf.Min(0f, b.yMax - r.yMin));
+                }
+            }
+            // ボードの端
+            if (horizontal) return Mathf.Clamp(r.x + d, 0f, Mathf.Max(0f, BoardW - r.width)) - r.x;
+            return Mathf.Clamp(r.y + d, 0f, BoardMaxY) - r.y;
+        }
+
+        /// <summary>画面の位置 → ボードの座標（左上が原点、下が +y）</summary>
+        private bool BoardPoint(Vector2 screen, Camera cam, out Vector2 p)
+        {
+            bool ok = RectTransformUtility.ScreenPointToLocalPointInRectangle(_memoContent, screen, cam, out var local);
+            p = new Vector2(local.x, -local.y);
+            return ok;
+        }
+
+        internal void BeginDrag(SnippetCard card, PointerEventData e)
+        {
+            if (!BoardPoint(e.position, e.pressEventCamera, out var p)) return;
+            _grab = p - new Vector2(card.Snippet.x, card.Snippet.y);
+            card.transform.SetAsLastSibling();   // 動かしている間は一番上に
+            Select(card.Button);
+        }
+
+        internal void DragCard(SnippetCard card, PointerEventData e)
+        {
+            if (!BoardPoint(e.position, e.pressEventCamera, out var p)) return;
+            MoveCard(card, p - _grab - new Vector2(card.Snippet.x, card.Snippet.y));
+            ScrollTo(card);
+        }
+
+        /// <summary>カードが見える所までボードを送る</summary>
+        private void ScrollTo(SnippetCard card)
+        {
+            float viewH = ViewH, contentH = _memoContent.rect.height;
+            float scroll = _memoContent.anchoredPosition.y;
+            float top = card.Snippet.y, bottom = top + card.Size.y;
+            if (bottom > scroll + viewH) scroll = bottom - viewH;
+            if (top < scroll) scroll = top;
+            _memoContent.anchoredPosition = new Vector2(0f, Mathf.Clamp(scroll, 0f, Mathf.Max(0f, contentH - viewH)));
+        }
+
+        /// <summary>全部のカードを一覧の並びに戻す</summary>
+        private void ResetBoard()
+        {
+            if (MemoSnippets.Count == 0) return;
+            var sel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            var card = sel != null ? sel.GetComponent<SnippetCard>() : null;
+            if (card != null) _reselectSnippet = card.Snippet.id;
+            _memoContent.anchoredPosition = Vector2.zero;
+            MemoSnippets.ResetPlacement();
+            UiSound.Decide();
+        }
+
+        /// <summary>矢印キーでの選択の移動を止める（Shift＋矢印でカードを動かしている間）</summary>
+        private static void SetNavigation(bool on)
+        {
+            if (EventSystem.current != null) EventSystem.current.sendNavigationEvents = on;
         }
 
         private static string SourceTitle(string entryId)
@@ -438,42 +676,6 @@ namespace EscapeProto
             foreach (var f in FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if ($"{f.RoomId}_{f.Id}" == entryId) return string.IsNullOrEmpty(f.Title) ? f.Name : f.Title;
             return entryId;
-        }
-
-        /// <summary>カードをドラッグ中：差し込む位置に線を出す。戻り値＝差し込む番号</summary>
-        internal int DragOver(Vector2 screen, Camera cam)
-        {
-            int index = _cards.Count;
-            float lineY = 0f;
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                var rt = (RectTransform)_cards[i].transform;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, screen, cam, out var local);
-                if (local.y > 0f) { index = i; break; }   // カードの中心より上
-            }
-            if (_cards.Count > 0)
-            {
-                var refCard = (RectTransform)_cards[Mathf.Min(index, _cards.Count - 1)].transform;
-                float top = refCard.anchoredPosition.y + refCard.rect.height * (1f - refCard.pivot.y);
-                float bottom = refCard.anchoredPosition.y - refCard.rect.height * refCard.pivot.y;
-                lineY = index < _cards.Count ? top + UiTheme.Sp1 : bottom - UiTheme.Sp1;
-            }
-            _insertLine.gameObject.SetActive(true);
-            _insertLine.rectTransform.anchoredPosition = new Vector2(0f, lineY);
-            _insertLine.transform.SetAsLastSibling();
-            return index;
-        }
-
-        internal void DragEnd(int from, int to)
-        {
-            _insertLine.gameObject.SetActive(false);
-            if (to > from) to--;
-            if (to != from)
-            {
-                _reselectSnippet = MemoSnippets.All[from].id;
-                MemoSnippets.Move(from, to);
-                UiSound.Decide();
-            }
         }
 
         internal void RemoveSnippet(MemoSnippet s)
@@ -488,6 +690,18 @@ namespace EscapeProto
         /// <summary>カードの元の資料を「読む」画面で開く</summary>
         internal void OpenSource(MemoSnippet s)
         {
+            if (_overlay)
+            {
+                // 資料の画面から開いている：その資料なら戻るだけ、別の資料ならそちらに替える
+                var iv = InspectView.Instance;
+                InspectView.Request next = null;
+                if (iv != null && iv.CurrentEntryId != s.entryId)
+                    foreach (var e in Notebook.Entries)
+                        if (e.id == s.entryId && Classify(e, out var row)) { next = BuildRequest(row, true); break; }
+                CloseOverlay();
+                if (next != null) iv.SwitchTo(next);
+                return;
+            }
             foreach (var e in Notebook.Entries)
                 if (e.id == s.entryId && Classify(e, out var row))
                 {
@@ -501,8 +715,9 @@ namespace EscapeProto
 
         private void HandleKeys()
         {
-            if (InspectView.IsOpen) return;
-            bool prev = false, next = false, up = false, down = false, del = false, shift = false;
+            if (InspectView.IsOpen && !_overlay) return;
+            bool prev = false, next = false, del = false, shift = false, reset = false, back = false;
+            Vector2 move = Vector2.zero;
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
             var gp = Gamepad.current;
@@ -510,22 +725,46 @@ namespace EscapeProto
             {
                 prev = kb.qKey.wasPressedThisFrame; next = kb.eKey.wasPressedThisFrame;
                 shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
-                up = kb.upArrowKey.wasPressedThisFrame; down = kb.downArrowKey.wasPressedThisFrame;
                 del = kb.deleteKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame;
+                reset = kb.rKey.wasPressedThisFrame;
+                back = kb.mKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame;
+                if (shift)
+                {
+                    if (kb.leftArrowKey.isPressed || kb.aKey.isPressed) move.x -= 1f;
+                    if (kb.rightArrowKey.isPressed || kb.dKey.isPressed) move.x += 1f;
+                    if (kb.upArrowKey.isPressed || kb.wKey.isPressed) move.y += 1f;
+                    if (kb.downArrowKey.isPressed || kb.sKey.isPressed) move.y -= 1f;
+                }
             }
             if (gp != null)
             {
                 prev |= gp.leftShoulder.wasPressedThisFrame; next |= gp.rightShoulder.wasPressedThisFrame;
                 del |= gp.buttonNorth.wasPressedThisFrame;
-                if (gp.buttonWest.isPressed) { shift = true; up |= gp.dpad.up.wasPressedThisFrame; down |= gp.dpad.down.wasPressedThisFrame; }
+                reset |= gp.buttonWest.wasPressedThisFrame;
+                back |= gp.rightShoulder.wasPressedThisFrame || gp.buttonEast.wasPressedThisFrame || gp.selectButton.wasPressedThisFrame;
+                var rs = gp.rightStick.ReadValue();
+                if (rs.magnitude > 0.2f) move += rs;
             }
 #else
             prev = Input.GetKeyDown(KeyCode.Q); next = Input.GetKeyDown(KeyCode.E);
             shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            up = Input.GetKeyDown(KeyCode.UpArrow); down = Input.GetKeyDown(KeyCode.DownArrow);
             del = Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace);
+            reset = Input.GetKeyDown(KeyCode.R);
+            back = Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab);
+            if (shift)
+            {
+                if (Input.GetKey(KeyCode.LeftArrow)) move.x -= 1f;
+                if (Input.GetKey(KeyCode.RightArrow)) move.x += 1f;
+                if (Input.GetKey(KeyCode.UpArrow)) move.y += 1f;
+                if (Input.GetKey(KeyCode.DownArrow)) move.y -= 1f;
+            }
 #endif
-            if (prev || next)
+            if (_overlay)
+            {
+                // 資料の画面から開いている：閉じると資料へ戻る（開いた時と同じキーでは閉じない）
+                if (back && Time.frameCount != _ovOpenedFrame) { CloseOverlay(); return; }
+            }
+            else if (prev || next)
             {
                 if (_tab == Tab.Docs && prev) SetChapter(_chapter - 1 < 0 ? ChapterNames.Length - 1 : _chapter - 1);
                 SetTab(_tab == Tab.Docs ? Tab.Memo : Tab.Docs);
@@ -533,15 +772,18 @@ namespace EscapeProto
                 return;
             }
             if (_tab != Tab.Memo) return;
+            SetNavigation(!shift);   // Shift を押している間は矢印で選択を移さない（カードを動かす）
+            if (reset) { ResetBoard(); return; }
             var sel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             var card = sel != null ? sel.GetComponent<SnippetCard>() : null;
             if (card == null) return;
-            int i = MemoSnippets.IndexOf(card.Snippet.id);
             if (del) { RemoveSnippet(card.Snippet); return; }
-            if (shift && (up || down))
+            if (move.sqrMagnitude > 0.0001f)
             {
-                int to = Mathf.Clamp(i + (up ? -1 : 1), 0, MemoSnippets.Count - 1);
-                if (to != i) { _reselectSnippet = card.Snippet.id; MemoSnippets.Move(i, to); UiSound.Move(); }
+                if (move.sqrMagnitude > 1f) move.Normalize();
+                card.transform.SetAsLastSibling();
+                MoveCard(card, new Vector2(move.x, -move.y) * MoveSpeed * Time.unscaledDeltaTime);
+                ScrollTo(card);
             }
         }
 
@@ -567,34 +809,41 @@ namespace EscapeProto
             for (int i = content.childCount - 1; i >= 0; i--)
             {
                 var c = content.GetChild(i);
-                if (c.name == "Insert") continue;
                 c.SetParent(null);
                 Destroy(c.gameObject);
             }
         }
     }
 
-    /// <summary>メモの1枚（切り取った文＋元の資料名）。ドラッグで並べ替え、右クリックで消す、ダブルクリックで元の資料へ</summary>
+    /// <summary>
+    /// メモの1枚（切り取った文＋元の資料名）。ボードの上で自由に動かせる（ほかのカードとは重ならない）。
+    /// 右クリックで消す、ダブルクリックで元の資料へ。大きさは文の長さに合わせる（幅は上限まで、あとは折り返す）
+    /// </summary>
     public class SnippetCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         public MemoSnippet Snippet;
         public Button Button;
         private NotebookUI _owner;
-        private int _index, _dropAt;
-        private CanvasGroup _cg;
 
         // 内側の地は不透明（枠の色の上に重ねるので、透けると枠の色が中まで滲む）
         private static readonly Color CardBg = UiTheme.Hex(0x050506);
         private static readonly Color CardBgOn = UiTheme.Hex(0x121110);
         private static readonly Color CardFrame = UiTheme.WithAlpha(UiTheme.Text, 0.12f);
+        private const int PadL = 22, PadR = 20, PadT = 12, PadB = 12;
 
-        public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, int index, string source)
+        public Vector2 Size => ((RectTransform)transform).rect.size;
+        /// <summary>ボード上の場所（左上が原点、下が +y）</summary>
+        public Rect Rect => new Rect(Snippet.x, Snippet.y, Size.x, Size.y);
+        public void Apply() => ((RectTransform)transform).anchoredPosition = new Vector2(Snippet.x, -Snippet.y);
+
+        public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, string source, float minW, float maxW)
         {
-            var btn = UiTheme.MenuItem(parent, "", null, 1300f, 60f, 24);
+            var btn = UiTheme.MenuItem(parent, "", null, maxW, 60f, 24);
             var go = btn.gameObject;
             go.name = "Card_" + s.id;
-            var le = go.GetComponent<LayoutElement>();
-            le.preferredHeight = -1f;
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
             // 地は黒、細い枠。文字は白（読む画面でマーカーを引いて浮き上がった文字と同じ見た目）。
             // 項目の Image を枠の色にして、内側を黒で塗る（どの解像度でも枠が同じ太さで出る）
             var frame = go.GetComponent<Image>();
@@ -604,10 +853,11 @@ namespace EscapeProto
             UiTheme.Stretch(bg.rectTransform, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline);
             bg.transform.SetAsFirstSibling();
             var v = go.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset(28, 24, 12, 12);
+            v.padding = new RectOffset(PadL, PadR, PadT, PadB);
             v.spacing = UiTheme.Sp1;
             v.childControlWidth = v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            go.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var text = go.transform.Find("Label").GetComponent<Text>();
             text.alignment = TextAnchor.UpperLeft;
@@ -622,8 +872,16 @@ namespace EscapeProto
             var mark = go.transform.Find("Mark");
             if (mark != null) mark.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
+            // 幅は文の長さに合わせる（上限を超えたら折り返す）→ 高さは中身から決まる
+            float w = Mathf.Clamp(Mathf.Max(text.preferredWidth, src.preferredWidth) + PadL + PadR + 4f, minW, maxW);
+            var le = go.GetComponent<LayoutElement>();
+            le.preferredWidth = w;
+            le.preferredHeight = -1f;   // 高さは中身から（項目の既定の高さを使わない）
+            rt.sizeDelta = new Vector2(w, rt.sizeDelta.y);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+
             var fx = go.GetComponent<UiItemFx>();
-            fx.ShiftText = false;   // 並びはレイアウトが決めるので文字はずらさない
+            fx.ShiftText = false;   // 並びはボードが決めるので文字はずらさない
             // 選択中：文字は白のまま、枠が真鍮色になり地が少し明るくなる（＋左の細罫）
             fx.TextNormal = fx.TextOn = Color.white;
             fx.OnFx = k =>
@@ -635,8 +893,6 @@ namespace EscapeProto
             card.Snippet = s;
             card.Button = btn;
             card._owner = owner;
-            card._index = index;
-            card._cg = go.AddComponent<CanvasGroup>();
             btn.onClick.AddListener(() =>
             {
 #if ENABLE_INPUT_SYSTEM
@@ -652,23 +908,15 @@ namespace EscapeProto
 
         public void OnBeginDrag(PointerEventData e)
         {
-            if (e.button != PointerEventData.InputButton.Left) return;
-            _dropAt = _index;
-            _cg.alpha = 0.55f;
+            if (e.button == PointerEventData.InputButton.Left) _owner.BeginDrag(this, e);
         }
 
         public void OnDrag(PointerEventData e)
         {
-            if (e.button != PointerEventData.InputButton.Left) return;
-            _dropAt = _owner.DragOver(e.position, e.pressEventCamera);
+            if (e.button == PointerEventData.InputButton.Left) _owner.DragCard(this, e);
         }
 
-        public void OnEndDrag(PointerEventData e)
-        {
-            if (e.button != PointerEventData.InputButton.Left) return;
-            _cg.alpha = 1f;
-            _owner.DragEnd(_index, _dropAt);
-        }
+        public void OnEndDrag(PointerEventData e) { }
 
         public void OnPointerClick(PointerEventData e)
         {
