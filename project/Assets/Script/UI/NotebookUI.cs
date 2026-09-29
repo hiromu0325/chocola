@@ -60,7 +60,7 @@ namespace EscapeProto
         private int _ovOpenedFrame = -1;
 
         // ---- ボード ----
-        private const float CardMaxW = 460f, CardMinW = 200f, BoardGap = 12f, BoardMaxY = 4000f;
+        private const float CardMaxW = 460f, CardMinW = 120f, BoardGap = 12f, BoardMaxY = 4000f;
         private const float MoveSpeed = 700f;   // キー・スティックで動かす速さ（/秒）
         private Vector2 _grab;                  // ドラッグ：つかんだ所とカードの左上の差
 
@@ -509,7 +509,7 @@ namespace EscapeProto
             var all = MemoSnippets.All;
             for (int i = 0; i < all.Count; i++)
             {
-                var card = SnippetCard.Create(_memoContent, this, all[i], SourceTitle(all[i].entryId), CardMinW, CardMaxW);
+                var card = SnippetCard.Create(_memoContent, this, all[i], CardMinW, CardMaxW);
                 _cards.Add(card);
                 _rows.Add(card.Button);
             }
@@ -686,15 +686,6 @@ namespace EscapeProto
         private static void SetNavigation(bool on)
         {
             if (EventSystem.current != null) EventSystem.current.sendNavigationEvents = on;
-        }
-
-        private static string SourceTitle(string entryId)
-        {
-            foreach (var e in Notebook.Entries) if (e.id == entryId) return e.title;
-            // 手帳に載っていない資料（途中から始めた時など）は部屋に置いてある資料の名前
-            foreach (var f in FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if ($"{f.RoomId}_{f.Id}" == entryId) return string.IsNullOrEmpty(f.Title) ? f.Name : f.Title;
-            return entryId;
         }
 
         // ---- 引用元の文章ウィンドウ ----
@@ -1015,8 +1006,8 @@ namespace EscapeProto
     }
 
     /// <summary>
-    /// メモの1枚（切り取った文＋元の資料名）。ボードの上で自由に動かせる（ほかのカードとは重ならない）。
-    /// 右クリックで消す、ダブルクリックで元の資料へ。大きさは文の長さに合わせる（幅は上限まで、あとは折り返す）
+    /// メモの1枚（切り取った文だけ。出典は書かない）。ボードの上で自由に動かせる（ほかのカードとは重ならない）。
+    /// 右クリックで消す、ダブルクリックで引用元の文章を開く。大きさは文の長さに合わせる（幅は上限まで、あとは改行）
     /// </summary>
     public class SnippetCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
@@ -1029,7 +1020,7 @@ namespace EscapeProto
         private static readonly Color CardBgOn = UiTheme.Hex(0x121110);
         private static readonly Color CardFrame = UiTheme.WithAlpha(UiTheme.Text, 0.12f);
         // 余白：Text は行の上に行間ぶんの空きを持つので、上の余白はその分だけ小さくして上下をそろえる
-        private const int PadL = 20, PadR = 20, PadT = 8, PadB = 20;
+        private const int PadL = 20, PadR = 20, PadT = 8, PadB = 14;
         private const float LineSpacing = 1.12f;   // 行送りは約1.5文字（日本語の読みやすい幅）
 
         public Vector2 Size => ((RectTransform)transform).rect.size;
@@ -1037,7 +1028,7 @@ namespace EscapeProto
         public Rect Rect => new Rect(Snippet.x, Snippet.y, Size.x, Size.y);
         public void Apply() => ((RectTransform)transform).anchoredPosition = new Vector2(Snippet.x, -Snippet.y);
 
-        public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, string source, float minW, float maxW)
+        public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, float minW, float maxW)
         {
             var btn = UiTheme.MenuItem(parent, "", null, maxW, 60f, 24);
             var go = btn.gameObject;
@@ -1070,13 +1061,11 @@ namespace EscapeProto
             if (lift == null) lift = text.gameObject.AddComponent<Shadow>();
             lift.effectColor = new Color(0f, 0f, 0f, 0.8f);
             lift.effectDistance = new Vector2(1f, -1.5f);
-            var src = UiTheme.Label(go.transform, "Source", UiTheme.FsSmall, TextAnchor.UpperRight, UiTheme.TextSub, shadow: false);
-            src.text = "── " + source;
             var mark = go.transform.Find("Mark");
             if (mark != null) mark.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
             // 幅はいちばん長い行に合わせる → 高さは中身から決まる
-            float w = Mathf.Clamp(Mathf.Max(text.preferredWidth, src.preferredWidth) + PadL + PadR, minW, maxW + 40f);
+            float w = Mathf.Clamp(text.preferredWidth + PadL + PadR, minW, maxW + 40f);
             var le = go.GetComponent<LayoutElement>();
             le.preferredWidth = w;
             le.preferredHeight = -1f;   // 高さは中身から（項目の既定の高さを使わない）
