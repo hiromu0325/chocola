@@ -2723,6 +2723,9 @@ namespace EscapeProto
                 HideRenderers(t, "KitchenCounter", "CounterTop", "SinkBasin", "Faucet", "UpperCabinet", "RangeHood",
                     "TvStand", "Tv", "Fridge", "FridgeHandle");
                 HideRenderers(sideb.transform, "Body");
+                // 隠し：わさび当て（本筋とは関係ない）。台所の奥、炊飯器と冷蔵庫の間の天板の隅（食卓の灯りから遠く暗い）
+                var sushi = Visual(t, "Assets/Models/HQ/Sushi/Sushi.fbx", new Vector3(-hw + 0.72f, 0.89f, 2.12f));
+                if (sushi != null) sushi.AddComponent<SushiGame>();
                 Solid(t, "Sofa", new Vector3(-1.8f, 0.4f, -2.2f), new Vector3(1.5f, 0.8f, 0.8f));
                 Solid(t, "Plant", new Vector3(hw - 0.45f, 0.5f, -hd + 0.5f), new Vector3(0.45f, 1.0f, 0.45f));
                 if (Visual(draw.transform, HqModel("kuroda_home", "Drawing"), Vector3.zero) != null) HideRenderers(t, draw.name);
@@ -4125,6 +4128,17 @@ namespace EscapeProto
                 case "CMN_Steel":     return HqLit(n, new Color(0.55f, 0.5f, 0.45f), 0.35f, 0.4f, HqTex("CoreAnte/steel_plate"), HqTex("CoreAnte/steel_plate_n", true), 0.4f);
                 case "CMN_WiredGlass":return HqLit(n, new Color(0.08f, 0.1f, 0.11f), 0.95f, 0.3f);
                 case "CMN_Chrome":    return HqLit(n, new Color(0.85f, 0.85f, 0.86f), 0.85f, 1f);
+                // ---- 隠し：わさび当て（寿司下駄と握り） ----
+                case "SUS_Geta":   return HqLit(n, Color.white, 0.25f, 0f, HqTex("Sushi/geta"), HqTex("Sushi/geta_n", true), 0.3f);
+                case "SUS_Rice":   return HqLit(n, new Color(1f, 1f, 0.98f), 0.3f, 0f, HqTex("Sushi/rice"), HqTex("Sushi/rice_n", true), 0.8f);
+                case "SUS_Wasabi": return HqLit(n, Color.white, 0.25f, 0f, HqTex("Sushi/wasabi"), HqTex("Sushi/wasabi_n", true), 0.6f);
+                case "SUS_Nori":   return HqLit(n, Color.white, 0.3f, 0f, HqTex("Sushi/nori"), HqTex("Sushi/nori_n", true), 0.5f);
+                case "SUS_Maguro": return HqLit(n, Color.white, 0.62f, 0f, HqTex("Sushi/maguro"), HqTex("Sushi/maguro_n", true), 0.4f);
+                case "SUS_Salmon": return HqLit(n, Color.white, 0.62f, 0f, HqTex("Sushi/salmon"), HqTex("Sushi/salmon_n", true), 0.4f);
+                case "SUS_Tai":    return HqLit(n, Color.white, 0.6f, 0f, HqTex("Sushi/tai"), HqTex("Sushi/tai_n", true), 0.4f);
+                case "SUS_Ika":    return HqLit(n, Color.white, 0.55f, 0f, HqTex("Sushi/ika"), HqTex("Sushi/ika_n", true), 0.6f);
+                case "SUS_Tamago": return HqLit(n, Color.white, 0.35f, 0f, HqTex("Sushi/tamago"), HqTex("Sushi/tamago_n", true), 0.4f);
+                case "SUS_Anago":  return HqLit(n, Color.white, 0.8f, 0f, HqTex("Sushi/anago"), HqTex("Sushi/anago_n", true), 0.4f);   // つめのつや
                 // ---- 黒田の自宅 ----
                 case "KUR_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("KurodaHome/flooring"), HqTex("KurodaHome/flooring_n", true), 0.4f);
                 case "KUR_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/wallpaper"), HqTex("KurodaHome/wallpaper_n", true), 0.4f);
@@ -4815,7 +4829,7 @@ namespace EscapeProto
             string n = src.name;
             var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat");
             if (IsHandTuned(tuned)) return tuned;   // 人が調整した材質は値を書き換えない
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_") || n.StartsWith("INS_")) return HqMat(src);
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_") || n.StartsWith("INS_") || n.StartsWith("SUS_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
