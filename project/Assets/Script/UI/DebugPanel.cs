@@ -172,6 +172,7 @@ namespace EscapeProto
             string loc = LoopRooms.InCorridor ? "回廊" : LoopRooms.CurrentRoomId;
             var bs = BreakerSystem.Instance;
             GUILayout.Label($"段階 {LoopRooms.Stage}　現在地 {loc}　停電 {(bs != null && bs.DownRoomId != null ? bs.DownRoomId : "-")}", _small);
+            if (!string.IsNullOrEmpty(SushiGame.Where)) GUILayout.Label($"隠し寿司の置き場所: {SushiGame.Where}", _small);
             if (!string.IsNullOrEmpty(_lastResult)) GUILayout.Label(_lastResult, _small);
             GUILayout.EndArea();
         }

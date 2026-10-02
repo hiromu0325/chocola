@@ -99,12 +99,25 @@ namespace EscapeProto
             var corridor = BuildCorridor();
             BuildRooms();
             AttachAudioRecords();
+            PlaceHiddenSushi();
             BuildLighting();
             var player = BuildPlayer();
             BuildManagers(player, corridor);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[LoopPrototype] 生成完了: {ScenePath}");
+        }
+
+        /// <summary>
+        /// 隠し：わさび当て（本筋とは関係ない）。寿司下駄は1ゲームに1個だけ。ここではシーン直下に置き、
+        /// 起動時に全部屋の隠し場所（Resources/SushiSpots.json。部屋ごとに3か所）のどこか1か所へ移る（SushiGame）。
+        /// 隠し場所は「Tools/EscapePrototype/Hidden/寿司の隠し場所を探す」で作る
+        /// </summary>
+        private static void PlaceHiddenSushi()
+        {
+            var root = new GameObject("Hidden").transform;
+            var sushi = Visual(root, "Assets/Models/HQ/Sushi/Sushi.fbx", Vector3.zero);
+            if (sushi != null) sushi.AddComponent<SushiGame>();
         }
 
         // ============================== 回廊（ロの字） ==============================
@@ -2723,9 +2736,6 @@ namespace EscapeProto
                 HideRenderers(t, "KitchenCounter", "CounterTop", "SinkBasin", "Faucet", "UpperCabinet", "RangeHood",
                     "TvStand", "Tv", "Fridge", "FridgeHandle");
                 HideRenderers(sideb.transform, "Body");
-                // 隠し：わさび当て（本筋とは関係ない）。台所の奥、炊飯器と冷蔵庫の間の天板の隅（食卓の灯りから遠く暗い）
-                var sushi = Visual(t, "Assets/Models/HQ/Sushi/Sushi.fbx", new Vector3(-hw + 0.72f, 0.89f, 2.12f));
-                if (sushi != null) sushi.AddComponent<SushiGame>();
                 Solid(t, "Sofa", new Vector3(-1.8f, 0.4f, -2.2f), new Vector3(1.5f, 0.8f, 0.8f));
                 Solid(t, "Plant", new Vector3(hw - 0.45f, 0.5f, -hd + 0.5f), new Vector3(0.45f, 1.0f, 0.45f));
                 if (Visual(draw.transform, HqModel("kuroda_home", "Drawing"), Vector3.zero) != null) HideRenderers(t, draw.name);

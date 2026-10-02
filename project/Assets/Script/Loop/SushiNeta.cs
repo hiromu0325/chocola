@@ -23,16 +23,16 @@ namespace EscapeProto
 
         private SushiGame _game;
 
-        public void Init(SushiGame game, SushiGame.Kind kind, Vector3 hingePos, Vector3 slot)
+        /// <summary>並べ終わったネタに付ける（位置は SushiGame.Arrange が置いた所のまま）</summary>
+        public void Init(SushiGame game, SushiGame.Kind kind, Vector3 slot)
         {
             _game = game;
             Kind = kind;
             Slot = slot;
-            transform.localPosition = hingePos;
-            transform.localRotation = Quaternion.identity;
             // 当たり判定：ネタの形の外接箱。幅は握りの間隔いっぱい（隣との間に狙えない隙間を作らない）、上に少し厚め
             var mf = GetComponent<MeshFilter>();
             _col = gameObject.AddComponent<BoxCollider>();
+            _col.isTrigger = true;   // 床にも置かれるので、歩く人の邪魔をしない（狙う判定はトリガーも拾う）
             if (mf != null && mf.sharedMesh != null)
             {
                 var b = mf.sharedMesh.bounds;
