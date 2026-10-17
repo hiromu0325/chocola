@@ -17,7 +17,7 @@ UV は実寸の箱投影（1m = 1。Unity の紙・革・段ボールのテク�
   Notebook   開いた革の手帳（ページの束、綴じ目の糸、縁のステッチ）。印字面は左右のページ
   Card       透明ケースに入った職員証（写真・ストラップ・金具）
   Photo      木の写真立て（ガラス・セピアの写真・裏板・脚）
-  Newspaper  四つ折りの新聞（折り目の重なり、開いた端の紙の層）
+  Newspaper  四つ折りの新聞（折り目の重なり、開いた端の紙の層）。紙面はテクスチャ（文字は読む画面で読む）
   Monitor    小型の液晶モニター（細い黒縁・首・台）
   Cassette   カセットテープ（スモークの殻・ねじ・窓から見えるハブと巻いたテープ・ラベル）
   Recorder   IC レコーダー（金属の前板・スピーカーの穴・小さな液晶・ボタン）
@@ -35,7 +35,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 import hq
 from hq import U, finish, join
@@ -1002,9 +1002,41 @@ def newspaper(M):
             return F(X2, aa, Z2)
         o = surf(f"INews{k}", us, vs, fn, M["INS_Newsprint"], tl, 0.0)
         out.append(finish(o, 1.0, angle=40))
+    news_atlas(out)
     x0, x1 = X2c + 0.007, 0.104 - 0.004
     y0, y1 = y_c - a1 + 0.02, y_c - 0.006
-    return out, [rect(((x0 + x1) / 2, (y0 + y1) / 2, -rho_out), (x1 - x0, y1 - y0))]
+    return out, [rect(((x0 + x1) / 2, -(y0 + y1) / 2, -rho_out), (x1 - x0, y1 - y0))]
+
+
+def news_atlas(objs):
+    """四つ折りの新聞の仕上げ。上下を返して上と右を紙の端・左と下を折り目にし（表＝1面の右上の四つ割り）、
+    紙面のテクスチャ（Dim/newspaper_fold：左半分＝表、右半分＝裏）を張る。裏は裏から見て字が正しい向きになるよう左右を返す"""
+    flip = Matrix.Scale(-1.0, 4, (0.0, 0.0, 1.0))   # Unity の y（Blender の z）を反転
+    for o in objs:
+        me = o.data
+        me.transform(flip)
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bmesh.ops.reverse_faces(bm, faces=bm.faces[:])   # 鏡に映すと裏返るので面の向きを戻す
+        bm.to_mesh(me)
+        bm.free()
+        me.update()
+    xs = [-v.co.x for o in objs for v in o.data.vertices]
+    ys = [v.co.z for o in objs for v in o.data.vertices]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    for o in objs:
+        me = o.data
+        uvl = me.uv_layers.get("UVMap") or me.uv_layers.new(name="UVMap")
+        for poly in me.polygons:
+            back = poly.normal.y < 0.0   # Unity の +Z（裏）を向く面
+            for li in poly.loop_indices:
+                co = me.vertices[me.loops[li].vertex_index].co
+                fu = (-co.x - x0) / (x1 - x0)
+                fv = (co.z - y0) / (y1 - y0)
+                u = 0.5 + 0.5 * (1.0 - fu) if back else 0.5 * fu
+                u = min(max(u, 0.501), 0.999) if back else min(max(u, 0.001), 0.499)
+                uvl.data[li].uv = (u, fv)
+        me.update()
 
 
 # ============================== 9. モニター ==============================

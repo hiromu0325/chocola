@@ -87,6 +87,9 @@ namespace EscapeProto
                     foreach (var l in room.GetComponentsInChildren<LoopLockBase>(true))
                         if (!l.Solved && System.Array.IndexOf(room.RequiredFindables, l.Id) >= 0) { lockLeft = true; break; }
                     int docs = remain - CountUnsolvedLocks(room);
+                    // 残りが黒塗りの資料の入れ物の中の資料だけ：埋めるように案内する
+                    var fill = FillHint(room, out int insideLeft);
+                    if (fill != null && docs - insideLeft <= 0 && !lockLeft) return Main($"{fill}（残り{remain}）");
                     if (docs > 0 && lockLeft) return Main($"『{room.Name}』で資料を読み、装置を解く（残り{remain}）");
                     if (lockLeft) return Main($"『{room.Name}』の装置を解く──答えは資料の中（残り{remain}）");
                     return Main($"『{room.Name}』で資料を探す（残り{remain}）");
@@ -115,6 +118,31 @@ namespace EscapeProto
                 if (best == null || r.UnlockStage > best.UnlockStage) best = r;
             }
             return best;
+        }
+
+        /// <summary>
+        /// 必須の資料が黒塗りの資料の入れ物の中にある時の案内（無ければ null）。insideLeft = 入れ物の中の未発見の必須の数
+        /// </summary>
+        private static string FillHint(LoopRoomRoot room, out int insideLeft)
+        {
+            insideLeft = 0;
+            string hint = null;
+            foreach (var fc in room.GetComponentsInChildren<FillContainer>(true))
+            {
+                if (fc.Inside == null) continue;
+                foreach (var go in fc.Inside)
+                {
+                    var f = go != null ? go.GetComponent<LoopFindable>() : null;
+                    if (f == null || f.Found || System.Array.IndexOf(room.RequiredFindables, f.Id) < 0) continue;
+                    insideLeft++;
+                    var d = FillDocs.Get(fc.RoomId, fc.FillId);
+                    if (d == null || hint != null) continue;
+                    if (FillDocs.IsSolved(d)) hint = $"開いた{fc.DisplayName}の中を調べる";
+                    else if (FillDocs.IsFound(d)) hint = $"『{d.TitleText}』の黒塗りの所に、資料から切り取った言葉を当てはめる──手帳のメモ";
+                    else hint = $"『{room.Name}』で資料を探す";
+                }
+            }
+            return hint;
         }
 
         private static int CountUnsolvedLocks(LoopRoomRoot room)

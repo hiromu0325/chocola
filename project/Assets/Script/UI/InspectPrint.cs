@@ -50,6 +50,8 @@ namespace EscapeProto
 
             switch (req.Info.Kind)
             {
+                case InspectKind.Newspaper:
+                    return;   // 紙面はテクスチャ（縦書きの新聞）。記事は読む画面の紙面・本文で読む
                 case InspectKind.Cassette:
                     Put(item.transform, area.rects[0], "", title, InkStyle.Hand, 0, labelOnly: true);
                     return;
@@ -187,7 +189,7 @@ namespace EscapeProto
             }
         }
 
-        private static Font OsFont(params string[] names)
+        internal static Font OsFont(params string[] names)
         {
             string key = string.Join("|", names);
             if (Fonts.TryGetValue(key, out var f) && f != null) return f;

@@ -23,6 +23,7 @@ import hq
 from hq import U, span, lathe, cyl, cyl_between, pipe, quad, plate_xy, profile_z, frame_ring, rrect_face, finish, join, pillow
 import train_room
 import dim_room
+import fill_props
 import study_room
 
 W, D, H = 7.0, 8.0, 2.6
@@ -71,6 +72,8 @@ def mats():
     M["stem"] = hq.mat("SAE_Stem", (0.3, 0.24, 0.16), 0.8)
     M["leaf"] = hq.mat("SAE_Leaf", (0.12, 0.26, 0.1), 0.45)
     M["felt"] = hq.mat("SAE_Felt", (0.22, 0.2, 0.18), 0.9)
+    M["env_saeki"] = hq.mat("FIL_EnvSaeki", (1, 1, 1), 0.85, tex="../../fill/tex/env_saeki.png")
+    M["envbody"] = hq.mat("FIL_Envelope", (0.92, 0.88, 0.78), 0.85)
     return M
 
 
@@ -434,8 +437,8 @@ def desk(M):
     for sx in (-1, 1):
         for sz in (-1, 1):
             p.append(taper(f"HK_Leg{sx}{sz}", sx * 0.63, sz * 0.28, 0.0, 0.715, 0.055, 0.035, M["wood"]))
-    p.append(span("HK_Apron", -0.6, 0.6, 0.62, 0.715, -0.29, 0.29, M["wood"], 0.004))
-    p += dim_room.drawer_front("HK_Drawer", -0.3, 0.3, 0.63, 0.705, -0.29, M["woodL"], M["brass"])
+    # 幕板には引き出しの口を開けてある（引き出しは別の部品 Drawer。黒塗りの資料を埋めると手前へ出る）
+    p += fill_props.saeki_desk_apron(M)
     # バンカーズランプ（ビルダーの DeskLamp：(0.5, 0.95, 0.2)）
     lx, lz = 0.5, 0.2
     p.append(lathe("HK_LBase", (lx, 0.75, lz), [(0.07, 0), (0.07, 0.015), (0.05, 0.025), (0.0, 0.03)], M["brass"], 32))
@@ -519,5 +522,9 @@ def lever(M):
     return [join(train_room.lever(_breaker_mats(M)), "SaekiHome_Lever")]
 
 
-PIECES = {"Shell": shell, "Lamps": pendants, "Interior": interior, "Dining": dining, "Desk": desk, "Chair": chair,
+def drawer(M):
+    return fill_props.saeki_drawer(M)
+
+
+PIECES = {"Shell": shell, "Lamps": pendants, "Interior": interior, "Dining": dining, "Desk": desk, "Drawer": drawer, "Chair": chair,
           "Letter": letter, "Plog": plog, "Unsent": unsent, "Door": door, "Breaker": breaker, "Lever": lever}

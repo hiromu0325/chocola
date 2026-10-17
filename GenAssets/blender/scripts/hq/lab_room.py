@@ -20,6 +20,7 @@ from mathutils import Matrix, Vector
 import hq
 from hq import U, span, lathe, cyl, cyl_between, pipe, quad, plate_xy, profile_z, frame_ring, rrect_face, finish, join
 import train_room
+import fill_props
 
 W, D, H = 13.0, 10.0, 3.2
 HW0, HD0 = W / 2, D / 2
@@ -135,8 +136,12 @@ def louver_wall(M):
     p.append(span("LL_Back", x0 - 0.02, x1 + 0.02, 0.08, 2.72, zb, zb + 0.012, M["black"], 0))
     x = x0
     k = 0
+    # 書類棚（黒塗りの資料の入れ物）の後ろは羽根を抜く（棚の背は黒い下地に付く）
+    cab0 = fill_props.LAB_CAB_X - fill_props.LAB_W / 2 - 0.005
+    cab1 = fill_props.LAB_CAB_X + fill_props.LAB_W / 2 + 0.005
     while x + 0.045 <= x1:
-        p.append(span(f"LL_Slat{k}", x, x + 0.045, 0.08, 2.72, zb + 0.012, zb + 0.047, M["oak"], 0.004))
+        if not (x < cab1 and x + 0.045 > cab0):
+            p.append(span(f"LL_Slat{k}", x, x + 0.045, 0.08, 2.72, zb + 0.012, zb + 0.047, M["oak"], 0.004))
         x += 0.07; k += 1
     p.append(span("LL_Cap", x0 - 0.03, x1 + 0.03, 2.72, 2.76, zb, zb + 0.05, M["oak"], 0.005))
     out = []

@@ -43,12 +43,14 @@ namespace EscapeProto
             public AudioClip[] Clips;
             public bool FromNotebook;
             public bool StartInRead;                 // 読む画面から開く（メモから元の資料へ飛んだ時）
+            public bool NoMarker;                    // 線を引けない（解く前の黒塗りの資料）
             public Action<bool> OnClosed;            // 引数: true = 手帳ごと閉じる（Tab）
         }
 
         private enum Mode { Model, Read }
 
-        private const float OpenDistance = 0.5f, MinDistance = 0.28f, MaxDistance = 0.78f;
+        private const float OpenDistance = 0.5f, MinDistance = 0.18f, MaxDistance = 1.3f;
+        private const float ZoomStep = 0.84f;           // ホイール1目盛りで距離を何倍にするか（近いほど細かく動く）
         private const float TargetSize = 0.3f;       // 実物の長辺を何mに見せるか（0.5m先で画面の約半分）
 
         private bool _open;
@@ -62,7 +64,8 @@ namespace EscapeProto
         private GameObject _item;
         private RawImage _dim;
         private GameObject _dimCanvas;   // 閉じている間は消す（カメラが止まると画面全体に重なって描かれるため）
-        private float _yaw, _pitch, _distance = OpenDistance;
+        private Quaternion _rot = Quaternion.identity;   // 実物の向き（置き台から見た。見ている人の向きで回す）
+        private float _distance = OpenDistance;
         private Vector2 _spinVel;
 
         // ---- UI ----
@@ -150,7 +153,10 @@ namespace EscapeProto
 
             // 初めて見た資料：主人公のひと言（音声記録は聞き終えてから）
             if (!req.Info.Audio) QueueComment(0.7f);
-            ProceduralAudio.PlayAt(ProceduralAudio.Click(), Ear, 0.3f, spatial: false);
+            // 手帳から開いた時はページをめくる音、紙の資料は紙の音、物だけなら手に取る音
+            var openSfx = req.FromNotebook ? ProceduralAudio.Page()
+                        : string.IsNullOrEmpty(req.Body) ? ProceduralAudio.PickUp() : ProceduralAudio.Paper();
+            ProceduralAudio.PlayAt(openSfx, Ear, 0.5f, spatial: false);
         }
 
         /// <summary>今開いている資料（手帳エントリId）。開いていなければ null</summary>
@@ -387,7 +393,7 @@ namespace EscapeProto
             b = Bounds(_item);
             _item.transform.position -= b.center - _spin.position;
 
-            _yaw = -14f; _pitch = 10f; _distance = OpenDistance;
+            _rot = Quaternion.Euler(10f, -14f, 0f); _distance = OpenDistance;
             _spinVel = Vector2.zero;
             _pivot.localPosition = new Vector3(0f, -0.12f, OpenDistance);
             _spin.localRotation = Quaternion.Euler(28f, -40f, 0f);
@@ -468,12 +474,12 @@ namespace EscapeProto
             Vector2 rot = RotateInput();
             if (rot.sqrMagnitude > 0.0001f) _spinVel = rot;
             else _spinVel = Vector2.Lerp(_spinVel, Vector2.zero, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 8f));
-            _yaw += _spinVel.x;
-            _pitch = Mathf.Clamp(_pitch + _spinVel.y, -85f, 85f);
-            var want = Quaternion.Euler(_pitch, _yaw, 0f);
-            _spin.localRotation = Quaternion.Slerp(_spin.localRotation, want, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 14f));
+            // 見ている人から見た向き（置き台＝カメラの軸）で回す。物の軸で回すと、横に回して裏にした時に上下が逆になる
+            _rot = Quaternion.AngleAxis(_spinVel.x, Vector3.up) * Quaternion.AngleAxis(_spinVel.y, Vector3.right) * _rot;
+            _spin.localRotation = Quaternion.Slerp(_spin.localRotation, _rot, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 14f));
 
-            _distance = Mathf.Clamp(_distance - ZoomInput(), MinDistance, MaxDistance);
+            // 寄せる・離す：距離を一定の割合で変える（近い時は細かく、遠い時は大きく動く）
+            _distance = Mathf.Clamp(_distance * Mathf.Pow(ZoomStep, ZoomInput()), MinDistance, MaxDistance);
         }
 
         private void SetMode(Mode m)
@@ -486,13 +492,16 @@ namespace EscapeProto
             if (read)
             {
                 string body = _req.Info.Audio ? DocCatalog.Transcript(_req.RoomId, _req.DocId) : _req.Body;
+                // 新聞は日付の行を右上の欄へ分け、段落ごとに空けて読みやすく（DocCatalog.ReadingBody）
+                body = DocCatalog.ReadingBody(_req.RoomId, _req.DocId, body, out var dateline);
                 _readTitle.text = _req.Title ?? "";
+                _readNote.text = _req.Info.Audio ? "書き起こし" : (dateline ?? "");
                 // 文字の大きさは3通りから選ぶ（自動調整は文字の画像を作りすぎるので使わない）
                 var bt = _marker.Text;
                 bt.fontSize = UiTheme.FitFontSize(body, bt.rectTransform.rect.width, bt.rectTransform.rect.height, bt.lineSpacing,
                                                   UiTheme.FsBody, 22, 19);
                 _marker.SetBody(_req.EntryId, body);
-                _readNote.text = _req.Info.Audio ? "書き起こし" : "";
+                _marker.ReadOnly = _req.NoMarker;
                 Notebook.Unflag(_req.EntryId);
             }
             if (_dim != null) _dim.color = new Color(0f, 0f, 0f, read ? 0.85f : 0.72f);
@@ -506,7 +515,10 @@ namespace EscapeProto
             if (_mode == Mode.Read)
             {
                 string toModel = _item != null && !(_req?.StartInRead ?? false) ? $"{UiTheme.Key("Space", "Y")} 実物に戻る　　" : "";
-                _guide.text = $"なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す　　{UiTheme.Key("M", "RB")} メモ　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
+                string mark = _req != null && _req.NoMarker
+                    ? "黒塗りの所は、メモのボードで言葉を当てはめる"
+                    : "なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す";
+                _guide.text = $"{mark}　　{UiTheme.Key("M", "RB")} メモ　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
             }
             else
             {
@@ -663,6 +675,14 @@ namespace EscapeProto
             if (_subRoutine == null) _subRoutine = StartCoroutine(PumpSubtitles(delay));
         }
 
+        /// <summary>主人公のひと言を字幕で出す（資料の画面の外から。手帳より手前に出る）</summary>
+        public void Say(params string[] lines)
+        {
+            if (lines == null || lines.Length == 0) return;
+            foreach (var l in lines) if (!string.IsNullOrEmpty(l)) _subQueue.Enqueue(l);
+            if (_subRoutine == null && _subQueue.Count > 0) _subRoutine = StartCoroutine(PumpSubtitles(0.2f));
+        }
+
         /// <summary>字幕を順に出す。資料を閉じた後も最後まで流す</summary>
         private IEnumerator PumpSubtitles(float delay)
         {
@@ -771,14 +791,13 @@ namespace EscapeProto
         private static float ZoomInput()
         {
 #if ENABLE_INPUT_SYSTEM
-            float z = 0f;
-            var mouse = Mouse.current;
-            if (mouse != null) z += mouse.scroll.ReadValue().y * 0.0004f;
+            // ホイールの目盛りの数。正で寄せる
+            float z = UiTheme.WheelNotches();
             var gp = Gamepad.current;
-            if (gp != null) z += (gp.rightTrigger.ReadValue() - gp.leftTrigger.ReadValue()) * 0.6f * Time.unscaledDeltaTime;
+            if (gp != null) z += (gp.rightTrigger.ReadValue() - gp.leftTrigger.ReadValue()) * 6f * Time.unscaledDeltaTime;
             return z;
 #else
-            return Input.mouseScrollDelta.y * 0.04f;
+            return Input.mouseScrollDelta.y;
 #endif
         }
 

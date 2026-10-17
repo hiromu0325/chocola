@@ -16,12 +16,15 @@ namespace EscapeProto
         // 手帳のメモのボード上の置き場所（左上の角。x は右、y は下が正）。placed = 置き場所が決まっている
         public bool placed;
         public float x, y;
+        // 黒塗りの資料の空欄に置いてある時の置き場所（FillDocs.SlotKey）。置いている間はボードに出ない
+        public string slot;
 
         public void TakePlaceOf(MemoSnippet o)
         {
             placed = o.placed;
             x = o.x;
             y = o.y;
+            slot = o.slot;
         }
     }
 
@@ -259,6 +262,9 @@ namespace EscapeProto
         }
 
         public static int IndexOf(int snippetId) => _list.FindIndex(s => s.id == snippetId);
+
+        /// <summary>カードの中身を外から変えた時（黒塗りの資料の空欄に置いた・外した）</summary>
+        public static void NotifyChanged() => OnChanged?.Invoke();
 
         /// <summary>手帳のボードの置き場所を全部忘れる（一覧の並びに戻す）</summary>
         public static void ResetPlacement()

@@ -5,7 +5,7 @@
 
 出力: GenAssets/train/tex/*.png（Blenderの確認用）と
       project/Assets/EscapePrototype/Textures/HQ/Train/*.png（Unity用。_n が法線）
-中吊りの研究所の広告（調べられる資料）は既存の Assets/Arts/Generated/ad_poster_jp.png をそのまま使う。
+中吊りの調べられる広告（公益財団法人 記憶を守る会）は ad_kioku()（2026/10/13 差し替え。以前は Assets/Arts/Generated/ad_poster_jp.png）。
 """
 import math
 import os
@@ -158,6 +158,48 @@ def posters():
     ], "clinic"))
 
 
+def ad_kioku(w=1152, h=768):
+    """調べられる中吊り広告（公益財団法人 記憶を守る会）。夜明けの空、横長 1.15 x 0.78。
+    文面はゲームの資料（進行/文書/ja/doc_train.ad.body.txt）と同じ"""
+    y = np.mgrid[0:h, 0:w][0] / h
+    x = np.mgrid[0:h, 0:w][1] / w
+    top, mid, low = np.array([34, 42, 82]), np.array([118, 104, 140]), np.array([244, 192, 150])
+    k = np.clip(y / 0.78, 0, 1)[..., None]
+    sky = np.where(k < 0.55, top + (mid - top) * (k / 0.55), mid + (low - mid) * ((k - 0.55) / 0.45))
+    # 地平線の向こうの朝日（やわらかい光のにじみ）
+    d = np.sqrt(((x - 0.78) * w / h) ** 2 + (y - 0.8) ** 2)
+    glow = np.clip(1 - d / 0.55, 0, 1) ** 2
+    sky = sky + glow[..., None] * np.array([70, 50, 20])
+    # 丘のシルエット
+    hill = 0.78 + 0.03 * np.sin(x * 5.0 + 0.6) + 0.015 * np.sin(x * 13.0)
+    sky = np.where((y > hill)[..., None], np.array([46, 40, 58]) + (y[..., None] - hill[..., None]) * 20, sky)
+    grain = fbm(w, 0.5, 951, m=h)[..., None]
+    img = rgb(sky * (0.96 + grain * 0.06))
+    dr = ImageDraw.Draw(img)
+    # 見出し（明朝・2行）と本文
+    f1 = _font(74, mincho=True)
+    dr.text((70, 70), "「あきらめないで、", font=f1, fill=(255, 252, 246))
+    dr.text((70 + 74, 166), "目覚めを待つ人たちへ。」", font=f1, fill=(255, 252, 246))
+    dr.rectangle([74, 282, 74 + 120, 285], fill=(246, 206, 150))
+    f2 = _font(31, mincho=False)
+    dr.text((74, 306), "遷延性意識障害と向き合う患者と、そのご家族を支援しています。", font=f2, fill=(238, 236, 246))
+    # 下の帯：団体名と呼びかけ
+    dr.rectangle([0, 648, w, h], fill=(248, 243, 232))
+    dr.rectangle([0, 644, w, 648], fill=(226, 170, 110))
+    # 団体のしるし（重なる二つの手のひら＝寄り添う二つの円）
+    dr.ellipse([60, 668, 136, 744], outline=(226, 150, 90), width=6)
+    dr.ellipse([96, 668, 172, 744], outline=(60, 80, 130), width=6)
+    f3 = _font(44, mincho=False)
+    dr.text((196, 664), "公益財団法人 記憶を守る会", font=f3, fill=(40, 52, 96))
+    f4 = _font(26, mincho=False)
+    dr.text((198, 720), "あなたの支援が、明日への希望につながります。", font=f4, fill=(90, 90, 100))
+    # 経年：わずかな色あせ
+    a = np.asarray(img).astype(float)
+    fade = fbm(w, 2.2, 952, m=h)[..., None]
+    a = a * (0.94 + fade * 0.06) + 6
+    save("ad_kioku", rgb(a))
+
+
 def route_map(w=1100, h=280):
     """ドア上の路線図"""
     img = Image.new("RGB", (w, h), (246, 244, 236))
@@ -208,4 +250,4 @@ def stickers():
 
 
 if __name__ == "__main__":
-    melamine(); linoleum(); moquette(); stainless(); rack_net(); posters(); route_map(); stickers()
+    melamine(); linoleum(); moquette(); stainless(); rack_net(); posters(); ad_kioku(); route_map(); stickers()

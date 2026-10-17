@@ -17,7 +17,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 import hq
 from hq import U, box, span, lathe, cyl, cyl_between, pillow, finish, join
@@ -61,7 +61,7 @@ def mats():
     M["cover"] = hq.mat("DIM_NoteCover", (0.10, 0.22, 0.16), 0.55)
     M["pages"] = hq.mat("DIM_Pages", (0.90, 0.88, 0.80), 0.9)
     M["ribbon"] = hq.mat("DIM_Ribbon", (0.60, 0.10, 0.10), 0.5)
-    M["news"] = hq.mat("DIM_Newspaper", (1.0, 1.0, 1.0), 0.9, tex="newspaper.png")
+    M["news"] = hq.mat("DIM_Newspaper", (1.0, 1.0, 1.0), 0.9, tex="newspaper_fold.png")
     M["book1"] = hq.mat("DIM_Book1", (0.30, 0.10, 0.08), 0.6)
     M["book2"] = hq.mat("DIM_Book2", (0.12, 0.16, 0.24), 0.6)
     M["book3"] = hq.mat("DIM_Book3", (0.55, 0.48, 0.34), 0.6)
@@ -750,27 +750,20 @@ def notebook(M):
 
 
 def newspaper(M):
-    """箱 0.42x0.02x0.3。二つ折りの切り抜きを机に置く（底=-0.01）"""
-    def f(u, v):
-        x = (u - 0.5) * 0.4
-        z = (v - 0.5) * 0.29
-        y = -0.009 + 0.004 * math.sin(u * math.pi) + 0.006 * max(0.0, (u - 0.8) / 0.2) ** 2
-        return (x, y, z)
-    top = hq.grid_surface("News_Top", 24, 16, f, M["news"])
-    me = top.data
-    uvl = me.uv_layers.new(name="UVMap").data
-    for poly in me.polygons:
-        for li in poly.loop_indices:
-            co = me.vertices[me.loops[li].vertex_index].co
-            uvl[li].uv = ((-co.x + 0.2) / 0.4, (-co.y + 0.145) / 0.29)
-    bm = bmesh.new(); bm.from_mesh(me)
-    for fc in bm.faces:
-        if fc.normal.z < 0:
-            fc.normal_flip()
-    bm.to_mesh(me); bm.free()
-    sol = top.modifiers.new("Solid", "SOLIDIFY"); sol.thickness = 0.0008
-    finish(top, keep_uv=True, angle=180)
-    return [top]
+    """箱 0.42x0.02x0.3。四つ折りの新聞（調べる画面と同じ形・同じ紙面）を、表を上・紙面の上を奥（+Z）にして、
+    少し斜めに机へ置く（底=-0.01）"""
+    import inspect_items
+    objs, _ = inspect_items.newspaper({"INS_Newsprint": M["news"]})
+    o = join(objs, "Newspaper")
+    me = o.data
+    me.transform(Matrix.Rotation(math.radians(90.0), 4, "X"))    # 表（Unity の -Z）を上へ
+    me.transform(Matrix.Rotation(math.radians(-7.0), 4, "Z"))    # Unity で 7° 回す
+    xs = [v.co.x for v in me.vertices]
+    ys = [v.co.y for v in me.vertices]
+    zs = [v.co.z for v in me.vertices]
+    me.transform(Matrix.Translation((-(min(xs) + max(xs)) / 2, -(min(ys) + max(ys)) / 2, -0.01 - min(zs))))
+    me.update()
+    return [o]
 
 
 # ============================== 扉 ==============================

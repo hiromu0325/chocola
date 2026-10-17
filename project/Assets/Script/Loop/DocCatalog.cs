@@ -96,6 +96,15 @@ namespace EscapeProto
             // 終章
             { "core_main.message", D(InspectKind.Monitor, InkStyle.Screen, audio: true) },
             { "son_room.plan", D(InspectKind.Report, InkStyle.Hand) },
+            // 黒塗りの資料（穴埋め）と、埋めると開く入れ物の中の資料
+            { "lab.guide", D(InspectKind.Sheet) },
+            { "lab.visitlog", D(InspectKind.Clipboard) },
+            { "saeki_home.diarypage", D(InspectKind.Sheet, InkStyle.Hand, 0.8f) },
+            { "saeki_home.envelope", D(InspectKind.Letter, InkStyle.Hand) },
+            { "ward.page303", D(InspectKind.Sheet, InkStyle.Hand) },
+            { "ward.letter303", D(InspectKind.Letter, InkStyle.Hand) },
+            { "kuroda_home.kmemo2", D(InspectKind.Sheet, InkStyle.Hand, 0.6f) },
+            { "kuroda_home.letters", D(InspectKind.Letter, InkStyle.Hand) },
         };
 
         /// <summary>資料の見せ方。一覧に無いもの（おもちゃ・道具など）は実物なし</summary>
@@ -103,6 +112,31 @@ namespace EscapeProto
             Map.TryGetValue(roomId + "." + id, out var d) ? d : D(InspectKind.None);
 
         public static bool IsAudio(string roomId, string id) => Get(roomId, id).Audio;
+
+        /// <summary>
+        /// 読む画面に出す本文。メモの文字番号はこの文字列で数えるので、調べる画面と手帳の「引用元」は必ずこれを通す。
+        /// 新聞：1行目の日付（「…刊」の行）は読む画面の右上の欄へ分け（dateline）、段落は1字下げて空行で区切る（文章だけを読みやすく）
+        /// </summary>
+        public static string ReadingBody(string roomId, string id, string body, out string dateline)
+        {
+            dateline = null;
+            body = (body ?? "").Replace("\r", "");
+            if (Get(roomId, id).Kind != InspectKind.Newspaper) return body;
+            int nl = body.IndexOf('\n');
+            string first = (nl >= 0 ? body.Substring(0, nl) : body).Trim();
+            if (first.EndsWith("刊"))
+            {
+                dateline = first;
+                body = nl >= 0 ? body.Substring(nl + 1) : "";
+            }
+            var paras = new List<string>();
+            foreach (var p in body.Split(new[] { "\n\n" }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                string s = p.Trim('\n', ' ');
+                if (s.Length > 0) paras.Add(s.StartsWith("　") ? s : "　" + s);
+            }
+            return string.Join("\n\n", paras);
+        }
 
         /// <summary>手帳エントリId（部屋_資料）→ 部屋と資料。部屋Idに _ を含むので部屋の一覧で見分ける</summary>
         public static bool TryParseEntry(string entryId, out string roomId, out string id)
@@ -120,10 +154,24 @@ namespace EscapeProto
 
         // ============================== 主人公のひと言（字幕） ==============================
 
+        /// <summary>テキスト表にまだ無い資料のひと言（黒塗りの資料と、その入れ物の中の資料）</summary>
+        private static readonly Dictionary<string, string> BuiltInComments = new Dictionary<string, string>
+        {
+            { "lab.guide", "黒く塗り潰されている。……抜けた言葉は、この部屋のどこかに書いてあるはずだ。" },
+            { "lab.visitlog", "目を覚まさない娘……。新聞の一行が、また頭をよぎる。\n\n所長は、なぜこの父親にだけ、ここまでしたんだ。" },
+            { "saeki_home.diarypage", "佐伯の日記だ。……肝心な所だけが、黒く抜け落ちている。" },
+            { "saeki_home.envelope", "佐伯は、最後まで「あの人」の名前を書かなかった。……書けなかったのか。" },
+            { "ward.page303", "水野の観察記録の、続きのページだ。303号……名前が、無い。" },
+            { "ward.letter303", "……私は、この人に何をした。" },
+            { "kuroda_home.kmemo2", "データ管理室で見たメモの、破り取られた後半だ。……黒田は、何に気づいた。" },
+            { "kuroda_home.letters", "「怖いからやめる、は正しくない」。……この人の言葉は、最後まで正しかった。" },
+        };
+
         /// <summary>主人公のひと言。空行で区切られた段落を順に字幕へ出す。無ければ空の配列</summary>
         public static string[] Comment(string roomId, string id)
         {
-            string s = GameText.Get($"doc/{roomId}.{id}.comment", "");
+            BuiltInComments.TryGetValue(roomId + "." + id, out var builtIn);
+            string s = GameText.Get($"doc/{roomId}.{id}.comment", builtIn ?? "");
             if (string.IsNullOrEmpty(s)) return new string[0];
             var parts = s.Replace("\r", "").Split(new[] { "\n\n" }, System.StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Replace("\n", "").Trim();

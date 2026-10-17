@@ -325,6 +325,22 @@ namespace EscapeProto
             return sizes[sizes.Length - 1];
         }
 
+        /// <summary>
+        /// このフレームのマウスホイールの目盛りの数（上へ回すと正）。
+        /// 入力システムの設定で1目盛りが 1（今の既定）でも 120（古い Windows の値）でも同じ値にする
+        /// </summary>
+        public static float WheelNotches()
+        {
+#if ENABLE_INPUT_SYSTEM
+            var m = UnityEngine.InputSystem.Mouse.current;
+            if (m == null) return 0f;
+            float y = m.scroll.ReadValue().y;
+            return Mathf.Abs(y) > 10f ? y / 120f : y;
+#else
+            return Input.mouseScrollDelta.y;
+#endif
+        }
+
         /// <summary>小さなキー表記の枠（[E] など）。キーボードとゲームパッドで表記を変える</summary>
         public static string Key(string keyboard, string pad = null)
         {
@@ -461,11 +477,11 @@ namespace EscapeProto
         public static void Move()
         {
             if (Time.unscaledTime < MuteMoveUntil) return;
-            ProceduralAudio.PlayAt(ProceduralAudio.DialTick(), Ear, 0.18f, spatial: false);
+            ProceduralAudio.PlayAt(ProceduralAudio.UiMove(), Ear, 0.3f, spatial: false);
         }
-        public static void Decide() => ProceduralAudio.PlayAt(ProceduralAudio.Click(), Ear, 0.45f, spatial: false);
-        public static void Cancel() => ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), Ear, 0.2f, spatial: false);
-        public static void Error() => ProceduralAudio.PlayAt(ProceduralAudio.Beep(), Ear, 0.35f, spatial: false);
+        public static void Decide() => ProceduralAudio.PlayAt(ProceduralAudio.UiDecide(), Ear, 0.45f, spatial: false);
+        public static void Cancel() => ProceduralAudio.PlayAt(ProceduralAudio.UiCancel(), Ear, 0.4f, spatial: false);
+        public static void Error() => ProceduralAudio.PlayAt(ProceduralAudio.UiError(), Ear, 0.4f, spatial: false);
     }
 
     /// <summary>左右キー・スティックで決まった刻み（Step）ずつ動くスライダー</summary>

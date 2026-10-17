@@ -179,13 +179,13 @@ namespace EscapeProto
             {
                 _notebook.Show();              // 今いる部屋の章から開く
                 gm?.SetBusy(true);             // 手帳を開いている間は歩かない（カーソルを出す）
-                UiSound.Decide();
+                ProceduralAudio.PlayAt(ProceduralAudio.BookOpen(), Camera.main != null ? Camera.main.transform.position : Vector3.zero, 0.6f, spatial: false);
             }
             else
             {
                 _notebook.Hide();
                 gm?.SetBusy(false);
-                UiSound.Cancel();
+                ProceduralAudio.PlayAt(ProceduralAudio.BookClose(), Camera.main != null ? Camera.main.transform.position : Vector3.zero, 0.5f, spatial: false);
             }
         }
 

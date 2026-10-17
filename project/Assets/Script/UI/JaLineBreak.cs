@@ -75,6 +75,7 @@ namespace EscapeProto
         private static bool CanBreak(string s, int i)
         {
             char a = s[i - 1], b = s[i];
+            if (a == b && a >= 0xE000 && a <= 0xF8FF) return false;   // 私用領域の文字の並び＝ひとまとまり（黒塗りの資料の空欄）
             if (NoStart.IndexOf(b) >= 0 || NoEnd.IndexOf(a) >= 0) return false;
             if (IsAsciiWord(a) && IsAsciiWord(b)) return false;
             return true;

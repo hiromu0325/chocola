@@ -24,6 +24,8 @@ namespace EscapeProto
         /// <summary>本文の下の紙（パネル）の色。線はこの上に Marker を重ねた色で不透明に塗る（線が重なっても濃くならない）</summary>
         public Color Paper = UiTheme.Panel;
         /// <summary>書き写した／消した時（トーストや音を出す）</summary>
+        /// <summary>線を引けない（解く前の黒塗りの資料。引いてある線の表示はそのまま）</summary>
+        public bool ReadOnly;
         public Action<MemoSnippet> OnAdded;
         public Action OnRemoved;
 
@@ -116,7 +118,7 @@ namespace EscapeProto
 
         public void OnPointerDown(PointerEventData e)
         {
-            if (e.button != PointerEventData.InputButton.Left) return;
+            if (e.button != PointerEventData.InputButton.Left || ReadOnly) return;
             if (!ToLocal(e.position, e.pressEventCamera, out var p)) return;
             BuildRects();
             _touched.Clear();

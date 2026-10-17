@@ -19,7 +19,7 @@ OUT = os.path.join(REPO, "project", "Assets", "Models", "HQ", "Lab")
 sys.dont_write_bytecode = True
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
-for name in ("hq", "train_room", "lab_room"):
+for name in ("hq", "train_room", "fill_props", "lab_room"):
     if name in sys.modules:
         importlib.reload(sys.modules[name])
 import hq          # noqa: E402

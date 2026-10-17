@@ -173,9 +173,9 @@ namespace EscapeProto
             var mouse = Mouse.current;
             if (mouse != null)
             {
-                _scrollAccum += mouse.scroll.ReadValue().y;
-                if (_scrollAccum >= 60f) { _scrollAccum = 0f; return -1; }   // 上回転で数字を戻す
-                if (_scrollAccum <= -60f) { _scrollAccum = 0f; return 1; }
+                _scrollAccum += UiTheme.WheelNotches();
+                if (_scrollAccum >= 0.5f) { _scrollAccum = 0f; return -1; }   // 上回転で数字を戻す
+                if (_scrollAccum <= -0.5f) { _scrollAccum = 0f; return 1; }
             }
             return 0;
 #else

@@ -116,7 +116,7 @@ namespace EscapeProto
 
             AttackDebugLog.Log("breaker", $"操作: {RoomId} を上げる");
             SetUp(true);
-            ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 1f);
+            ProceduralAudio.PlayAt(ProceduralAudio.Clunk(), transform.position, 0.9f);
             BreakerSystem.Instance?.NotifyRaised(RoomId);
         }
 
@@ -147,7 +147,7 @@ namespace EscapeProto
                 yield return null;
             }
             SetAngle(target);
-            ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), Lever.position, 0.45f);   // ガチャン
+            ProceduralAudio.PlayAt(ProceduralAudio.Clunk(), Lever.position, 0.6f);   // ガチャン
             _swing = null;
         }
 

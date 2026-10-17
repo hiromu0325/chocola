@@ -53,7 +53,7 @@ def mats():
     M["fan"] = hq.mat("TRN_FanCream", (0.82, 0.8, 0.72), 0.45)
     M["hazard"] = hq.mat("TRN_Hazard", (0.9, 0.72, 0.1), 0.5)
     M["lever"] = hq.mat("TRN_LeverRed", (0.75, 0.12, 0.1), 0.45)
-    for key, tex in (("adLab", "../../../project/Assets/Arts/Generated/ad_poster_jp.png"),
+    for key, tex in (("adLab", "ad_kioku.png"),
                      ("adEik", "ad_eikaiwa.png"), ("adTrv", "ad_travel.png"), ("adMed", "ad_medicine.png"),
                      ("sideRe", "side_realestate.png"), ("sideCl", "side_clinic.png"),
                      ("route", "route_map.png"), ("sticker", "door_sticker.png"),

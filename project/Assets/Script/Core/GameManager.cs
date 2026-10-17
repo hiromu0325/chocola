@@ -143,10 +143,12 @@ namespace EscapeProto
             StoryProgress.ImportVisited(data.loopVisited);
             StoryProgress.IntroPlayed = data.loopIntroPlayed || data.loopStage > 0;
             MemoSnippets.Import(data.memoSnippets, data.memoStrokes);
+            FillDocs.Import(data.fillBoard);
             DocState.Import(data.docsHeard, data.docsCommented);
             foreach (var f in FindObjectsByType<LoopFindable>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 f.RefreshFound();
+            FillContainer.SyncAll();   // 解いた黒塗りの資料の入れ物は開けておく
 
             BeginPlay();
         }
@@ -209,6 +211,7 @@ namespace EscapeProto
             data.loopIntroPlayed = StoryProgress.IntroPlayed;
             data.memoSnippets = MemoSnippets.Export();
             data.memoStrokes = MemoSnippets.ExportStrokes();
+            data.fillBoard = FillDocs.Export();
             data.docsHeard = DocState.ExportHeard();
             data.docsCommented = DocState.ExportCommented();
             return data;

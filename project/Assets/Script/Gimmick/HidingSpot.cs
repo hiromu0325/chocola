@@ -60,7 +60,7 @@ namespace EscapeProto
             SetMovementLocked(true);
             _player.SetHidden(true, this);
             _player.EmitNoise(_doorNoiseRadius);   // 扉の音！聴覚型はこれを聞いている
-            ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 1f);
+            ProceduralAudio.PlayAt(ProceduralAudio.Creak(), transform.position, 1f);
         }
 
         private void Exit()
@@ -70,7 +70,7 @@ namespace EscapeProto
             SetMovementLocked(false);
             _player.SetHidden(false, null);
             _player.EmitNoise(_doorNoiseRadius);
-            ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 1f);
+            ProceduralAudio.PlayAt(ProceduralAudio.Creak(), transform.position, 1f);
         }
 
         /// <summary>リスポーン時などの強制退出（音なし）</summary>

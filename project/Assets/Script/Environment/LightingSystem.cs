@@ -59,7 +59,7 @@ namespace EscapeProto
             _lightsOn = !_lightsOn;
             Apply();
             GameEvents.RaiseRoomLightsChanged(_lightsOn);
-            ProceduralAudio.PlayAt(ProceduralAudio.Click(), transform.position, 1f);
+            ProceduralAudio.PlayAt(ProceduralAudio.Switch(), transform.position, 0.9f);
         }
 
         private void Apply()

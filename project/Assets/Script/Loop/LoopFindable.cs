@@ -107,7 +107,8 @@ namespace EscapeProto
 
             if (!silent)
             {
-                ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.7f);
+                // 道具は布の擦れ（しまう音）、資料は綴じた合図
+                ProceduralAudio.PlayAt(DisappearOnPickup ? ProceduralAudio.PickUp() : ProceduralAudio.Solve(), transform.position, 0.7f);
 
                 if (DisappearOnPickup)
                     ToastUI.Show(string.Format(GameText.Get(GameText.UiKey("pickup"), "『{0}』を手に入れた{1}"),

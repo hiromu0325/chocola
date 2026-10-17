@@ -275,8 +275,7 @@ namespace EscapeProto
             {
                 if (fromCorridor) PlacePassage(from);
                 Vector3 at = from.transform.position + Vector3.up * 1.0f;
-                ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), at, 0.8f);
-                ProceduralAudio.PlayAt(ProceduralAudio.DoorCreak(), at, 0.5f);
+                ProceduralAudio.PlayDoorOpen(at, 0.8f, from.Sliding);   // 電車の引き戸は専用の音
                 if (player != null) goal = StepTarget(from, start, fromCorridor);
             }
 
@@ -326,7 +325,7 @@ namespace EscapeProto
             if (to != null)
             {
                 to.Set(0f);
-                ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), to.transform.position + Vector3.up * 1.0f, 0.8f);
+                ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(to.Sliding), to.transform.position + Vector3.up * 1.0f, 0.8f);
             }
             PlacePassage(null);
             _busy = false;

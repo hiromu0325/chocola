@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EscapeProto
@@ -41,7 +42,7 @@ namespace EscapeProto
     }
 
     /// <summary>
-    /// アセット不要のプロシージャル効果音生成
+    /// 効果音。素材（Resources/Sfx）があればそれを、無ければその場で合成した音を返す
     /// </summary>
     public static class ProceduralAudio
     {
@@ -112,7 +113,7 @@ namespace EscapeProto
         }
 
         /// <summary>敵の足音（低い打撃音）</summary>
-        public static AudioClip Footstep()
+        private static AudioClip GenFootstep()
         {
             if (_footstep != null) return _footstep;
             _footstep = Generate("footstep", 0.22f, (t, dur) =>
@@ -126,7 +127,7 @@ namespace EscapeProto
         }
 
         /// <summary>ギミック操作のカチカチ音</summary>
-        public static AudioClip Click()
+        private static AudioClip GenClick()
         {
             if (_click != null) return _click;
             _click = Generate("click", 0.05f, (t, dur) =>
@@ -196,7 +197,7 @@ namespace EscapeProto
         }
 
         /// <summary>ギミック解除成功音</summary>
-        public static AudioClip Unlock()
+        private static AudioClip GenUnlock()
         {
             if (_unlock != null) return _unlock;
             _unlock = Generate("unlock", 0.5f, (t, dur) =>
@@ -211,7 +212,7 @@ namespace EscapeProto
         private static readonly AudioClip[] _dialSpecial = new AudioClip[3];
 
         /// <summary>ダイヤルを1目盛り回した時の通常の「カチッ」</summary>
-        public static AudioClip DialTick()
+        private static AudioClip GenDialTick()
         {
             if (_dialTick != null) return _dialTick;
             _dialTick = Generate("dialtick", 0.04f, (t, dur) =>
@@ -236,7 +237,7 @@ namespace EscapeProto
         }
 
         /// <summary>不正解のブザー</summary>
-        public static AudioClip DialBuzz()
+        private static AudioClip GenDialBuzz()
         {
             if (_dialBuzz != null) return _dialBuzz;
             _dialBuzz = Generate("dialbuzz", 0.4f, (t, dur) =>
@@ -283,7 +284,7 @@ namespace EscapeProto
         }
 
         /// <summary>扉のラッチを外す音（ノブを回す→ラッチが抜ける）</summary>
-        public static AudioClip DoorLatch()
+        private static AudioClip GenDoorLatch()
         {
             if (_doorLatch != null) return _doorLatch;
             _doorLatch = Generate("doorlatch", 0.25f, (t, dur) =>
@@ -309,7 +310,7 @@ namespace EscapeProto
         /// 蝶番のきしみ（約1秒）。張り付いては滑る摩擦の連打を、木の扉の響き（共振）に通す。
         /// 回る速さに合わせて音程が上がって下がる
         /// </summary>
-        public static AudioClip DoorCreak()
+        private static AudioClip GenDoorCreak()
         {
             if (_doorCreak != null) return _doorCreak;
             float phase = 0f, y1 = 0f, y2 = 0f, z1 = 0f, z2 = 0f;
@@ -333,7 +334,7 @@ namespace EscapeProto
         }
 
         /// <summary>扉が閉まる音（木の「ドン」＋ラッチが受けに収まる「カチャン」）</summary>
-        public static AudioClip DoorShut()
+        private static AudioClip GenDoorShut()
         {
             if (_doorShut != null) return _doorShut;
             _doorShut = Generate("doorshut", 0.5f, (t, dur) =>
@@ -346,7 +347,7 @@ namespace EscapeProto
         }
 
         /// <summary>鍵の掛かった扉を揺する音（ラッチが受けに当たる「ガチャガチャ」）</summary>
-        public static AudioClip DoorRattle()
+        private static AudioClip GenDoorRattle()
         {
             if (_doorRattle != null) return _doorRattle;
             _doorRattle = Generate("doorrattle", 0.4f, (t, dur) =>
@@ -403,6 +404,96 @@ namespace EscapeProto
             return _powerSurge;
         }
 
+        // ============================== 素材の効果音 ==============================
+        // Kenney の CC0 素材（GenAssets/sfx/build_sfx.py が Assets/Audio/Resources/Sfx/<key>/ に書き出す）。
+        // フォルダの音を差し替えればコードを触らずに音が変わる。フォルダが空なら従来の合成音で鳴る
+
+        private static readonly Dictionary<string, AudioClip[]> _assets = new Dictionary<string, AudioClip[]>();
+        private static readonly Dictionary<string, int> _lastPick = new Dictionary<string, int>();
+        private static readonly HashSet<AudioClip> _assetClips = new HashSet<AudioClip>();
+
+        /// <summary>素材の音（Resources/Sfx/key/ のどれか。同じ音が続かないよう選ぶ）。無ければ null</summary>
+        public static AudioClip Asset(string key)
+        {
+            if (!_assets.TryGetValue(key, out var clips))
+            {
+                clips = Resources.LoadAll<AudioClip>("Sfx/" + key);
+                System.Array.Sort(clips, (a, b) => string.CompareOrdinal(a.name, b.name));
+                foreach (var c in clips) _assetClips.Add(c);
+                _assets[key] = clips;
+            }
+            if (clips.Length == 0) return null;
+            if (clips.Length == 1) return clips[0];
+            int i = Random.Range(0, clips.Length);
+            if (_lastPick.TryGetValue(key, out int last) && i == last) i = (i + 1) % clips.Length;
+            _lastPick[key] = i;
+            return clips[i];
+        }
+
+        private static AudioClip Or(string key, System.Func<AudioClip> fallback)
+        {
+            var c = Asset(key);
+            return c != null ? c : fallback();
+        }
+
+        /// <summary>探索者の足音（硬い床）</summary>
+        public static AudioClip Footstep() => Or("footstep", GenFootstep);
+        /// <summary>ギミックや錠をいじる小さなカチッ</summary>
+        public static AudioClip Click() => Or("click", GenClick);
+        /// <summary>錠が外れる「カチ…ガチャ」</summary>
+        public static AudioClip Unlock() => Or("unlock", GenUnlock);
+        /// <summary>ダイヤルを1目盛り回した時の「カチッ」</summary>
+        public static AudioClip DialTick() => Or("dial_tick", GenDialTick);
+        /// <summary>不正解のブザー</summary>
+        public static AudioClip DialBuzz() => Or("dial_buzz", GenDialBuzz);
+        /// <summary>ラッチが外れる・収まる金属音</summary>
+        public static AudioClip DoorLatch() => Or("door_latch", GenDoorLatch);
+        /// <summary>扉が閉まる音</summary>
+        public static AudioClip DoorShut() => Or("door_close", GenDoorShut);
+        /// <summary>鍵の掛かった扉を揺する音</summary>
+        public static AudioClip DoorRattle() => Or("door_rattle", GenDoorRattle);
+        /// <summary>家具の蝶番のきしみ（棚の戸・ロッカー・扉板・隠れ場所）</summary>
+        public static AudioClip Creak() => Or("creak", GenDoorCreak);
+        /// <summary>木の引き出しを引く音</summary>
+        public static AudioClip Drawer() => Or("drawer", GenDoorLatch);
+        /// <summary>重い金属レバーの「ガチャン」（ブレイカー）</summary>
+        public static AudioClip Clunk() => Or("clunk", GenDoorShut);
+        /// <summary>スイッチの「カチッ」（懐中電灯・照明）</summary>
+        public static AudioClip Switch() => Or("switch", GenClick);
+        /// <summary>紙を手に取る・めくる音</summary>
+        public static AudioClip Paper() => Or("paper", GenClick);
+        /// <summary>道具を拾ってしまう音（布の擦れ）</summary>
+        public static AudioClip PickUp() => Or("pickup", GenClick);
+        /// <summary>手帳を開く</summary>
+        public static AudioClip BookOpen() => Or("book_open", GenClick);
+        /// <summary>手帳を閉じる</summary>
+        public static AudioClip BookClose() => Or("book_close", GenDoorLatch);
+        /// <summary>手帳のページをめくる</summary>
+        public static AudioClip Page() => Or("page", GenClick);
+        /// <summary>資料を綴じた・記録した時の小さな合図</summary>
+        public static AudioClip Solve() => Or("solve", GenUnlock);
+        public static AudioClip UiMove() => Or("ui_move", GenDialTick);
+        public static AudioClip UiDecide() => Or("ui_decide", GenClick);
+        public static AudioClip UiCancel() => Or("ui_cancel", GenDoorLatch);
+        public static AudioClip UiError() => Or("ui_error", Beep);
+
+        /// <summary>扉が閉まる音。sliding＝電車の車端の引き戸（戸車がレールを戻って「ガシャン」）</summary>
+        public static AudioClip DoorShut(bool sliding) => sliding ? Or("train_door_close", GenDoorShut) : DoorShut();
+        /// <summary>鍵の掛かった扉を揺する音。sliding＝電車の引き戸（鋼の戸板が枠に当たる）</summary>
+        public static AudioClip DoorRattle(bool sliding) => sliding ? Or("train_door_rattle", GenDoorRattle) : DoorRattle();
+
+        /// <summary>
+        /// 扉を開ける音。素材があればそれ1つ（ノブ→きしみまで入っている）、無ければ合成のラッチ＋きしみ。
+        /// sliding＝電車の車端の引き戸（かんぬきを外す→戸車がゴロゴロ転がる→戸袋で止まる）
+        /// </summary>
+        public static void PlayDoorOpen(Vector3 at, float volume, bool sliding = false)
+        {
+            var a = Asset(sliding ? "train_door_open" : "door_open");
+            if (a != null) { PlayAt(a, at, volume); return; }
+            PlayAt(GenDoorLatch(), at, volume);
+            PlayAt(GenDoorCreak(), at, volume * 0.7f);
+        }
+
         private delegate float SampleFunc(float time, float duration);
 
         private static AudioClip Generate(string name, float duration, SampleFunc func)
@@ -429,8 +520,9 @@ namespace EscapeProto
             src.spatialBlend = spatial ? 1f : 0f;
             src.maxDistance = 25f;
             src.rolloffMode = AudioRolloffMode.Linear;
+            if (_assetClips.Contains(clip)) src.pitch = Random.Range(0.95f, 1.05f);   // 録音の音は毎回少しだけ高さを揺らす
             src.Play();
-            Object.Destroy(go, clip.length + 0.1f);
+            Object.Destroy(go, clip.length / src.pitch + 0.1f);
         }
     }
 }

@@ -191,22 +191,34 @@ def newspaper(w=1024, h=742):
     head = _font(64)
     sub = _font(34)
     body = _font(19)
-    # 右から左へ：見出し → 副見出し → 本文の段
-    vtext(w - 90, 28, "小川脳神経総合研究所", 64, head, 66)
-    vtext(w - 150, 40, "臨床試験を再開", 34, sub, 38)
+    # 右から左へ：見出し → 副見出し → 本文の段（本文はゲームの資料 進行/文書/ja/doc_dim.news.body.txt と同じ。縦書きなので数字は全角）
+    vtext(w - 90, 28, "三木脳神経総合研究所", 64, head, 66)
+    vtext(w - 150, 40, "臨床実験を再開", 34, sub, 38)
     d.line([(w - 168, 20), (w - 168, h - 20)], fill=ink, width=2)
-    article = ("同研究所は脳神経とＡＩの融合を掲げ記憶領域への介入実験を進めていたとされる。"
-               "関係者によれば被験者の一部に眠りから覚めない症例が報告されており、"
-               "研究所は取材に対し「安全性は確認されている」と回答した。")
+    article = ("三木脳神経総合研究所（所在地・ＸＸ県）は２２日、脳神経活動に関する新たな治療法の確立を目指す臨床実験を再開したと発表した。"
+               "一方、関係者によると、実験に参加した被験者３名が意識を回復しない状態に陥っていることが明らかになった。"
+               "同研究所は、脳の神経活動を解析・制御することで、意識障害の治療や脳機能の回復を目指す研究を進めてきた。"
+               "今回の臨床実験は、過去に実施された研究計画を発展させたもので、長期にわたり意識の回復が見られない患者への応用も視野に入れているという。"
+               "しかし、複数の関係者の証言によれば、実験終了後も目を覚まさない被験者が確認されており、医療関係者の間では安全性を懸念する声が上がっている。"
+               "被験者らは生命維持に必要な身体機能を保っているものの、外部からの呼びかけに対する反応は無く、意識状態の詳細については分かっていない。"
+               "同研究所の三木宗英主任は取材に対し、「現在、原因の特定と被験者の状態")
     filler = "市内の研究機関をめぐっては昨年来の説明不足を指摘する声が相次ぎ地域住民の間に不安が広がっている。"
-    text = article + filler * 6
-    col_h = 24
+    # 下の段は別の地域の記事（同じ文の繰り返しにならないよう何種類かを順に流す）
+    others = [filler,
+              "市立図書館の改修工事が来月から始まり、期間中は駅前の分館で貸し出しを続ける。開館時間は午前十時から午後六時まで。",
+              "北町の商店街で恒例の秋祭りが開かれ、親子連れなど約三千人が訪れた。夜には提灯の行列が通りを練り歩いた。",
+              "県警は二十三日、市内の交差点で発生した交通事故について、信号機の不具合が原因とみて調べを進めている。",
+              "港の再開発計画をめぐり、市は住民向けの説明会を来月二回開く。商業施設と公園を一体で整備する方針。",
+              "気象台によると、週末は寒気の影響で冷え込みが強まる見込み。山沿いでは初雪の可能性もあるという。"]
+    text = article + "".join(others[i % len(others)] for i in range(24))
+    col_h = (h // 2 - 44) // 20   # 1段の文字数（上下2段が紙の半分ずつに収まる）
     xcol = w - 196
     k = 0
     for block in range(2):
         ytop = 24 + block * (h // 2)
         for c in range(34):
-            if xcol - c * 23 < 20:
+            # 上の段は左上の写真の手前で止める（写真に文字を重ねない）
+            if xcol - c * 23 < (236 if block == 0 else 20):
                 break
             seg = text[k:k + col_h]
             k += col_h
@@ -224,6 +236,249 @@ def newspaper(w=1024, h=742):
     yellow = fbm(w, 2.4, 74, m=h)[..., None]
     a = a * (0.93 + yellow * 0.07) - np.array([0, 3, 10]) * yellow
     save("newspaper", rgb(a))
+
+
+# ---------------------------------------------------------------- 四つ折りの新聞（縦書きの紙面）
+
+_TURNED = "ー－―—…‥〜～「」『』（）［］【】〈〉《》〔〕＝：；"
+_CORNER = "、。，．"
+_SMALL = "ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ"
+_NOSTART = "、。，．」』）】〉》・ーっゃゅょぁぃぅぇぉッャュョァィゥェォ！？…‥"
+_NOEND = "「『（【〈《"
+_FONTS = r"C:\Windows\Fonts"
+
+
+def _tt(name, size, index=0):
+    path = os.path.join(_FONTS, name)
+    return ImageFont.truetype(path, size, index=index) if os.path.exists(path) else _font(size)
+
+
+def _zen(s):
+    s = s.replace("...", "…")
+    return "".join(chr(ord(c) + 0xFEE0) if "!" <= c <= "~" else ("　" if c == " " else c) for c in s)
+
+
+class _VPen:
+    """縦書き：字を上から下へ、列を右から左へ。「ー」「（」などは横倒し、「、。」は字の枠の右上へ"""
+
+    def __init__(self, img):
+        self.img = img
+        self.d = ImageDraw.Draw(img)
+
+    def char(self, x, y, ch, font, size, fill):
+        if ch in "　 ":
+            return
+        if ch in _TURNED:
+            tile = Image.new("L", (size * 2, size * 2), 0)
+            ImageDraw.Draw(tile).text((size // 2, size // 2), ch, font=font, fill=255)
+            tile = tile.rotate(-90, resample=Image.BICUBIC)
+            self.img.paste(Image.new("RGB", tile.size, fill), (int(x - size // 2), int(y - size // 2)), tile)
+        elif ch in _CORNER:
+            self.d.text((x + size * 0.56, y - size * 0.56), ch, font=font, fill=fill)
+        elif ch in _SMALL:
+            self.d.text((x + size * 0.12, y - size * 0.1), ch, font=font, fill=fill)
+        else:
+            self.d.text((x, y), ch, font=font, fill=fill)
+
+    def column(self, x, y, text, font, size, fill, pitch=None):
+        for i, ch in enumerate(text):
+            self.char(x, y + i * (pitch or size), ch, font, size, fill)
+
+
+def _columns(text, n):
+    """1段 n 字の列に分ける（句読点はぶら下げ、ほかの行頭禁則は追い出し、行末禁則は次の列へ）"""
+    cols, i = [], 0
+    while i < len(text):
+        k = min(n, len(text) - i)
+        if i + k < len(text) and text[i + k] in _NOSTART:
+            if text[i + k] in "、。，．":
+                k += 1
+            elif k > 1:
+                k -= 1
+        if k > 1 and i + k < len(text) and text[i + k - 1] in _NOEND:
+            k -= 1
+        cols.append(text[i:i + k])
+        i += k
+    return cols
+
+
+class _Flow:
+    """段落の列を、いくつかの段（x の右端・左端・y）へ順に流し込む"""
+
+    def __init__(self, pen, font, size, pitch, n, ink):
+        self.pen, self.font, self.size, self.pitch, self.n, self.ink = pen, font, size, pitch, n, ink
+        self.cols = []
+
+    def feed(self, paras):
+        for para in paras:
+            self.cols += _columns("　" + _zen(para), self.n)
+
+    def fill(self, x_right, x_left, y):
+        x = x_right - self.size
+        while self.cols and x >= x_left - self.size * 0.5:
+            self.pen.column(x, y, self.cols.pop(0), self.font, self.size, self.ink)
+            x -= self.pitch
+        return x
+
+
+def _halftone(img, box, seed, kind="building"):
+    """網点の写真（建物の外観／人の集まり）"""
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    yy, xx = np.mgrid[0:h, 0:w]
+    u, v = xx / w, yy / h
+    tone = 0.55 + 0.25 * (fbm(max(w, h), 1.6, seed)[:h, :w] - 0.5)
+    if kind == "building":
+        sky = v < 0.32 + 0.05 * np.sin(u * 7)
+        tone = np.where(sky, 0.22 + 0.1 * v, tone)
+        body = (~sky) & (v < 0.86)
+        win = body & (((u * 14) % 1.0) < 0.42) & (((v * 9) % 1.0) < 0.5)
+        tone = np.where(body, 0.62 + 0.08 * (u - 0.5), tone)
+        tone = np.where(win, 0.85, tone)
+        tone = np.where(v >= 0.86, 0.5 + 0.15 * fbm(max(w, h), 1.2, seed + 1)[:h, :w], tone)
+    d = ImageDraw.Draw(img)
+    d.rectangle([x0, y0, x1, y1], fill=(222, 214, 192))
+    step = 4
+    for yy_ in range(0, h, step):
+        for xx_ in range(0, w, step):
+            r = tone[yy_, xx_] * step * 0.62
+            if r > 0.3:
+                d.ellipse([x0 + xx_ - r, y0 + yy_ - r, x0 + xx_ + r, y0 + yy_ + r], fill=(40, 36, 33))
+    d.rectangle([x0, y0, x1, y1], outline=(40, 36, 33), width=1)
+
+
+def newspaper_fold(w=1024, h=768):
+    """四つ折りの新聞の紙面（横 2w：左＝表、右＝裏）。表は1面の右上の四つ割り（題字と、ゲームの記事の見出し・本文）、
+    裏は地域面の左上の四つ割り。上と右が紙の端、左と下が折り目（文字は折り目で切れる）。
+    本文はゲームの資料（進行/文書/ja/doc_dim.news.body.txt）と同じ"""
+    W = w * 2
+    paper = fbm(W, 1.8, 81, m=h)
+    base = np.stack([226 + paper * 9, 217 + paper * 9, 192 + paper * 8], axis=-1)
+    img = rgb(base)
+    pen = _VPen(img)
+    d = pen.d
+    ink = (34, 30, 28)
+    paper_c = (224, 216, 192)
+    head = _tt("yumindb.ttf", 66)
+    side = _tt("yumindb.ttf", 42)
+    band = _tt("YuGothB.ttc", 34)
+    mast = _tt("yumindb.ttf", 84)
+    body = _tt("yumin.ttf", 18)
+    small = _tt("YuGothM.ttc", 15)
+    tiny = _tt("YuGothM.ttc", 13)
+    hd2 = _tt("YuGothB.ttc", 30)
+    hd3 = _tt("yumindb.ttf", 34)
+
+    doc = os.path.join(os.path.dirname(HERE), "..", "進行", "文書", "ja", "doc_dim.news.body.txt")
+    with open(doc, encoding="utf-8-sig") as fp:
+        lines = fp.read().replace("\r", "").split("\n\n")
+    article = [s.strip() for s in lines[1:] if s.strip()]   # 1行目は日付
+    others = ["市内の研究機関をめぐっては昨年来の説明不足を指摘する声が相次ぎ地域住民の間に不安が広がっている。",
+              "市立図書館の改修工事が来月から始まり、期間中は駅前の分館で貸し出しを続ける。開館時間は午前十時から午後六時まで。",
+              "北町の商店街で恒例の秋祭りが開かれ、親子連れなど約三千人が訪れた。夜には提灯の行列が通りを練り歩いた。",
+              "県警は二十三日、市内の交差点で発生した交通事故について、信号機の不具合が原因とみて調べを進めている。",
+              "港の再開発計画をめぐり、市は住民向けの説明会を来月二回開く。商業施設と公園を一体で整備する方針。",
+              "気象台によると、週末は寒気の影響で冷え込みが強まる見込み。山沿いでは初雪の可能性もあるという。"]
+
+    # ======== 表（左半分）：1面の右上 ========
+    # 題字の箱（右上の角）
+    mx0, mx1, my0, my1 = 874, 1000, 22, 300
+    d.rectangle([mx0, my0, mx1, my1], outline=ink, width=3)
+    d.rectangle([mx0 + 6, my0 + 6, mx1 - 6, my1 - 6], outline=ink, width=1)
+    pen.column(mx0 + 21, my0 + 22, "朝刊", mast, 84, ink, 90)
+    pen.column(mx0 + 52, my0 + 214, "日刊", tiny, 13, ink, 14)
+    pen.column(mx0 + 34, my0 + 214, "第３種郵便", tiny, 13, ink, 13)
+    # 日付と号
+    pen.column(978, 318, "２０ＸＸ年", small, 15, ink, 16)
+    pen.column(958, 318, "１１月２５日", small, 15, ink, 16)
+    pen.column(938, 318, "（朝刊）", small, 15, ink, 16)
+    # きょうの紙面
+    ix0, iy0, ix1, iy1 = 874, 470, 1000, 748
+    d.rectangle([ix0, iy0, ix1, iy1], outline=ink, width=2)
+    d.rectangle([ix0, iy0, ix1, iy0 + 34], fill=ink)
+    d.text((ix0 + 14, iy0 + 7), "きょうの紙面", font=small, fill=paper_c)
+    for k, (a, b) in enumerate([("社会", "２７"), ("地域", "２４"), ("天気", "２８"), ("テレビ", "３２"), ("くらし", "１９")]):
+        pen.column(ix1 - 24 - k * 23, iy0 + 46, a + "　" + b, tiny, 13, ink, 14)
+
+    # この記事の見出し（大見出し・袖見出し・黒地に白抜き）
+    pen.column(784, 26, "臨床実験を再開", head, 66, ink, 66)
+    pen.column(728, 46, "三木脳神経総合研究所", side, 42, ink, 43)
+    bx0, by0 = 662, 40
+    sub = "被験者３名　意識戻らず"
+    d.rectangle([bx0, by0, bx0 + 52, by0 + len(sub) * 36 + 26], fill=ink)
+    pen.column(bx0 + 9, by0 + 14, sub, band, 34, paper_c, 36)
+
+    # 写真（左上。左の端は折り目で切れる）と説明
+    _halftone(img, (0, 26, 262, 410), 82)
+    pen.column(270, 30, "再開が発表された研究所＝ＸＸ県", tiny, 13, ink, 14)
+
+    # 本文：1〜2段は写真と見出しの間、3〜4段は見出しの下から左の折り目まで
+    flow = _Flow(pen, body, 18, 27, 12, ink)
+    flow.feed(article + others)
+    tier = [24, 254, 484, 714]
+    flow.fill(640, 300, tier[0])
+    flow.fill(640, 300, tier[1])
+    flow.fill(860, 0, tier[2])
+    d.line([(0, 704), (860, 704)], fill=ink, width=1)   # 下の段は別の記事
+    flow.cols = []
+    flow.feed(others[1:] + others)
+    flow.fill(860, 0, tier[3])
+    for y in (244, 474):
+        d.line([(300, y), (640, y)], fill=(120, 112, 100), width=1)
+
+    # ======== 裏（右半分）：地域面の左上 ========
+    ox = w
+    # 柱（左上）
+    d.text((ox + 24, 18), "２４　　地　域", font=small, fill=ink)
+    d.text((ox + 420, 18), "２０ＸＸ年１１月２５日（朝刊）", font=small, fill=ink)
+    d.line([(ox + 20, 44), (ox + w, 44)], fill=ink, width=2)
+    d.line([(ox + 20, 49), (ox + w, 49)], fill=ink, width=1)
+    flow2 = _Flow(pen, body, 18, 27, 12, ink)
+    # 記事1：右上（見出しは2段にまたがる）
+    pen.column(ox + w - 40, 66, "駅前再開発", hd3, 34, ink, 35)
+    pen.column(ox + w - 84, 96, "来月説明会", hd2, 30, ink, 31)
+    flow2.feed([others[4], others[0]])
+    flow2.fill(ox + w - 110, ox + 560, 62)
+    flow2.fill(ox + w - 110, ox + 560, 292)
+    d.line([(ox + 540, 60), (ox + 540, 520)], fill=ink, width=1)
+    # 記事2
+    pen.column(ox + 504, 66, "秋祭りに三千人", hd3, 34, ink, 35)
+    flow2.cols = []
+    flow2.feed([others[2], others[5]])
+    flow2.fill(ox + 470, ox + 260, 62)
+    flow2.fill(ox + 470, ox + 260, 292)
+    d.line([(ox + 240, 60), (ox + 240, 520)], fill=ink, width=1)
+    # 記事3（左は折り目で切れる）
+    pen.column(ox + 204, 66, "図書館を改修", hd2, 30, ink, 31)
+    flow2.cols = []
+    flow2.feed([others[1], others[3]])
+    flow2.fill(ox + 170, ox + 20, 62)
+    flow2.fill(ox + 170, ox + 20, 292)
+    d.line([(ox + 20, 530), (ox + w, 530)], fill=ink, width=1)
+    # 下：広告枠（献血のお願い）と記事の続き
+    ax0, ay0, ax1, ay1 = ox + 24, 548, ox + 420, 768
+    d.rectangle([ax0, ay0, ax1, ay1 + 10], outline=ink, width=3)
+    pen.column(ax1 - 64, ay0 + 18, "献血に", hd3, 40, ink, 42)
+    pen.column(ax1 - 114, ay0 + 38, "ご協力を", hd3, 40, ink, 42)
+    pen.column(ax1 - 170, ay0 + 22, "市保健センター", small, 15, ink, 16)
+    pen.column(ax1 - 192, ay0 + 22, "毎週土曜　午前十時から", small, 15, ink, 16)
+    d.ellipse([ax0 + 40, ay0 + 40, ax0 + 170, ay0 + 170], outline=ink, width=3)
+    d.text((ax0 + 78, ay0 + 86), "献血", font=hd2, fill=ink)
+    flow2.cols = []
+    flow2.feed(others[::-1] + others)
+    flow2.fill(ox + w - 20, ox + 440, 548)
+
+    img = img.filter(ImageFilter.GaussianBlur(0.35))
+    a = np.asarray(img).astype(float)
+    yellow = fbm(W, 2.4, 84, m=h)[..., None]
+    a = a * (0.94 + yellow * 0.06) - np.array([0, 3, 9]) * yellow
+    # 折り目の際はわずかに影（表は左と下、裏は右と下＝裏から見て表の左の折り目が右に来る）
+    xs = np.arange(W)[None, :]
+    xs = np.where(xs < w, xs, W - 1 - xs)
+    ys = np.arange(h)[:, None]
+    fold = np.clip(1 - np.minimum(xs / 26.0, 1), 0, 1) * 0.08 + np.clip(1 - np.minimum((h - 1 - ys) / 26.0, 1), 0, 1) * 0.08
+    a = a * (1 - fold[..., None])
+    save("newspaper_fold", rgb(a))
 
 
 def crt_screen(w=512, h=384):
@@ -249,4 +504,4 @@ def crt_screen(w=512, h=384):
 
 
 if __name__ == "__main__":
-    wallpaper(); carpet(); walnut(); quilt(); linen(); plaster(); stain(); newspaper(); crt_screen()
+    wallpaper(); carpet(); walnut(); quilt(); linen(); plaster(); stain(); newspaper(); newspaper_fold(); crt_screen()

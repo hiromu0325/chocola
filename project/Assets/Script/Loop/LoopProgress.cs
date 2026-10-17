@@ -17,11 +17,15 @@ namespace EscapeProto
         /// <summary>部屋が解放されたときの通知（部屋Id）</summary>
         public static event System.Action<string> OnRoomUnlocked;
 
+        /// <summary>発見・解決の通知（部屋Id, Id）。黒塗りの資料の入れ物はこれで開く</summary>
+        public static event System.Action<string, string> OnFound;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             FoundKeys.Clear();
             OnRoomUnlocked = null;
+            OnFound = null;
         }
 
         private static string Key(string roomId, string id) => roomId + "/" + id;
@@ -31,6 +35,9 @@ namespace EscapeProto
         /// <summary>手帳を拾ったか（拾うまでTabの手帳UIは開けず、資料も綴じられない）</summary>
         public static bool NotebookOwned => IsFound(StartRoomId, "notebook");
 
+        /// <summary>懐中電灯を拾ったか（拾うまで F で点けられない）</summary>
+        public static bool FlashlightOwned => IsFound(StartRoomId, "flashlight");
+
         /// <summary>カセットレコーダーを拾ったか（拾うまでカセットテープは再生できない）</summary>
         public static bool TapePlayerOwned => IsFound(StartRoomId, "tapeplayer");
 
@@ -38,6 +45,7 @@ namespace EscapeProto
         public static void NotifyFound(string roomId, string id)
         {
             if (!FoundKeys.Add(Key(roomId, id))) return;
+            OnFound?.Invoke(roomId, id);
 
             // 懐中電灯は拾った時点で点ける（以降は常時携行の想定）
             if (id == "flashlight")
@@ -155,9 +163,11 @@ namespace EscapeProto
             StoryProgress.PendingUnlockRoom = null;
             StoryProgress.ImportVisited(null);
             MemoSnippets.Clear();
+            FillDocs.Clear();
             DocState.Clear();
             foreach (var f in Object.FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 f.ResetForNewGame();
+            FillContainer.SyncAll();   // 黒塗りの資料の入れ物を閉じ直す
             foreach (var e in Object.FindObjectsByType<EchoScene>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 e.ResetForNewGame();
         }
