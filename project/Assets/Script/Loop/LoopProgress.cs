@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -73,14 +74,54 @@ namespace EscapeProto
                     return;
                 }
                 StoryProgress.PendingUnlockRoom = roomId;
-                Notebook.Add("attack_" + roomId, "警報",
-                    "資料を読み終えた瞬間、どこかでブレイカーの落ちる音がした。\n" +
-                    "警報が鳴り響いている。止めなければ、扉は開かない。");
-                BreakerSystem.Instance?.ScriptedDrop(target);
+                // 落とすのは、読んでいる資料や装置の画面を閉じてから（読んでいる最中には始めない）
+                StartAttackWhenFree(roomId, target);
                 return;
             }
 
             UnlockNext(room);
+        }
+
+        /// <summary>画面を閉じてから襲撃が始まるまでの間（秒）。閉じた瞬間に落とさない</summary>
+        public const float AttackDelayAfterClose = 1.0f;
+
+        /// <summary>
+        /// 脚本襲撃を、開いている画面（資料・手帳・装置・カットシーン・ポーズ）が全部閉じてから始める。
+        /// 閉じて AttackDelayAfterClose 秒たったら落とす。その間にまた画面を開いたら、閉じるまで待ち直す
+        /// </summary>
+        private static void StartAttackWhenFree(string roomId, string target)
+        {
+            MonoBehaviour host = UiQueue.Instance != null ? (MonoBehaviour)UiQueue.Instance : BreakerSystem.Instance;
+            if (host == null) { BeginAttack(roomId, target); return; }
+            host.StartCoroutine(AttackWhenFree(roomId, target));
+        }
+
+        private static IEnumerator AttackWhenFree(string roomId, string target)
+        {
+            float calm = 0f;
+            while (calm < AttackDelayAfterClose)
+            {
+                yield return null;
+                calm = UiBusy ? 0f : calm + Time.unscaledDeltaTime;
+            }
+            BeginAttack(roomId, target);
+        }
+
+        /// <summary>プレイヤーが何かの画面を開いている（歩き回っている時だけ false）</summary>
+        private static bool UiBusy =>
+            UiQueue.GlobalBusy ||
+            (LoopPuzzleUI.Instance != null && LoopPuzzleUI.Instance.IsOpen) ||
+            (SafeDialUI.Instance != null && SafeDialUI.Instance.IsOpen) ||
+            (GameManager.Instance != null && GameManager.Instance.State != GameState.Playing);
+
+        private static void BeginAttack(string roomId, string target)
+        {
+            if (StoryProgress.PendingUnlockRoom != roomId) return;   // 待つ間に「はじめから」した等
+            AttackDebugLog.Log("drop", $"脚本襲撃: {roomId} 完了 → 画面を閉じたので {target} を落とす");
+            Notebook.Add("attack_" + roomId, "警報",
+                "資料を読み終えて顔を上げた時、どこかでブレイカーの落ちる音がした。\n" +
+                "警報が鳴っている。止めなければ、扉は開かない。");
+            BreakerSystem.Instance?.ScriptedDrop(target);
         }
 
         /// <summary>脚本襲撃の解決（ブレイカー復旧 or 死亡による終了）。持ち越した解放を実行</summary>

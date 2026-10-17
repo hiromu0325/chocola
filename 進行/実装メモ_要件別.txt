@@ -35,6 +35,8 @@
 　・部屋ごとの必須ID（資料＋装置）を全部見つけると次の段階が解放
 　・4か所で脚本襲撃（lab→train／saeki_home→analysis／core_ante→ward／kuroda_home→data_room）。
 　　ブレイカー復旧で次が解放
+　・脚本襲撃は資料・手帳・装置などの画面を全部閉じて1秒たってから始まる（読んでいる最中には落とさない。待つ間にまた開けば閉じるまで待ち直す。
+　　LoopProgress.StartAttackWhenFree。待っている間の目標表示は「この部屋の情報は揃った」）
 　・「はじめから」「つづきから」で静的状態を初期化（前の周回の解放・発見・終章状態が残らない）
 場所:
 　Loop/LoopProgress.cs（NotifyFound／UnlockNext／ResetForNewGame）

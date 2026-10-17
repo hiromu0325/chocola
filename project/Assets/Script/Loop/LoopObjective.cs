@@ -94,7 +94,13 @@ namespace EscapeProto
                     if (lockLeft) return Main($"『{room.Name}』の装置を解く──答えは資料の中（残り{remain}）");
                     return Main($"『{room.Name}』で資料を探す（残り{remain}）");
                 }
-                if (!string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom)) return Warn("警報が鳴っている。部屋を出て、鳴っている部屋へ向かう");
+                if (!string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom))
+                {
+                    // 襲撃は画面を閉じてから始まる。まだ落ちていない間は「揃った」とだけ出す
+                    var bsys = BreakerSystem.Instance;
+                    if (bsys != null && bsys.DownRoomId == null && bsys.PendingRoomId == null) return Good("この部屋の情報は揃った");
+                    return Warn("警報が鳴っている。部屋を出て、鳴っている部屋へ向かう");
+                }
                 var nxt = NextRoom();
                 if (nxt == null) return Good("この部屋の情報は揃った。部屋を出る");
                 return Main($"部屋を出て『{nxt.Name}』{DoorHint(nxt)}へ向かう");
