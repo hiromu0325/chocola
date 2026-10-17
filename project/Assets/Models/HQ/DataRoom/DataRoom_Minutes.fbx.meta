@@ -3,7 +3,12 @@ guid: 4ece2da01c7824c4e9349712ab2f8d31
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Minutes
+    second: {fileID: 2100000, guid: 2efe68db010704c4db920ece99f925eb, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

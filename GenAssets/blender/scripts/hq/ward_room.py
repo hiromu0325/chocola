@@ -23,6 +23,7 @@ from hq import U, span, lathe, cyl, cyl_between, pipe, quad, profile_z, rrect_fa
 import train_room
 import dim_room
 import lab_room
+import fill_props
 
 W, D, H = 9.0, 12.0, 3.2
 HW0, HD0 = W / 2, D / 2
@@ -139,9 +140,15 @@ def wainscot(M):
     for k, (kind, s, a, b) in enumerate(runs):
         if kind == "NS":
             p.append(span(f"WW_Wain{k}", a, b, 0.0, top, *sorted((s * HD, s * (HD - 0.004))), M["wain"], 0))
-            p.append(span(f"WW_Cove{k}", a, b, 0.0, 0.08, *sorted((s * HD, s * (HD - 0.012))), M["cove"], 0.003))
-            p.append(span(f"WW_BumpBase{k}", a, b, 0.84, 0.96, *sorted((s * HD, s * (HD - 0.015))), M["grey"], 0.004))
-            p.append(span(f"WW_Bump{k}", a + 0.02, b - 0.02, 0.855, 0.945, *sorted((s * (HD - 0.015), s * (HD - 0.04))), M["bumper"], 0.03, 4))
+            # 南の壁の西：職員ロッカー（黒塗りの資料の入れ物）の幅だけ巾木とバンパーレールを切る（ロッカーは腰壁に付く）
+            segs = [(a, b)]
+            if s < 0 and a < fill_props.WARD_LOCKER_X < b:
+                lw = fill_props.LK_W * 3 / 2 + 0.005
+                segs = [(a, fill_props.WARD_LOCKER_X - lw), (fill_props.WARD_LOCKER_X + lw, b)]
+            for j, (c, e) in enumerate(segs):
+                p.append(span(f"WW_Cove{k}{j}", c, e, 0.0, 0.08, *sorted((s * HD, s * (HD - 0.012))), M["cove"], 0.003))
+                p.append(span(f"WW_BumpBase{k}{j}", c, e, 0.84, 0.96, *sorted((s * HD, s * (HD - 0.015))), M["grey"], 0.004))
+                p.append(span(f"WW_Bump{k}{j}", c + 0.02, e - 0.02, 0.855, 0.945, *sorted((s * (HD - 0.015), s * (HD - 0.04))), M["bumper"], 0.03, 4))
         else:
             # 東の配電盤（z=±0.25、y 0.95〜）の前はバンパーを切る
             segs = [(a, b)] if s < 0 else [(a, -0.3), (0.3, b)]

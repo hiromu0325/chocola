@@ -91,17 +91,33 @@ namespace EscapeProto
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             MeshCache.Clear();
+            RemappedThisRun.Clear();   // FBX の材質の割り当ては生成ごとに1回だけ見直す
             if (!AssetDatabase.IsValidFolder(MatDir))
                 AssetDatabase.CreateFolder("Assets/EscapePrototype", "MoodMaterials");
 
+            EnsureInspectLayer();
             var corridor = BuildCorridor();
             BuildRooms();
+            AttachAudioRecords();
+            PlaceHiddenSushi();
             BuildLighting();
             var player = BuildPlayer();
             BuildManagers(player, corridor);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[LoopPrototype] 生成完了: {ScenePath}");
+        }
+
+        /// <summary>
+        /// 隠し：わさび当て（本筋とは関係ない）。寿司下駄は1ゲームに1個だけ。ここではシーン直下に置き、
+        /// 起動時に全部屋の隠し場所（Resources/SushiSpots.json。部屋ごとに3か所）のどこか1か所へ移る（SushiGame）。
+        /// 隠し場所は「Tools/EscapePrototype/Hidden/寿司の隠し場所を探す」で作る
+        /// </summary>
+        private static void PlaceHiddenSushi()
+        {
+            var root = new GameObject("Hidden").transform;
+            var sushi = Visual(root, "Assets/Models/HQ/Sushi/Sushi.fbx", Vector3.zero);
+            if (sushi != null) sushi.AddComponent<SushiGame>();
         }
 
         // ============================== 回廊（ロの字） ==============================
@@ -755,10 +771,15 @@ namespace EscapeProto
             var newsGo = Findable(desk.transform, "news", "新聞記事", new Vector3(-0.28f, 0.76f, 0f), paper,
                 new Vector3(0.42f, 0.02f, 0.3f),
                 "新聞記事（切り抜き）",
-                "《地域面》\n小川脳神経総合研究所、臨床試験を再開\n\n" +
-                "……同研究所は「脳神経とAIの融合」を掲げ、\n記憶領域への介入実験を進めていたとされる。\n" +
-                "関係者によれば、被験者の一部に\n『眠りから覚めない』症例が報告されており……\n\n" +
-                "（記事の下半分は破り取られている）");
+                "20XX年11月25日　朝刊\n" +
+                "\n" +
+                "三木脳神経総合研究所（所在地・XX県）は22日、脳神経活動に関する新たな治療法の確立を目指す臨床実験を再開したと発表した。一方、関係者によると、実験に参加した被験者3名が意識を回復しない状態に陥っていることが明らかになった。\n" +
+                "\n" +
+                "同研究所は、脳の神経活動を解析・制御することで、意識障害の治療や脳機能の回復を目指す研究を進めてきた。今回の臨床実験は、過去に実施された研究計画を発展させたもので、長期にわたり意識の回復が見られない患者への応用も視野に入れているという。\n" +
+                "\n" +
+                "しかし、複数の関係者の証言によれば、実験終了後も目を覚まさない被験者が確認されており、医療関係者の間では安全性を懸念する声が上がっている。被験者らは生命維持に必要な身体機能を保っているものの、外部からの呼びかけに対する反応は無く、意識状態の詳細については分かっていない。\n" +
+                "\n" +
+                "同研究所の三木宗英主任は取材に対し、「現在、原因の特定と被験者の状態...");
             // 資料の見た目も差し替える（調べる判定は箱のトリガーのまま。拾うと子ごと消える）
             if (Visual(newsGo.transform, HqModel("dim", "Newspaper"), Vector3.zero) != null)
                 HideRenderers(desk.transform, newsGo.name);
@@ -790,6 +811,9 @@ namespace EscapeProto
                 HideRenderers(nbGo.transform, "Pages", "Bookmark");
                 HideRenderers(desk.transform, nbGo.name);
             }
+
+            // カセットレコーダー（机の上。最初の装備。拾うと消える。これが無いとカセットテープを聞けない）
+            TapePlayer(desk.transform, new Vector3(-0.02f, 0.75f, 0.22f), -12f);   // 表（-Z）を椅子の側へ
 
             // ---- セーブPC（記録端末。北西の隅の小さな台の上）----
             var saveMat = GetMat("LP_SavePc", new Color(0.3f, 0.32f, 0.34f), 0.4f);
@@ -864,7 +888,7 @@ namespace EscapeProto
             // ---- 起床カットシーン（ベッドから起き上がる）----
             BuildIntroCutscene(t, new Vector3(-hw + 1.2f, 0f, -1.0f), hd);
 
-            return new[] { "news", "flashlight", "notebook" };
+            return new[] { "news", "flashlight", "notebook", "tapeplayer" };
         }
 
         /// <summary>書斎：机／文書（机の上）</summary>
@@ -1209,11 +1233,11 @@ namespace EscapeProto
             var panel = Findable(ad.transform, "ad", "中吊り広告", new Vector3(0f, adY, 0f), adMat,
                 new Vector3(adW, adH, 0.03f),
                 "中吊り広告",
-                "《小川脳神経総合研究所》\n\n" +
-                "　　脳神経 × AI 開発\n\n" +
-                "「記憶は、置き換えられる。」\n\n" +
-                "被験者募集中 — 詳しくは当研究所まで");
-            TextPlate(panel.transform, "「記憶は、置き換えられる。」",
+                "「あきらめないで、目覚めを待つ人たちへ。」\n" +
+                "遷延性意識障害と向き合う患者と、そのご家族を支援しています。\n\n" +
+                "公益財団法人 記憶を守る会\n" +
+                "あなたの支援が、明日への希望につながります。");
+            TextPlate(panel.transform, "「あきらめないで、目覚めを待つ人たちへ。」",
                 new Vector3(0f, -0.30f, -0.03f), 0f, new Color(1f, 0.86f, 0.86f), 0.014f);
             // 他の中吊り（読めないダミー）を前後に
             foreach (float z in new[] { 3.5f, -6.0f, 6.5f })
@@ -1237,6 +1261,7 @@ namespace EscapeProto
                 {
                     HideRenderers(ad.transform, "Wire_L", "Wire_R");
                     HideRenderers(panel.transform.parent, panel.name);
+                    HideRenderers(panel.transform, "Text");   // 文字は広告の絵に入っている（箱の時の見出しは消す）
                 }
             }
 
@@ -1281,14 +1306,18 @@ namespace EscapeProto
                     Findable(d.transform, "summary", "研究概要", new Vector3(-0.45f, 0.76f, 0.0f), paper,
                         new Vector3(0.4f, 0.02f, 0.3f),
                         "研究概要",
-                        "《小川脳神経総合研究所 研究概要》\n\n" +
-                        "目的: 損傷した記憶領域をAIで補完し、\n" +
-                        "　　　人格の連続性を維持する\n\n" +
-                        "手順:\n" +
-                        "　1. 被験体の記憶を回廊構造として写像\n" +
-                        "　2. 欠損区画にAI生成の記憶を移植\n" +
-                        "　3. 覚醒後、齟齬の有無を観察\n\n" +
-                        "※第4項以降は破棄されている");
+                        "三木脳神経総合研究所\n" +
+                        "研究概要書\n\n" +
+                        "課題：神経活動解析および意識機能回復に関する研究\n" +
+                        "主任：三木 宗英\n\n" +
+                        "目的\n" +
+                        "脳神経活動の解析と人工知能（AI）による情報補完を通じ、意識機能の回復および人格の連続性の維持を目指す。\n\n" +
+                        "概要\n" +
+                        "脳波（EEG）等から得られる神経活動データを解析し、記憶情報と人格特性の関連性をモデル化する。\n\n" +
+                        "損なわれた記憶を人工知能で補い、人格の連続性を保つ。記憶を回廊構造で写し取り、情報間の関連性を空間的に再構成することで、記憶構造の解析および補完を試みる。\n\n" +
+                        "段階\n" +
+                        "現在、神経活動データの解析精度向上と、記憶構造モデルの有効性検証を進めている。臨床応用に向けた安全性および再現性の評価を継続する。\n\n" +
+                        "文書管理区分：研究所内部資料");
             }
 
             // 研究員の机の隣にもう1台ずつ並べて島にする（資料は置かない）
@@ -1344,7 +1373,27 @@ namespace EscapeProto
                 Solid(t, "PlantCol", new Vector3(-hw + 0.525f, 0.8f, hd - 0.525f), new Vector3(0.42f, 1.6f, 0.42f));
             }
 
-            return new[] { "summary", "members" };
+            // 黒塗りの資料（チュートリアル・必須）：受付カウンターの来客用の案内状。答えはこの部屋の研究概要と社員名簿にある。
+            // 埋めると南の壁のガラス戸の書類棚が開き、中の面会相談の記録票を読むと部屋が終わる
+            FillPaper(t, "lab", "guide", "来客用の案内状", "Guide", new Vector3(-3.15f, 1.04f, -hd + 0.42f), 172f, new Vector2(0.21f, 0.297f));
+            var cab = FillBox(t, "lab", "guide", "ガラス戸の書類棚", HqModel("lab", "FillCabinet"), "LabFill_Door",
+                // x = fill_props.LAB_CAB_X。後ろのルーバーは羽根を抜いてあり、背は黒い下地（壁から 1.2cm）の 2mm 手前
+                new Vector3(3.4f, 0f, -hd + 0.075f + 0.014f + 0.21f), 0f, FillContainer.Motion.Hinge, new Vector3(0f, -100f, 0f),
+                (Vector3.zero, Vector3.zero),
+                (new Vector3(0f, 0.925f, -0.045f), new Vector3(0.9f, 1.85f, 0.33f)));
+            // 調べる判定は3段目の右半分の口いっぱい（薄い板だと、目の高さからは本体の当たり判定に先に当たる）
+            FillInside(cab.transform, cab, "visitlog", "記録票", new Vector3(0.17f, 1.18f, 0.03f), new Vector3(0.28f, 0.42f, 0.36f),
+                "面会相談の記録票",
+                "《面会相談 記録票》　対応: 所長\n\n" +
+                "相談者: ご家族（父）\n" +
+                "内容　: 娘さんが、目を覚まさない。\n" +
+                "　　　　受け入れ先を探している。\n\n" +
+                "所長の所見:\n" +
+                "　当研究所の病棟で受け入れる。費用は問わない。\n" +
+                "　以後の対応は、所長が直接行う。\n\n" +
+                "（相談者の氏名の欄だけが、黒く塗り潰されている）");
+
+            return new[] { "summary", "members", "visitlog" };
         }
 
         // ============================== 1章 佐伯恒一 ==============================
@@ -1473,6 +1522,7 @@ namespace EscapeProto
                 "──リナシータ。イタリア語で「再誕」。\n" +
                 "この響きを、私は知っている。\n" +
                 "祈るように口にしたことが、ある。");
+            Tape(table.transform, new Vector3(0.28f, 0.9f, -0.08f), -18f, "補完試験 口述 No.12　佐伯");
             var specGo = Findable(table.transform, "spec", "アルゴリズム仕様", new Vector3(0.75f, 0.9f, -0.25f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "補完アルゴリズム仕様（佐伯）",
@@ -1655,6 +1705,7 @@ namespace EscapeProto
                 "最後の行は、筆圧が乱れている。\n\n" +
                 "「……何をするつもりですか？」\n\n" +
                 "記録は、そこで途切れていた。");
+            Tape(desk.transform, new Vector3(0.12f, 0.755f, 0.18f), 10f, "留守番電話　4月21日");
             var unsentGo = Findable(desk.transform, "unsent", "未送信メモ", new Vector3(0.35f, 0.755f, -0.15f), paper,
                 new Vector3(0.2f, 0.01f, 0.14f),
                 "宛先のないメモ",
@@ -1707,6 +1758,31 @@ namespace EscapeProto
                 if (Visual(letterGo.transform, HqModel("saeki_home", "Letter"), Vector3.zero) != null) HideRenderers(dining.transform, letterGo.name);
                 if (Visual(plogGo.transform, HqModel("saeki_home", "Plog"), Vector3.zero) != null) HideRenderers(desk.transform, plogGo.name);
                 if (Visual(unsentGo.transform, HqModel("saeki_home", "Unsent"), Vector3.zero) != null) HideRenderers(desk.transform, unsentGo.name);
+            }
+
+            // 黒塗りの資料（任意）：書斎机の上の、佐伯の日記の欠けたページ。2章の病棟の言葉が要る（戻ってきて埋める）。
+            // 埋めると書斎机の引き出しが手前に出て、中に妻に宛てた封筒（留守番電話「書斎の机を見てくれ」の答え）
+            FillPaper(desk.transform, "saeki_home", "diarypage", "日記の切れ端", "DiaryPage", new Vector3(-0.55f, 0.75f, 0.08f), 8f, new Vector2(0.148f, 0.21f));
+            if (hq)
+            {
+                var drawer = FillBox(desk.transform, "saeki_home", "diarypage", "書斎机の引き出し", HqModel("saeki_home", "Drawer"), null,
+                    Vector3.zero, 0f, FillContainer.Motion.Slide, new Vector3(0f, 0f, -0.3f),
+                    (new Vector3(0f, 0.667f, -0.31f), new Vector3(0.6f, 0.08f, 0.05f)));
+                if (drawer.Moving != null)
+                    FillInside(drawer.Moving, drawer, "envelope", "封筒", new Vector3(0.02f, 0.648f, -0.195f), new Vector3(0.2f, 0.02f, 0.12f),
+                        "妻に宛てた封筒",
+                        "《封筒の中の手紙》\n\n" +
+                        "「君に謝らなければならない。\n" +
+                        "夜中に書斎で謝っていたのは、君にじゃない。\n" +
+                        "まだ会ったこともない、誰かにだ。\n\n" +
+                        "補完アルゴリズムは、欠けた記憶を『その人らしい記憶』で埋める。\n" +
+                        "だがその記憶は、どこかから持ってこなければならない。\n" +
+                        "人の脳を欲しがる仕組みを作ったのは、僕だ。\n" +
+                        "あの人を追い詰めたのも、たぶん僕の作った仕組みだ。\n\n" +
+                        "だから、僕が止めに行く。\n" +
+                        "もし戻らなかったら、あの人を恨まないでほしい。\n" +
+                        "あの人は、娘さんを助けたいだけなんだ」\n\n" +
+                        "（封は切られていない）");
             }
 
             return new[] { "letter", "plog", "unsent" };
@@ -1802,6 +1878,7 @@ namespace EscapeProto
                         ?? Desk(t, "NurseDesk", new Vector3(1.8f, 0f, -hd + 1.6f), frameM);
                 Prop(t, "OfficeChair", new Vector3(1.8f, 0f, -hd + 0.85f));
             }
+            Tape(nurse.transform, new Vector3(0.18f, 0.76f, 0.12f), -8f, "面会用　二宮さん　No.31");
             var obsGo = Findable(nurse.transform, "obs", "観察記録", new Vector3(-0.45f, 0.76f, 0.0f), paper,
                 new Vector3(0.36f, 0.02f, 0.26f),
                 "水野の患者観察記録",
@@ -1844,6 +1921,29 @@ namespace EscapeProto
                 if (Visual(obsGo.transform, HqModel("ward", "Obs"), Vector3.zero) != null) HideRenderers(nurse.transform, obsGo.name);
                 if (Visual(girlGo.transform, HqModel("ward", "GirlFile"), Vector3.zero) != null) HideRenderers(t, girlGo.name);
             }
+
+            // 黒塗りの資料（任意）：ナースデスクの、水野の観察記録の続きのページ。水野のアパートの言葉が要る（戻ってきて埋める）。
+            // 埋めると入口の西の職員ロッカー（3つ並びの真ん中＝水野）が開き、中に渡せなかった手紙
+            // 置き場所は机の上の何も無い所（観察記録のクリップボードとキーボードの間。電話・マウス・ファイル立てにも掛からない。
+            // 他の物に重ならないことは hq/check_fill_overlap.py で確かめる）
+            FillPaper(nurse.transform, "ward", "page303", "観察記録の続き", "Page303", new Vector3(-0.145f, 0.75f, -0.18f), 2f, new Vector2(0.21f, 0.297f));
+            var lockers = FillBox(t, "ward", "page303", "水野のロッカー", HqModel("ward", "FillLockers"), "WardFill_Door",
+                // x = fill_props.WARD_LOCKER_X。後ろの巾木とバンパーレールは切ってあり、背は腰壁（4mm）の 2mm 手前
+                new Vector3(-2.0f, 0f, -hd + 0.075f + 0.006f + 0.25f), 0f, FillContainer.Motion.Hinge, new Vector3(0f, -100f, 0f),
+                (Vector3.zero, Vector3.zero),
+                (new Vector3(0f, 0.9f, -0.04f), new Vector3(1.35f, 1.8f, 0.42f)));
+            // 名札（田村／水野／森）はモデルのテクスチャ（FIL_NameCards）
+            // 封筒は棚の奥に立てかけてある。調べる判定は封筒から扉の面まで伸ばす（本体の当たり判定より手前で当たるように）
+            FillInside(lockers.transform, lockers, "letter303", "封筒", new Vector3(0.05f, 1.58f, 0.01f), new Vector3(0.24f, 0.13f, 0.42f),
+                "渡せなかった手紙",
+                "《便箋》\n\n" +
+                "「303号の、お父さんへ。\n\n" +
+                "あの子の記録には、約束どおり名前を書いていません。\n" +
+                "いつか、あの子が自分で名乗れる日まで。\n\n" +
+                "毎晩の絵本、廊下まで聞こえています。\n" +
+                "あの子が目を覚ました時、\n" +
+                "最初に聞くのが、あなたの声でありますように」\n\n" +
+                "（ロッカーの奥に、封をしないまま入っていた）");
 
             return new[] { "obs", "girlfile" };
         }
@@ -2660,6 +2760,7 @@ namespace EscapeProto
                 "「正しいことと、救うことは同じではない。\n" +
                 "　それでも私は、正しい方を選ぶ。\n" +
                 "　誰かが選ばなければならないからだ」");
+            Tape(sideb.transform, new Vector3(0.02f, 0.905f, 0.02f), 96f, "留守番電話　4月22日");
             var lastrecGo = Findable(sideb.transform, "lastrec", "対峙の記録", new Vector3(0f, 0.93f, 0.35f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "最後の対峙の記録（破損）",
@@ -2720,6 +2821,29 @@ namespace EscapeProto
                 if (Visual(lastrecGo.transform, HqModel("kuroda_home", "LastRec"), Vector3.zero) != null) HideRenderers(sideb.transform, lastrecGo.name);
                 if (Visual(verdict.transform, HqModel("kuroda_home", "Verdict"), Vector3.zero) != null) HideRenderers(sideb.transform, "Verdict");
             }
+
+            // 黒塗りの資料（任意）：東の壁の書き物机（ライティングビューロー）の上の、黒田のメモの破り取られた後半。
+            // 3章の真相の後までに答えがそろう。埋めると斜めのふたが手前に倒れ、中に娘たちへの手紙
+            const float buLean = 38.07f;  // 閉じたふたの傾き（fill_props.BU_LEAN と同じ）
+            var bureau = FillBox(t, "kuroda_home", "kmemo2", "書き物机", HqModel("kuroda_home", "FillBureau"), "KurodaFill_Flap",
+                // 背は巾木（壁から 1.2cm）の前面の 2mm 手前
+                new Vector3(hw - 0.075f - 0.014f - 0.225f, 0f, 1.7f), -90f, FillContainer.Motion.Hinge, new Vector3(90f + buLean, 0f, 0f),
+                (new Vector3(0f, 0.87f, 0.1f), new Vector3(0.78f, 0.3f, 0.25f)),
+                (new Vector3(0f, 0.36f, 0f), new Vector3(0.8f, 0.72f, 0.45f)),
+                (new Vector3(0f, 0.885f, -0.13f), new Vector3(0.8f, 0.33f, 0.19f)));
+            FillPaper(bureau.transform, "kuroda_home", "kmemo2", "破れたメモ", "KMemo2", new Vector3(0f, 1.05f, -0.12f), 180f, new Vector2(0.18f, 0.152f));
+            FillInside(bureau.transform, bureau, "letters", "封筒", new Vector3(0.08f, 0.735f, 0.06f), new Vector3(0.22f, 0.03f, 0.15f),
+                "娘たちへの手紙",
+                "《便箋》\n\n" +
+                "「お姉ちゃんへ。ちびへ。\n\n" +
+                "お父さんは明日、ある人と話をしてくる。\n" +
+                "その人にも、お前たちくらいの娘がいる。\n" +
+                "その人は娘を助けるために、正しくないことをした。\n" +
+                "お父さんは、それを止めに行く。\n\n" +
+                "正しいことは、怖い。\n" +
+                "でも、怖いからやめる、は正しくない。\n\n" +
+                "お母さんの言うことを、よく聞くこと」\n\n" +
+                "（書き物机の中に、宛名だけ書いた封筒に入っていた）");
 
             return new[] { "rules", "lastrec", "verdict" };
         }
@@ -3119,6 +3243,76 @@ namespace EscapeProto
             return go;
         }
 
+        // ============================== 黒塗りの資料（穴埋め）と、埋めると開く入れ物 ==============================
+
+        /// <summary>
+        /// 部屋に黒塗りの紙を置く（調べると手帳のメモのボードに置かれる。FillDocFindable）。見た目は Fill/Fill_〈part〉.fbx。
+        /// pos = 紙を置く面の上の点、yaw = 文字の上が向く向き（0 = +Z）
+        /// </summary>
+        private static GameObject FillPaper(Transform parent, string roomId, string id, string displayName, string part,
+                                            Vector3 pos, float yaw, Vector2 size)
+        {
+            const float T = 0.012f;   // 調べる判定の厚み
+            var go = Box(parent, "Fill_" + id, pos + new Vector3(0f, T * 0.5f, 0f), new Vector3(size.x, T, size.y),
+                         GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f));
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            go.GetComponent<Collider>().isTrigger = true;
+            var f = go.AddComponent<FillDocFindable>();
+            f.RoomId = roomId;
+            f.Id = id;
+            f.DisplayName = displayName;
+            if (Visual(go.transform, HqModel("fill", part), new Vector3(0f, -T * 0.5f, 0f)) != null)
+            {
+                Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
+                Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+            }
+            return go;
+        }
+
+        /// <summary>
+        /// 黒塗りの資料を埋めると開く入れ物（FillContainer）。model の中の moving（扉・ふたの部品名。null なら model ごと）を動かす。
+        /// solids = 当たり判定の箱（入れ物の原点から見た中心と大きさ。入れ物の物として調べられる）、
+        /// lockBox = 閉じている間だけ調べられる判定（無ければ size を 0 に）
+        /// </summary>
+        private static FillContainer FillBox(Transform parent, string roomId, string fillId, string displayName, string model,
+                                             string moving, Vector3 pos, float yaw, FillContainer.Motion kind, Vector3 open,
+                                             (Vector3 c, Vector3 s) lockBox, params (Vector3 c, Vector3 s)[] solids)
+        {
+            var root = new GameObject("FillBox_" + fillId);
+            root.transform.SetParent(parent, false);
+            root.transform.localPosition = pos;
+            root.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var vis = Visual(root.transform, model, Vector3.zero);
+            foreach (var (c, s) in solids) Solid(root.transform, "Col", c, s);
+            var fc = root.AddComponent<FillContainer>();
+            fc.RoomId = roomId;
+            fc.FillId = fillId;
+            fc.DisplayName = displayName;
+            fc.Kind = kind;
+            if (kind == FillContainer.Motion.Hinge) fc.OpenEuler = open; else fc.OpenOffset = open;
+            if (vis != null) fc.Moving = string.IsNullOrEmpty(moving) ? vis.transform : vis.transform.Find(moving);
+            if (lockBox.s.sqrMagnitude > 0f)
+            {
+                var lk = Solid(root.transform, "LockCol", lockBox.c, lockBox.s);
+                var col = lk.GetComponent<Collider>();
+                col.isTrigger = true;
+                fc.LockCollider = col;
+            }
+            return fc;
+        }
+
+        /// <summary>入れ物の中の資料（読める資料。見た目は入れ物のモデルにあるので箱は見せない）</summary>
+        private static GameObject FillInside(Transform parent, FillContainer fc, string id, string displayName, Vector3 pos, Vector3 size,
+                                             string title, string body)
+        {
+            var go = Findable(parent, id, displayName, pos, GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f), size, title, body);
+            Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+            var list = new List<GameObject>(fc.Inside ?? new GameObject[0]) { go };
+            fc.Inside = list.ToArray();
+            return go;
+        }
+
         // ============================== 終章：娘の記憶の断片（思い出のおもちゃ） ==============================
 
         private struct Toy
@@ -3428,6 +3622,19 @@ namespace EscapeProto
         {
             var root = new GameObject("Managers");
 
+            // 調べる画面（くるくる回す）で使う実物のモデル（種類 → Prefab）
+            var libGo = new GameObject("InspectLibrary");
+            libGo.transform.SetParent(root.transform, false);
+            var lib = libGo.AddComponent<InspectLibrary>();
+            foreach (InspectKind kind in System.Enum.GetValues(typeof(InspectKind)))
+            {
+                if (kind == InspectKind.None) continue;
+                string fbx = kind == InspectKind.Helmet ? HqModel("analysis", "Helmet") : InspectModel(kind);
+                string prefab = ModelPrefabPath(fbx, ShellMat);
+                var go = prefab != null ? AssetDatabase.LoadAssetAtPath<GameObject>(prefab) : null;
+                if (go != null) lib.Models.Add(new InspectLibrary.Entry { Kind = kind, Prefab = go });
+            }
+
             // リスポーンは最初の部屋（薄暗い部屋＝人形の部屋）の入口スポーンと同じ位置
             var respawn = new GameObject("RespawnPoint");
             respawn.transform.SetParent(root.transform, false);
@@ -3576,6 +3783,7 @@ namespace EscapeProto
                 mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
                 AssetDatabase.CreateAsset(mat, path);
             }
+            if (IsHandTuned(mat)) return mat;   // 人が調整した材質（HandTuned ラベル）はそのまま
             mat.color = color;
             if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", smoothness);
             EditorUtility.SetDirty(mat);
@@ -3639,21 +3847,20 @@ namespace EscapeProto
         private static GameObject Prop(Transform parent, string fbx, Vector3 pos, float yaw = 0f,
                                        bool collider = true, Material screenOverride = null)
         {
-            var go = Place($"Assets/Models/Props/{fbx}.fbx", parent, pos, yaw);
+            // FBX を直接置かず、FBX を親にした Prefab を置く（材質は取り込み設定で割り当て済み）
+            var go = Place(ModelPrefabPath($"Assets/Models/Props/{fbx}.fbx", PropMat), parent, pos, yaw);
             if (go == null) return null;
             go.name = fbx;
             var rs = go.GetComponentsInChildren<Renderer>();
-            foreach (var r in rs)
-            {
-                var mats = r.sharedMaterials;
-                for (int i = 0; i < mats.Length; i++)
+            if (screenOverride != null)
+                foreach (var r in rs)
                 {
-                    if (mats[i] == null) continue;
-                    if (screenOverride != null && mats[i].name.StartsWith("Emit_Screen")) mats[i] = screenOverride;
-                    else mats[i] = PropMat(mats[i]);
+                    // 画面だけ別の材質にしたい時は、この1個だけ上書きする
+                    var mats = r.sharedMaterials;
+                    for (int i = 0; i < mats.Length; i++)
+                        if (mats[i] != null && mats[i].name == "LP_Prop_Screen") mats[i] = screenOverride;
+                    r.sharedMaterials = mats;
                 }
-                r.sharedMaterials = mats;
-            }
             if (collider)
             {
                 // 境界ボックスだと天板やベッドの上に置いた資料まで箱の中に入ってしまい、
@@ -3749,6 +3956,141 @@ namespace EscapeProto
         }
 
         /// <summary>URP Lit の材質にテクスチャ・法線・発光を設定する</summary>
+        /// <summary>半透明の材質（カセットの窓・写真立てのガラス・名札ケース）</summary>
+        private static Material TranspLit(string name, Color color, float alpha, float smooth)
+        {
+            var m = HqLit(name, color, smooth);
+            if (IsHandTuned(m)) return m;
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_ZWrite", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            m.SetColor("_BaseColor", new Color(color.r, color.g, color.b, alpha));
+            return m;
+        }
+
+        /// <summary>調べる画面の実物のモデル（Blender の hq/build_inspect.py が書き出す）</summary>
+        private static string InspectModel(InspectKind kind) => $"{HqDir}/Inspect/Inspect_{kind}.fbx";
+
+        /// <summary>実物だけを描くレイヤー「Inspect」（8番）を用意する（メインカメラには描かせない）</summary>
+        private static void EnsureInspectLayer()
+        {
+            var tm = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tm.FindProperty("layers");
+            var slot = layers.GetArrayElementAtIndex(InspectView.Layer == 8 ? 8 : InspectView.Layer);
+            if (slot.stringValue != "Inspect" && string.IsNullOrEmpty(slot.stringValue))
+            {
+                slot.stringValue = "Inspect";
+                tm.ApplyModifiedProperties();
+            }
+        }
+
+        /// <summary>
+        /// 音声記録（DocCatalog で Audio の資料）に声を付ける：Assets/Audio/Tapes/&lt;部屋&gt;.&lt;資料&gt;_&lt;nn&gt;.wav を
+        /// 台詞の順に AudioRecord へ。カセット・レコーダーは部屋の中の見た目も実物のモデルにする（机の上に寝かせる）
+        /// </summary>
+        private static void AttachAudioRecords()
+        {
+            foreach (var f in Object.FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var info = DocCatalog.Get(f.RoomId, f.Id);
+                if (!info.Audio) continue;
+                int n = DocCatalog.Tape(f.RoomId, f.Id).Count;
+                var clips = new AudioClip[n];
+                for (int i = 0; i < n; i++)
+                    clips[i] = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/Audio/Tapes/{f.RoomId}.{f.Id}_{i:00}.wav");
+                var rec = f.GetComponent<AudioRecord>() ?? f.gameObject.AddComponent<AudioRecord>();
+                rec.Clips = clips;
+
+                if (info.Kind != InspectKind.Cassette && info.Kind != InspectKind.Recorder) continue;
+                // 部屋に専用のモデルが既にある（水野のレコーダー・黒田のICレコーダー）なら、そちらを使う
+                bool hasVisual = false;
+                foreach (var r in f.GetComponentsInChildren<Renderer>(true))
+                    if (r.gameObject != f.gameObject) { hasVisual = true; break; }
+                if (hasVisual) continue;
+                string prefab = ModelPrefabPath(InspectModel(info.Kind), ShellMat);
+                if (prefab == null) continue;
+                // 箱の見た目を消し、実物を寝かせて置く（表が上）。拾うと消える資料は子にして一緒に消えるように
+                var box = f.GetComponent<Renderer>();
+                if (box != null) box.enabled = false;
+                bool child = f.transform.localScale == Vector3.one;
+                var parent = child ? f.transform : f.transform.parent;
+                var pos = child ? Vector3.zero : f.transform.localPosition;
+                var vis = Place(prefab, parent, pos);
+                if (vis == null) continue;
+                vis.name = "Visual_" + info.Kind;
+                vis.transform.localRotation = Quaternion.Euler(90f, child ? 0f : f.transform.localEulerAngles.y + 12f, 0f);
+                foreach (var c in vis.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            }
+        }
+
+        /// <summary>
+        /// カセットレコーダー（最初の部屋の机の上に立てて置く装備）。拾うと手に入れて消え、カセットテープを再生できるようになる。
+        /// 見た目は調べる画面と同じ実物のモデル（Inspect_TapeRecorder）
+        /// </summary>
+        private static GameObject TapePlayer(Transform parent, Vector3 pos, float yaw)
+        {
+            var go = new GameObject("Find_tapeplayer");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var col = go.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.center = new Vector3(0f, 0.05f, 0f);
+            col.size = new Vector3(0.2f, 0.12f, 0.08f);
+            var f = go.AddComponent<LoopFindable>();
+            f.Id = "tapeplayer";
+            f.DisplayName = "カセットレコーダー";
+            f.DisappearOnPickup = true;
+            f.PickupHint = "カセットテープを聞ける";
+            string prefab = ModelPrefabPath(InspectModel(InspectKind.TapeRecorder), ShellMat);
+            if (prefab != null)
+            {
+                var vis = Place(prefab, go.transform, Vector3.zero);
+                if (vis != null)
+                {
+                    vis.name = "Visual_TapeRecorder";
+                    // モデルの原点は見た目の中心なので、底が机の天板に乗るよう持ち上げる
+                    var rs = vis.GetComponentsInChildren<Renderer>();
+                    if (rs.Length > 0)
+                    {
+                        var b = rs[0].bounds;
+                        foreach (var r in rs) b.Encapsulate(r.bounds);
+                        vis.transform.position += Vector3.up * (go.transform.position.y - b.min.y);
+                    }
+                    foreach (var c in vis.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+                }
+            }
+            return go;
+        }
+
+        /// <summary>
+        /// 新しい音声記録（カセットテープ）。拾うと手に入れて消える（手帳の資料一覧から何度でも聞ける）。
+        /// 見た目は AttachAudioRecords が実物のモデルにする。進行の必須ではない（聞かなくても先へ進める）
+        /// </summary>
+        private static GameObject Tape(Transform parent, Vector3 pos, float yaw, string title)
+        {
+            var go = new GameObject("Find_tape");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var col = go.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.center = new Vector3(0f, 0.01f, 0f);
+            col.size = new Vector3(0.14f, 0.05f, 0.1f);
+            var f = go.AddComponent<LoopFindable>();
+            f.Id = "tape";
+            f.DisplayName = "カセットテープ";
+            f.NoteTitle = title;
+            f.NoteBody = "";
+            f.DisappearOnPickup = true;
+            f.PickupHint = "Tab: 手帳で聞き直せる";
+            return go;
+        }
+
         private static Material HqLit(string name, Color tint, float smooth, float metal = 0f,
                                       Texture2D albedo = null, Texture2D normal = null, float bump = 1f,
                                       Color? emission = null, Texture2D emissionMap = null,
@@ -3811,6 +4153,28 @@ namespace EscapeProto
             string n = src.name;
             switch (n)
             {
+                // ---- 調べる画面の実物（紙・テープ・画面など） ----
+                case "INS_Paper":        return HqLit(n, new Color(0.97f, 0.96f, 0.92f), 0.12f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.35f);
+                case "INS_PaperCream":   return HqLit(n, new Color(0.98f, 0.93f, 0.82f), 0.1f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.35f);
+                case "INS_Newsprint":    return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/newspaper_fold", clamp: true));   // 四つ折りの新聞の紙面（左＝表、右＝裏）
+                case "INS_Manila":       return HqLit(n, new Color(0.88f, 0.75f, 0.52f), 0.1f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.3f);
+                case "INS_Board":        return HqLit(n, new Color(0.46f, 0.33f, 0.22f), 0.25f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.4f);
+                case "INS_Leather":      return HqLit(n, new Color(0.2f, 0.12f, 0.08f), 0.35f, 0f, HqTex("Inspect/leather"), HqTex("Inspect/leather_n", true), 0.8f);
+                case "INS_Metal":        return HqLit(n, new Color(0.5f, 0.5f, 0.52f), 0.55f, 1f);
+                case "INS_PlasticBlack": return HqLit(n, new Color(0.04f, 0.04f, 0.045f), 0.55f);
+                case "INS_PlasticSmoke": return TranspLit(n, new Color(0.1f, 0.09f, 0.08f), 0.9f, 0.85f);
+                case "INS_PlasticClear": { var m = TranspLit(n, new Color(0.95f, 0.95f, 0.95f), 0.2f, 0.9f); m.renderQueue = 3001; return m; }   // 窓はカセットの殻より後に描く
+                case "INS_Glass":        return TranspLit(n, new Color(0.9f, 0.92f, 0.95f), 0.14f, 0.95f);
+                case "INS_Tape":         return HqLit(n, new Color(0.24f, 0.14f, 0.08f), 0.6f);
+                case "INS_Label":        return HqLit(n, new Color(0.96f, 0.93f, 0.83f), 0.1f, 0f, HqTex("Inspect/paper"), HqTex("Inspect/paper_n", true), 0.3f);
+                case "INS_Screen":       return HqLit(n, new Color(0.02f, 0.03f, 0.03f), 0.55f, 0f, null, null, 1f, new Color(0.02f, 0.05f, 0.04f));   // 光沢を抑えて、主光のてかりが文字に被らないように
+                case "INS_Wood":         return HqLit(n, new Color(0.62f, 0.5f, 0.4f), 0.45f, 0f, HqTex("Dim/walnut"), HqTex("Dim/walnut_n", true), 0.35f);
+                case "INS_Photo":        return HqLit(n, new Color(0.55f, 0.45f, 0.33f), 0.3f);
+                case "INS_Cardboard":    return HqLit(n, new Color(0.78f, 0.67f, 0.5f), 0.05f, 0f, HqTex("Inspect/cardboard"), HqTex("Inspect/cardboard_n", true), 0.5f);
+                case "INS_Rubber":       return HqLit(n, new Color(0.1f, 0.1f, 0.1f), 0.2f);
+                case "INS_PlasticGrey":  return HqLit(n, new Color(0.62f, 0.63f, 0.65f), 0.45f, 0.15f);   // カセットレコーダーの銀色の本体
+                case "INS_PlasticRed":   return HqLit(n, new Color(0.72f, 0.1f, 0.08f), 0.5f);            // 録音キー
+                case "INS_LampRed":      return HqLit(n, new Color(0.6f, 0.05f, 0.04f), 0.85f);           // 録音ランプ（消えている）
                 // ---- 薄暗い部屋 ----
                 case "DIM_Wallpaper": return HqLit(n, Color.white, 0.12f, 0f, HqTex("Dim/wallpaper"), HqTex("Dim/wallpaper_n", true), 0.6f);
                 case "DIM_Carpet":    return HqLit(n, Color.white, 0.02f, 0f, HqTex("Dim/carpet"), HqTex("Dim/carpet_n", true), 0.8f);
@@ -3821,7 +4185,7 @@ namespace EscapeProto
                 case "DIM_Quilt":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/quilt"), HqTex("Dim/quilt_n", true), 0.5f);
                 case "DIM_Linen":     return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/linen"), HqTex("Dim/linen_n", true), 0.4f);
                 case "DIM_Mattress":  return HqLit(n, new Color(0.97f, 0.97f, 0.97f), 0.05f, 0f, HqTex("Dim/linen"), HqTex("Dim/linen_n", true), 0.4f);
-                case "DIM_Newspaper": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/newspaper", clamp: true));
+                case "DIM_Newspaper": return HqLit(n, Color.white, 0.05f, 0f, HqTex("Dim/newspaper_fold", clamp: true));   // 調べる画面と同じ四つ折りの新聞
                 case "DIM_CrtScreen": return HqLit(n, Color.white, 0.9f, 0f, HqTex("Dim/crt_screen", clamp: true), null, 1f,
                                                    Color.white * 1.3f, HqTex("Dim/crt_screen", clamp: true));
                 case "DIM_LampShade": return HqLit(n, new Color(1f, 0.95f, 0.85f), 0.05f, 0f, HqTex("Dim/linen"), null, 1f,
@@ -3945,6 +4309,30 @@ namespace EscapeProto
                 case "CMN_Steel":     return HqLit(n, new Color(0.55f, 0.5f, 0.45f), 0.35f, 0.4f, HqTex("CoreAnte/steel_plate"), HqTex("CoreAnte/steel_plate_n", true), 0.4f);
                 case "CMN_WiredGlass":return HqLit(n, new Color(0.08f, 0.1f, 0.11f), 0.95f, 0.3f);
                 case "CMN_Chrome":    return HqLit(n, new Color(0.85f, 0.85f, 0.86f), 0.85f, 1f);
+                // ---- 隠し：わさび当て（寿司下駄と握り） ----
+                // ---- 黒塗りの資料（穴埋め）：部屋に置く紙・封筒・書類棚のバインダー ----
+                case "FIL_Guide":     return HqLit(n, Color.white, 0.1f, 0f, HqTex("Fill/guide", clamp: true));
+                case "FIL_DiaryPage": return HqLit(n, Color.white, 0.1f, 0f, HqTex("Fill/diarypage", clamp: true));
+                case "FIL_Page303":   return HqLit(n, Color.white, 0.1f, 0f, HqTex("Fill/page303", clamp: true));
+                case "FIL_KMemo2":    return HqLit(n, Color.white, 0.1f, 0f, HqTex("Fill/kmemo2", clamp: true));
+                case "FIL_VisitLog":  return HqLit(n, Color.white, 0.1f, 0f, HqTex("Fill/visitlog", clamp: true));
+                case "FIL_EnvSaeki":  return HqLit(n, Color.white, 0.12f, 0f, HqTex("Fill/env_saeki", clamp: true));
+                case "FIL_EnvWard":   return HqLit(n, Color.white, 0.12f, 0f, HqTex("Fill/env_ward", clamp: true));
+                case "FIL_EnvKuroda": return HqLit(n, Color.white, 0.12f, 0f, HqTex("Fill/env_kuroda", clamp: true));
+                case "FIL_Envelope":  return HqLit(n, new Color(0.92f, 0.88f, 0.78f), 0.12f);
+                case "FIL_Binders":   return HqLit(n, Color.white, 0.35f, 0f, HqTex("Fill/binders"));
+                case "FIL_NameCards": return HqLit(n, Color.white, 0.2f, 0f, HqTex("Fill/namecards", clamp: true));
+                case "LAB_CabinetGlass": return TranspLit(n, new Color(0.85f, 0.9f, 0.92f), 0.12f, 0.95f);   // 書類棚のガラス戸（透明）
+                case "SUS_Geta":   return HqLit(n, Color.white, 0.25f, 0f, HqTex("Sushi/geta"), HqTex("Sushi/geta_n", true), 0.3f);
+                case "SUS_Rice":   return HqLit(n, new Color(1f, 1f, 0.98f), 0.3f, 0f, HqTex("Sushi/rice"), HqTex("Sushi/rice_n", true), 0.8f);
+                case "SUS_Wasabi": return HqLit(n, Color.white, 0.25f, 0f, HqTex("Sushi/wasabi"), HqTex("Sushi/wasabi_n", true), 0.6f);
+                case "SUS_Nori":   return HqLit(n, Color.white, 0.3f, 0f, HqTex("Sushi/nori"), HqTex("Sushi/nori_n", true), 0.5f);
+                case "SUS_Maguro": return HqLit(n, Color.white, 0.62f, 0f, HqTex("Sushi/maguro"), HqTex("Sushi/maguro_n", true), 0.4f);
+                case "SUS_Salmon": return HqLit(n, Color.white, 0.62f, 0f, HqTex("Sushi/salmon"), HqTex("Sushi/salmon_n", true), 0.4f);
+                case "SUS_Tai":    return HqLit(n, Color.white, 0.6f, 0f, HqTex("Sushi/tai"), HqTex("Sushi/tai_n", true), 0.4f);
+                case "SUS_Ika":    return HqLit(n, Color.white, 0.55f, 0f, HqTex("Sushi/ika"), HqTex("Sushi/ika_n", true), 0.6f);
+                case "SUS_Tamago": return HqLit(n, Color.white, 0.35f, 0f, HqTex("Sushi/tamago"), HqTex("Sushi/tamago_n", true), 0.4f);
+                case "SUS_Anago":  return HqLit(n, Color.white, 0.8f, 0f, HqTex("Sushi/anago"), HqTex("Sushi/anago_n", true), 0.4f);   // つめのつや
                 // ---- 黒田の自宅 ----
                 case "KUR_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("KurodaHome/flooring"), HqTex("KurodaHome/flooring_n", true), 0.4f);
                 case "KUR_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/wallpaper"), HqTex("KurodaHome/wallpaper_n", true), 0.4f);
@@ -4473,8 +4861,9 @@ namespace EscapeProto
                 case "TRN_Priority":  return HqLit(n, Color.white, 0.4f, 0f, HqTex("Train/priority", clamp: true));
                 case "TRN_AdLab":
                 {
-                    // 調べられる研究所の広告（生成画像）。車内の暗さでも読めるよう少し自発光させる
-                    var tex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Arts/Generated/ad_poster_jp.png");
+                    // 調べられる中吊り広告（公益財団法人 記憶を守る会。GenAssets/train/make_textures.py の ad_kioku）。
+                    // 車内の暗さでも読めるよう少し自発光させる
+                    var tex = HqTex("Train/ad_kioku", clamp: true);
                     return HqLit(n, Color.white, 0.2f, 0f, tex, null, 1f, Color.white * 0.4f, tex);
                 }
                 case "TRN_Net":
@@ -4518,18 +4907,95 @@ namespace EscapeProto
         /// </summary>
         private static GameObject Visual(Transform parent, string path, Vector3 pos, float yaw = 0f)
         {
-            var go = Place(path, parent, pos, yaw);
+            // FBX を直接置かず、FBX を親にした Prefab（Assets/Prefabs/Models/…）を置く。
+            // 材質は FBX の取り込み設定で名前ごとに割り当て済みなので、ここでは触らない
+            var go = Place(ModelPrefabPath(path, ShellMat), parent, pos, yaw);
             if (go == null) return null;
             go.name = System.IO.Path.GetFileNameWithoutExtension(path);
-            foreach (var r in go.GetComponentsInChildren<Renderer>())
-            {
-                var mats = r.sharedMaterials;
-                for (int k = 0; k < mats.Length; k++)
-                    if (mats[k] != null) mats[k] = ShellMat(mats[k]);
-                r.sharedMaterials = mats;
-            }
-            foreach (var c in go.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
             return go;
+        }
+
+        // ============================== モデルの Prefab（人の手直しを残すための層） ==============================
+        //
+        // FBX（Blender から書き出す）→ Prefab Variant（Assets/Prefabs/Models/<FBX と同じ相対パス>.prefab）→ シーン。
+        // ・Prefab は無い時だけ作る。あれば一切触らないので、Prefab を開いて手で直した内容（部品の位置・材質の差し替え・
+        //   コンポーネントの追加など）は、シーンを作り直しても残り、同じモデルを置いた全ての場所に反映される。
+        // ・FBX を書き出し直すと、形の変更は Variant の元（FBX）から流れ込む。
+        // ・材質は FBX の取り込み設定（Materials > Remapped Materials）で、FBX 内の材質名 → プロジェクトの材質 に割り当てる。
+        //   名前で結び付くので、Blender 側で材質の並びが変わってもずれない。
+        // ・手で調整した材質は、材質アセットに「HandTuned」ラベルを付けるとビルダーが値を書き換えない（IsHandTuned）。
+
+        private const string ModelPrefabDir = "Assets/Prefabs/Models";
+        private const string HandTunedLabel = "HandTuned";
+        private static readonly HashSet<string> RemappedThisRun = new HashSet<string>();
+
+        /// <summary>人が手で調整した材質か（「HandTuned」ラベル付き）。ビルダーは値を書き換えない</summary>
+        private static bool IsHandTuned(Material m) =>
+            m != null && System.Array.IndexOf(AssetDatabase.GetLabels(m), HandTunedLabel) >= 0;
+
+        /// <summary>
+        /// FBX を包む Prefab のパス（無ければ作る）。FBX が無ければ null。
+        /// mapMat = FBX 内の材質 → プロジェクトの材質（取り込み設定に保存する）
+        /// </summary>
+        private static string ModelPrefabPath(string fbxPath, System.Func<Material, Material> mapMat)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            if (model == null) return null;
+            RemapModelMaterials(fbxPath, mapMat);
+            const string root = "Assets/Models/";
+            string rel = fbxPath.StartsWith(root) ? fbxPath.Substring(root.Length) : System.IO.Path.GetFileName(fbxPath);
+            string prefabPath = $"{ModelPrefabDir}/{System.IO.Path.ChangeExtension(rel, ".prefab")}".Replace('\\', '/');
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null) return prefabPath;   // 既にあれば触らない
+
+            EnsureAssetFolder(System.IO.Path.GetDirectoryName(prefabPath).Replace('\\', '/'));
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            foreach (var c in inst.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            PrefabUtility.SaveAsPrefabAsset(inst, prefabPath);   // FBX のインスタンスから保存 → FBX を元にした Prefab Variant
+            Object.DestroyImmediate(inst);
+            return prefabPath;
+        }
+
+        /// <summary>
+        /// FBX 内の材質を、名前ごとにプロジェクトの材質へ割り当てる（取り込み設定の Remapped Materials）。
+        /// 割り当て済みの名前も毎回 mapMat を通し、材質の値（色・テクスチャ）をコードの定義に合わせて更新する
+        ///（HandTuned の材質は mapMat 側で値を書き換えない）
+        /// </summary>
+        private static void RemapModelMaterials(string fbxPath, System.Func<Material, Material> mapMat)
+        {
+            if (!RemappedThisRun.Add(fbxPath)) return;
+            if (!(AssetImporter.GetAtPath(fbxPath) is ModelImporter imp)) return;
+            var current = imp.GetExternalObjectMap();
+            bool changed = false;
+            // まだ割り当てていない材質（FBX に埋め込まれたまま）
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            {
+                if (!(obj is Material m)) continue;
+                var target = mapMat(m);
+                if (target == null || target == m) continue;
+                var id = new AssetImporter.SourceAssetIdentifier(typeof(Material), m.name);
+                if (current.TryGetValue(id, out var cur) && cur == target) continue;
+                imp.AddRemap(id, target);
+                changed = true;
+            }
+            // 割り当て済みの材質：名前だけの仮の材質を通して、材質の値を最新の定義に合わせる
+            foreach (var kv in current)
+            {
+                if (kv.Key.type != typeof(Material)) continue;
+                var proxy = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = kv.Key.name };
+                if (kv.Value is Material curMat) proxy.color = curMat.color;
+                var target = mapMat(proxy);
+                Object.DestroyImmediate(proxy);
+                if (target != null && target != kv.Value) { imp.AddRemap(kv.Key, target); changed = true; }
+            }
+            if (changed) imp.SaveAndReimport();
+        }
+
+        private static void EnsureAssetFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)) return;
+            string parentPath = System.IO.Path.GetDirectoryName(path).Replace('\\', '/');
+            EnsureAssetFolder(parentPath);
+            AssetDatabase.CreateFolder(parentPath, System.IO.Path.GetFileName(path));
         }
 
         /// <summary>指定した名前の直下の箱から見た目だけを外す（BoxColliderは残す）</summary>
@@ -4556,7 +5022,9 @@ namespace EscapeProto
         private static Material ShellMat(Material src)
         {
             string n = src.name;
-            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_")) return HqMat(src);
+            var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat");
+            if (IsHandTuned(tuned)) return tuned;   // 人が調整した材質は値を書き換えない
+            if (n.StartsWith("DIM_") || n.StartsWith("TRN_") || n.StartsWith("LAB_") || n.StartsWith("STD_") || n.StartsWith("ANA_") || n.StartsWith("SAE_") || n.StartsWith("WRD_") || n.StartsWith("CAN_") || n.StartsWith("MZA_") || n.StartsWith("DAT_") || n.StartsWith("SYS_") || n.StartsWith("KUR_") || n.StartsWith("CMN_") || n.StartsWith("SON_") || n.StartsWith("COR_") || n.StartsWith("INS_") || n.StartsWith("SUS_") || n.StartsWith("FIL_")) return HqMat(src);
             switch (n)
             {
                 case "LP_ShellWainscot":    return GetMat(n, new Color(0.72f, 0.76f, 0.74f), 0.35f);   // 施設の腰壁
@@ -4583,6 +5051,8 @@ namespace EscapeProto
         private static Material PropMat(Material src)
         {
             string n = src.name;
+            var tuned = AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/LP_Prop_{n}.mat");
+            if (IsHandTuned(tuned)) return tuned;
             switch (n)
             {
                 case "RackBody":     return GetMat("LP_Prop_RackBody", new Color(0.12f, 0.13f, 0.15f), 0.4f);
@@ -4610,6 +5080,7 @@ namespace EscapeProto
         private static GameObject Place(string path, Transform parent, Vector3 pos,
                                         float yRot = 0f, float targetHeight = -1f)
         {
+            if (string.IsNullOrEmpty(path)) return null;
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null) return null;
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);

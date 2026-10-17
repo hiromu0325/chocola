@@ -49,6 +49,7 @@ namespace EscapeProto
             if (!isNew) return;
             if (PuzzleUI.Instance == null || PuzzleUI.Instance.IsOpen || PuzzleUI.Instance.BlockReopen) return;
             if (LoopPuzzleUI.Instance != null && LoopPuzzleUI.Instance.IsOpen) return;
+            if (InspectView.IsOpen || NotebookUI.IsOpen) return;
 
             if (Solved) { OnAlreadySolved(); return; }
 

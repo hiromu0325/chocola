@@ -3,7 +3,47 @@ guid: c1bbcb8069c4cc6499b17ed489ace44d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Black
+    second: {fileID: 2100000, guid: 297fd24d826853447995f08b3de928c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_CoreGlass
+    second: {fileID: 2100000, guid: e6eed22e3ac7004498fe8330837edc84, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_CoreInner
+    second: {fileID: 2100000, guid: fcea16edcf069094795e4ea4f9f9b07e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_CorePlate
+    second: {fileID: 2100000, guid: a4d5168f551bd744993b66b8af0eb7a6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_DataNode
+    second: {fileID: 2100000, guid: 38046d90b22edd746ba74dd174f0f88e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_LightRing
+    second: {fileID: 2100000, guid: 5a659b86f0f3413439df3cbea89fe9e1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalDark
+    second: {fileID: 2100000, guid: 9d7246168aeb23d41be9a8fcc44b8a3a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalLight
+    second: {fileID: 2100000, guid: 4118f9987f75ace44a30bcd7c977dd16, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

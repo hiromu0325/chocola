@@ -3,7 +3,17 @@ guid: 0d39ff4a863536047b89dfee0c91a716
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_LeverRed
+    second: {fileID: 2100000, guid: a6222e1299ccaed4dbf357ef477515d9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

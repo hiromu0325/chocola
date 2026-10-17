@@ -255,10 +255,9 @@ namespace EscapeProto
             Vector3 at = _door.transform.position + Vector3.up * 1.0f;
             if (open)
             {
-                ProceduralAudio.PlayAt(ProceduralAudio.DoorLatch(), at, 0.8f);
-                ProceduralAudio.PlayAt(ProceduralAudio.DoorCreak(), at, 0.6f);
+                ProceduralAudio.PlayDoorOpen(at, 0.8f, _door.Sliding);
             }
-            else ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(), at, 0.85f);
+            else ProceduralAudio.PlayAt(ProceduralAudio.DoorShut(_door.Sliding), at, 0.85f);
         }
 
         private static float EaseOut(float x) { x = Mathf.Clamp01(x); return 1f - (1f - x) * (1f - x); }

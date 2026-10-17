@@ -3,7 +3,27 @@ guid: b08214f687ba48341b2484cb9868b46a
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_BlackPlastic
+    second: {fileID: 2100000, guid: 1ad89a5eea041364da94ef7e6ded1408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_NoteCover
+    second: {fileID: 2100000, guid: b2a88a4d00aecc04b85d03301b99b4e5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Pages
+    second: {fileID: 2100000, guid: 18c72d1cb83839446a65e7aef370355e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Ribbon
+    second: {fileID: 2100000, guid: 94c76c50e12317645ad3f2ce4b7b0224, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

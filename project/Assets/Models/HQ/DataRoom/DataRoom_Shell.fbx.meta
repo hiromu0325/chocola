@@ -3,7 +3,112 @@ guid: 1a791100f0b3f51448a10ca8741edf02
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_AccessFloor
+    second: {fileID: 2100000, guid: 633721e97e316484fb639679a3029122, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_AccessFloorPerf
+    second: {fileID: 2100000, guid: 8bea2897c404eb64faefe15f0d12caac, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Black
+    second: {fileID: 2100000, guid: 79e06212e4d3d3348896f8a9a5470b67, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableBlack
+    second: {fileID: 2100000, guid: f0bf27bf973fec64bb1c24474be33d27, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableBlue
+    second: {fileID: 2100000, guid: 6865c6a9d578fab4ba2787a7612b1093, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableRed
+    second: {fileID: 2100000, guid: 2d994ba8ea7ad764cb0369365d4c4683, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableYellow
+    second: {fileID: 2100000, guid: d9a63e56eaa8fb94692de839635422e7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CeilingTile
+    second: {fileID: 2100000, guid: 3d86c9fd337ea7e4b840a2ad920edb28, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_ClockFace
+    second: {fileID: 2100000, guid: d404f02e988876548ae5c08de48a6f89, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Cove
+    second: {fileID: 2100000, guid: eb5b35004011e4644ba0158e714c34b8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CracWhite
+    second: {fileID: 2100000, guid: f4532ec186f46a941ab0930d445f5345, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_ExtinguisherRed
+    second: {fileID: 2100000, guid: 014b6d4e78148a5439cf775dcf59e1d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Galvanized
+    second: {fileID: 2100000, guid: 77eba17960a4126408b39e99d741e13a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Grid
+    second: {fileID: 2100000, guid: d2f90d5202747424d9a622b02bb4ced9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedGreen
+    second: {fileID: 2100000, guid: 6e85c45c535ef1c419148fcecf68d4a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedPanel
+    second: {fileID: 2100000, guid: ce26c1c988fd70b47961ea326020ec9d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Panel
+    second: {fileID: 2100000, guid: 4ceab23b0dbf5e6498d5c884a307e1c9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_RackRail
+    second: {fileID: 2100000, guid: fde8ec59b7f06d14a883a8576b86e525, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_SignRoom
+    second: {fileID: 2100000, guid: 0d283a90af8298f40b46d5d0be0b6b68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_VentGrey
+    second: {fileID: 2100000, guid: e5f2ef698234e6341971082b86d7c333, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

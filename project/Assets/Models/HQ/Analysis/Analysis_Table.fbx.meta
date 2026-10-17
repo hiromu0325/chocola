@@ -3,7 +3,42 @@ guid: 7a4f3274745c2574eb013f67c0d12aff
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Acrylic
+    second: {fileID: 2100000, guid: c1aba6b7763111a4dbbfdf2834d15f7a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Aluminum
+    second: {fileID: 2100000, guid: 32be5ad6466a06449b49323426107131, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Brain
+    second: {fileID: 2100000, guid: c1ae8f890a2d4c341a4e21c8090e95b6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Cable
+    second: {fileID: 2100000, guid: fc224c43532e8684e967ca89934867f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Epoxy
+    second: {fileID: 2100000, guid: 6248991240f2fdd429e8f3213978badc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

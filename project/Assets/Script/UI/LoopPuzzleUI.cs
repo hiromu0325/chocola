@@ -38,7 +38,8 @@ namespace EscapeProto
         private static readonly string[] SymbolGlyph = { "○", "△", "□" };
         private static readonly Color[] SymbolColor =
         {
-            new Color(1f, 0.55f, 0.5f), new Color(0.55f, 0.8f, 1f), new Color(0.6f, 1f, 0.6f),
+            // 記号は形（○△□）で区別できるので、色はテーマの3色に合わせて控えめに
+            UiTheme.Hex(0xD0685C), UiTheme.Positive, UiTheme.Accent,
         };
 
         private Font _font;
@@ -66,7 +67,7 @@ namespace EscapeProto
         private void Awake()
         {
             Instance = this;
-            _font = FontProvider.Get();
+            _font = UiTheme.BodyFont;
             Build();
         }
         private void OnDestroy() { if (Instance == this) Instance = null; }
@@ -161,7 +162,7 @@ namespace EscapeProto
                     var go = new GameObject($"Cell_{r}_{c}");
                     go.transform.SetParent(_content, false);
                     var img = go.AddComponent<Image>();
-                    img.color = _level.Pipes[i] == Pipe.None ? new Color(0.1f, 0.1f, 0.12f, 0.9f) : new Color(0.16f, 0.17f, 0.22f, 1f);
+                    img.color = _level.Pipes[i] == Pipe.None ? UiTheme.Hex(0x0E0E10, 0.9f) : UiTheme.PanelDim;
                     SetRect(img.rectTransform, Center, Center, pos, new Vector2(CellSize, CellSize));
                     _cellBg[i] = img;
 
@@ -184,7 +185,7 @@ namespace EscapeProto
             string legend = "傾向記号: ";
             for (int s = 0; s < 3; s++)
                 legend += $"<color=#{ColorUtility.ToHtmlStringRGB(SymbolColor[s])}>{SymbolGlyph[s]} {_level.SymbolNames[s]}</color>　";
-            MakeLabel(_content, legend + "　<color=#FFE060>?</color> 欠損（右クリックで選ぶ）", new Vector2(0f, -total * 0.5f - 40f), 22, Color.white);
+            MakeLabel(_content, legend + $"　<color={UiTheme.Rgb(UiTheme.Accent)}>?</color> 欠損（右クリックで選ぶ）", new Vector2(0f, -total * 0.5f - 40f), 22, Color.white);
         }
 
         private void RotateCell(int i)
@@ -212,13 +213,13 @@ namespace EscapeProto
             _cellPipe[i].rectTransform.localRotation = Quaternion.Euler(0f, 0f, -90f * _rot[i]);
             bool gap = _level.Answers[i] >= 0;
             if (p == Pipe.None) { _cellSym[i].text = ""; return; }
-            if (gap && _sym[i] < 0) { _cellSym[i].text = "?"; _cellSym[i].color = new Color(1f, 0.88f, 0.4f); }
+            if (gap && _sym[i] < 0) { _cellSym[i].text = "?"; _cellSym[i].color = UiTheme.Accent; }
             else
             {
                 _cellSym[i].text = SymbolGlyph[_sym[i]];
                 _cellSym[i].color = SymbolColor[_sym[i]];
             }
-            if (gap) _cellBg[i].color = new Color(0.3f, 0.26f, 0.18f, 1f);   // 欠損＝琥珀の枠色
+            if (gap) _cellBg[i].color = UiTheme.WithAlpha(UiTheme.Accent * 0.35f, 1f);   // 欠損＝真鍮の地
         }
 
         private static string PipeGlyph(Pipe p)
@@ -279,7 +280,7 @@ namespace EscapeProto
                 if (c == n - 1 && r == _level.OutRow && Open(cell, 1))
                 {
                     Highlight(lit, true);
-                    _message.text = "<color=#A0FFB0>光が通った。記憶が補完された。</color>";
+                    _message.text = $"<color={UiTheme.Rgb(UiTheme.Positive)}>光が通った。記憶が補完された。</color>";
                     ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), Vector3.zero, 0.8f, false);
                     _submit.interactable = false;
                     StartCoroutine(CloseAfter(1.2f, true));
@@ -303,14 +304,14 @@ namespace EscapeProto
         private void Highlight(List<int> cells, bool ok)
         {
             foreach (var i in cells)
-                _cellBg[i].color = ok ? new Color(0.2f, 0.45f, 0.3f, 1f) : new Color(0.35f, 0.25f, 0.2f, 1f);
+                _cellBg[i].color = ok ? UiTheme.WithAlpha(UiTheme.Positive * 0.45f, 1f) : UiTheme.Hex(0x3A2A22);
         }
 
         private void Fail(string msg, int cell)
         {
-            _message.text = "<color=#FFB0A0>" + msg + "</color>";
+            _message.text = $"<color={UiTheme.Rgb(UiTheme.Danger)}>" + msg + "</color>";
             ProceduralAudio.PlayAt(ProceduralAudio.DialBuzz(), Vector3.zero, 0.5f, false);
-            if (cell >= 0) _cellBg[cell].color = new Color(0.6f, 0.15f, 0.15f, 1f);
+            if (cell >= 0) _cellBg[cell].color = UiTheme.WithAlpha(UiTheme.Danger * 0.8f, 1f);
             if (cell >= 0 && _level.Answers[cell] >= 0) _onWrongCell?.Invoke(cell);
         }
 
@@ -336,7 +337,7 @@ namespace EscapeProto
                 var go = new GameObject($"Row_{i}");
                 go.transform.SetParent(_content, false);
                 var img = go.AddComponent<Image>();
-                img.color = new Color(0.16f, 0.17f, 0.22f, 1f);
+                img.color = UiTheme.PanelDim;
                 SetRect(img.rectTransform, Center, Center, new Vector2(0f, y0 - i * rowH), new Vector2(960f, rowH - 4f));
                 _rowBg[i] = img;
                 var t = MakeLabel(go.transform, "　" + rows[i], Vector2.zero, 24, Color.white);
@@ -352,7 +353,7 @@ namespace EscapeProto
         private void ToggleRow(int i)
         {
             _checked[i] = !_checked[i];
-            _rowBg[i].color = _checked[i] ? new Color(0.55f, 0.35f, 0.2f, 1f) : new Color(0.16f, 0.17f, 0.22f, 1f);
+            _rowBg[i].color = _checked[i] ? UiTheme.WithAlpha(UiTheme.Accent * 0.55f, 1f) : UiTheme.PanelDim;
             _message.text = "";
             ProceduralAudio.PlayAt(ProceduralAudio.Click(), Vector3.zero, 0.4f, false);
         }
@@ -368,7 +369,7 @@ namespace EscapeProto
             }
             if (count == _needCount && allCorrect)
             {
-                _message.text = "<color=#A0FFB0>照合完了。矛盾が確定した。</color>";
+                _message.text = $"<color={UiTheme.Rgb(UiTheme.Positive)}>照合完了。矛盾が確定した。</color>";
                 ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), Vector3.zero, 0.8f, false);
                 _submit.interactable = false;
                 StartCoroutine(CloseAfter(1.0f, true));
@@ -376,8 +377,8 @@ namespace EscapeProto
             else
             {
                 _message.text = count != _needCount
-                    ? $"<color=#FFB0A0>チェックは{_needCount}行のはずだ。</color>"
-                    : "<color=#FFB0A0>その組み合わせでは、矛盾にならない。</color>";
+                    ? $"<color={UiTheme.Rgb(UiTheme.Danger)}>チェックは{_needCount}行のはずだ。</color>"
+                    : $"<color={UiTheme.Rgb(UiTheme.Danger)}>その組み合わせでは、矛盾にならない。</color>";
                 ProceduralAudio.PlayAt(ProceduralAudio.DialBuzz(), Vector3.zero, 0.5f, false);
                 _onWrongCell?.Invoke(-1);
             }
@@ -400,12 +401,13 @@ namespace EscapeProto
             _panel = new GameObject("Panel");
             _panel.transform.SetParent(canvasGo.transform, false);
             var bg = _panel.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.07f, 0.97f);
+            bg.color = UiTheme.Panel;
             SetRect(bg.rectTransform, Center, Center, Vector2.zero, new Vector2(1240, 860));
 
-            _title = MakeLabel(_panel.transform, "", new Vector2(0, 385), 36, new Color(1f, 0.85f, 0.6f));
+            _title = MakeLabel(_panel.transform, "", new Vector2(0, 385), 36, UiTheme.Text);
+            _title.font = UiTheme.DisplayFont;
             SetRect(_title.rectTransform, Center, Center, new Vector2(0, 385), new Vector2(1180, 50));
-            _body = MakeLabel(_panel.transform, "", new Vector2(0, 325), 24, new Color(0.9f, 0.9f, 0.92f));
+            _body = MakeLabel(_panel.transform, "", new Vector2(0, 325), 24, UiTheme.TextSub);
             SetRect(_body.rectTransform, Center, Center, new Vector2(0, 325), new Vector2(1180, 70));
 
             var contentGo = new GameObject("Content");
@@ -422,7 +424,7 @@ namespace EscapeProto
             });
             _close = MakeButton(_panel.transform, "閉じる", new Vector2(140, -385), new Vector2(240, 56), () => Close(false));
 
-            _footer = MakeLabel(_panel.transform, "", new Vector2(0, -415), 20, new Color(0.7f, 0.7f, 0.75f));
+            _footer = MakeLabel(_panel.transform, "", new Vector2(0, -415), UiTheme.FsSmall, UiTheme.TextSub);
             SetRect(_footer.rectTransform, Center, Center, new Vector2(0, -415), new Vector2(1180, 30));
 
             _panel.SetActive(false);
@@ -449,20 +451,8 @@ namespace EscapeProto
 
         private Button MakeButton(Transform parent, string label, Vector2 pos, Vector2 size, Action onClick)
         {
-            var go = new GameObject("Btn_" + label);
-            go.transform.SetParent(parent, false);
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.17f, 0.22f, 1f);
-            SetRect(img.rectTransform, Center, Center, pos, size);
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            var colors = btn.colors;
-            colors.highlightedColor = new Color(0.45f, 0.55f, 0.7f, 1f);
-            colors.pressedColor = new Color(0.25f, 0.35f, 0.5f, 1f);
-            btn.colors = colors;
-            btn.onClick.AddListener(() => onClick());
-            var t = MakeLabel(go.transform, label, Vector2.zero, 28, Color.white);
-            SetRect(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var btn = UiTheme.BoxButton(parent, label, size, 28, onClick);
+            SetRect((RectTransform)btn.transform, Center, Center, pos, size);
             return btn;
         }
 

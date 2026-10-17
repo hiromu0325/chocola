@@ -36,7 +36,7 @@ namespace EscapeProto
             if (!isNew) return;
 
             if (GameManager.Instance != null) GameManager.Instance.SaveNow();
-            ProceduralAudio.PlayAt(ProceduralAudio.Unlock(), transform.position, 0.7f);
+            ProceduralAudio.PlayAt(ProceduralAudio.Solve(), transform.position, 0.7f);
 
             if (PuzzleUI.Instance != null && !PuzzleUI.Instance.IsOpen && !PuzzleUI.Instance.BlockReopen)
                 PuzzleUI.Instance.ShowDocument(

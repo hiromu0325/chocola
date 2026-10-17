@@ -26,7 +26,7 @@ namespace EscapeProto
                         0.8f, spatial: false);
                     PuzzleUI.Instance?.ShowDocument("扉が開いた",
                         "見つけた情報が繋がった。\n\n" +
-                        $"廊下の扉のひとつ —— <color=#FFE060>{name}</color> —— が開くようになった。\n\n" +
+                        $"廊下の扉のひとつ —— <color={UiTheme.Rgb(UiTheme.Accent)}>{name}</color> —— が開くようになった。\n\n" +
                         "廊下を回り、その部屋を探そう。");
                 },
                 () => PuzzleUI.Instance != null && PuzzleUI.Instance.IsOpen,

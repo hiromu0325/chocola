@@ -3,7 +3,32 @@ guid: e3da383b7cf58974a80668f1b0f458c7
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Black
+    second: {fileID: 2100000, guid: 7096bf4bef264b64086c3997f8d1dd68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Brass
+    second: {fileID: 2100000, guid: 39e85a39c07108747b215b6a34c04e68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_GoldLight
+    second: {fileID: 2100000, guid: 801992ffc120dd64692f39501e079395, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_MetalDark
+    second: {fileID: 2100000, guid: 55b3a4686a37a7846a1b1e9766de2011, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_ScreenMessage
+    second: {fileID: 2100000, guid: 17e3ad421dbb38b43a8cba8ec44f153d, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -229,7 +229,7 @@ namespace EscapeProto
             AttackDebugLog.Log("drop", $"予兆開始（{PreludeSeconds}秒後に {target.Id} が降下）");
             var player = GameObject.FindGameObjectWithTag("Player");
             ProceduralAudio.PlayAt(ProceduralAudio.PowerSurge(),
-                player != null ? player.transform.position : transform.position, 0.8f, spatial: false);
+                player != null ? player.transform.position : transform.position, 0.8f * HorrorSettings.Volume, spatial: false);
             yield return new WaitForSeconds(PreludeSeconds);
             PendingRoomId = null;
             _prelude = null;
@@ -263,6 +263,7 @@ namespace EscapeProto
             src.spatialBlend = 1f;
             src.maxDistance = 28f;
             src.rolloffMode = AudioRolloffMode.Linear;
+            src.volume = HorrorSettings.Volume;
             src.Play();
 
             // 該当の扉が視覚でも分かるよう、赤い点滅ライトを添える
@@ -271,7 +272,8 @@ namespace EscapeProto
             _alarmLight.color = new Color(1f, 0.15f, 0.1f);
             _alarmLight.range = 5f;
 
-            if (spawnSearcherNow) SpawnSearcher(target);
+            // 恐怖演出の軽減・なし（デバッグ）では異形を出さない。停電と警報だけ
+            if (spawnSearcherNow && HorrorSettings.Searchers) SpawnSearcher(target);
             Debug.Log($"[BreakerSystem] ブレイカー降下: {target.DisplayName}（{target.Id}）" +
                       (spawnSearcherNow ? "" : "（異形は復旧後に現れる）"));
         }
@@ -341,6 +343,11 @@ namespace EscapeProto
         /// </summary>
         public void SetSiege(bool on, float cycleSeconds = 25f)
         {
+            if (on && !HorrorSettings.Attacks)
+            {
+                AttackDebugLog.Log("siege", "恐怖演出なし → 包囲しない");
+                return;
+            }
             Siege = on;
             if (on)
             {
@@ -405,8 +412,8 @@ namespace EscapeProto
                 _bgm.loop = true;
                 _bgm.playOnAwake = false;
                 _bgm.spatialBlend = 0f;   // 2D（どこにいても聞こえる）
-                _bgm.volume = 0.5f;
             }
+            _bgm.volume = 0.5f * HorrorSettings.Volume;
             if (!_bgm.isPlaying) _bgm.Play();
         }
 

@@ -3,7 +3,42 @@ guid: 48015254ec202df4ebbce07799e612b3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Brass
+    second: {fileID: 2100000, guid: fec5dd3c12d2db9478bd4e3a0ec0bc7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Ceiling
+    second: {fileID: 2100000, guid: 68aeb288d76f85c498bd22870409a592, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Floor
+    second: {fileID: 2100000, guid: 26aad9a7c78c3d943a1e2c614afa9e71, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_LampGlass
+    second: {fileID: 2100000, guid: 99d30bb25f2b4d8498ef3bdc582a5120, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Plaster
+    second: {fileID: 2100000, guid: ee5a0e12f0ea530488e9fd8209a63441, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Trim
+    second: {fileID: 2100000, guid: df843142a88dcdc45baeac672a46a187, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Wainscot
+    second: {fileID: 2100000, guid: d206c62491e53f94aa3cb3b3d905c8b3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

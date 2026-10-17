@@ -3,7 +3,27 @@ guid: 33f1d93daed041a408a9dcf8be633d67
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_BlackPlastic
+    second: {fileID: 2100000, guid: 1ad89a5eea041364da94ef7e6ded1408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Brass
+    second: {fileID: 2100000, guid: 9668d3093caa4174a85005f55ae3993d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Bulb
+    second: {fileID: 2100000, guid: b7200edf031900246b53131053140655, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_LampShade
+    second: {fileID: 2100000, guid: ec53ac5d48a42bd4c9a11a0d2ed3d115, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

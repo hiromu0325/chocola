@@ -3,7 +3,77 @@ guid: f345cb96692ae5c40ae48476b37f353b
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Brass
+    second: {fileID: 2100000, guid: 3b1b065403eb83e43a830d880663f5c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Ceiling
+    second: {fileID: 2100000, guid: 9444207fdc442194a908084b7beae474, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_ClockFace
+    second: {fileID: 2100000, guid: 5f45d480b181ce04c8a3bf449c8a464c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Curtain
+    second: {fileID: 2100000, guid: 4d791cf9a0f20514897007ca8cda9175, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Floor
+    second: {fileID: 2100000, guid: bb7356779eba021418006344cbc09777, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Painting
+    second: {fileID: 2100000, guid: 66d45dcacfaa88241b55d063f63cc008, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Sunset
+    second: {fileID: 2100000, guid: 0f81f964550168c41a8fd2fcf39dd530, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_SwitchPlate
+    second: {fileID: 2100000, guid: 8fc19d6127158ad42b58041a71864f10, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_TrimPaint
+    second: {fileID: 2100000, guid: 0122983da345c8b42ace81b717619934, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Wallpaper
+    second: {fileID: 2100000, guid: 7b21111e39477724984cb43b07a3fabb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_WindowGlass
+    second: {fileID: 2100000, guid: 83f25108f25eafe4eacd12f0a7a6446b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Wood
+    second: {fileID: 2100000, guid: 6a5dd3207dc202f4eb9373d6f2b495d2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_WoodLight
+    second: {fileID: 2100000, guid: bf7f9bf5b3f2e2848b2b6f889199683f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

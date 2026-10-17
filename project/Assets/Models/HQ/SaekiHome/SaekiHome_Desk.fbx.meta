@@ -3,7 +3,37 @@ guid: b110c6124f400fc4abcc19139bf03f9e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_BankerGreen
+    second: {fileID: 2100000, guid: 5a70a472c842fbf48ad2481f677246d0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Brass
+    second: {fileID: 2100000, guid: 3b1b065403eb83e43a830d880663f5c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Bulb
+    second: {fileID: 2100000, guid: 077f859ab532ad3419f952f71e5edf45, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Wood
+    second: {fileID: 2100000, guid: 6a5dd3207dc202f4eb9373d6f2b495d2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_WoodLight
+    second: {fileID: 2100000, guid: bf7f9bf5b3f2e2848b2b6f889199683f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

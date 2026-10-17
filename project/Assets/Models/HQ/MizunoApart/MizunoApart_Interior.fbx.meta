@@ -3,7 +3,212 @@ guid: 1a724812851f3794c83e0eeb4ff3f795
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_BagCanvas
+    second: {fileID: 2100000, guid: de198bb1d64e08a41bb10b633f854ab5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Black
+    second: {fileID: 2100000, guid: 90b06d4ab34765c4883a1768d586ab5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Bottle
+    second: {fileID: 2100000, guid: 8b539356728d6944ea12d3ba7187666a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Brass
+    second: {fileID: 2100000, guid: cc4369f52843f6c4499e53e4d5c6db95, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Calendar
+    second: {fileID: 2100000, guid: ba0aa0274e119914a9c92c34e0d86cd7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Chrome
+    second: {fileID: 2100000, guid: a81f1485f21bd0b429e31ce322c15e58, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Clothes
+    second: {fileID: 2100000, guid: 02a5932a0540e3241a94e2142c9a0236, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_CorkBoard
+    second: {fileID: 2100000, guid: 85774dc598a34ff49936b504bd32ab7a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Cushion
+    second: {fileID: 2100000, guid: 8d6d94db754d5c64093e15b3f9500629, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Duvet
+    second: {fileID: 2100000, guid: 885e16a51ea28554f9f9af5c095624fd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Flower
+    second: {fileID: 2100000, guid: 39b838451b243b84da9a909af118411d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospBlanket
+    second: {fileID: 2100000, guid: d29284c6ecbafbc4992be262011d4d79, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospCurtain
+    second: {fileID: 2100000, guid: 155c67d1e3f416c4e84f232857fc0555, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospGrey
+    second: {fileID: 2100000, guid: b8abd20443874594196609019c218a7c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospIvory
+    second: {fileID: 2100000, guid: 0a598267b353f994dbe3cdd7e3917395, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospLaminate
+    second: {fileID: 2100000, guid: 4aee0beb568f74d419027a892f04b206, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospMattress
+    second: {fileID: 2100000, guid: 52f96952fa3fdc6449822a1344151932, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_HospSheet
+    second: {fileID: 2100000, guid: ed97ed154e13efa46a0eb537b3df2516, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_IvBag
+    second: {fileID: 2100000, guid: 39d189c0c186ee642863ae50444bc737, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Kettle
+    second: {fileID: 2100000, guid: 029c447760ead4e41b90a1ed056b98bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_LabCoat
+    second: {fileID: 2100000, guid: b46798edab63bd7488a45bff9da51d00, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Leaf
+    second: {fileID: 2100000, guid: 1dbc5545afbb91b4fa15413134c3e12f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Leather
+    second: {fileID: 2100000, guid: a34e11b3a1a436f49b9a7a7130712408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Mirror
+    second: {fileID: 2100000, guid: 8ea82e1ccc760f3449b305225f71897a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Mug
+    second: {fileID: 2100000, guid: 2384367b8c6363048b5939e7877ef97c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Photo
+    second: {fileID: 2100000, guid: b0b63a6b4141ab446a6180a8864eba2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_PillowCase
+    second: {fileID: 2100000, guid: 09c56a558d3dccf4eaba5a26a7c72538, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Plush
+    second: {fileID: 2100000, guid: 5035221bf2138424081524c35128db5c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Pot
+    second: {fileID: 2100000, guid: 89bf63466ca5d0b448de2867530f0ece, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Rubber
+    second: {fileID: 2100000, guid: 347295143b971874bbd02cf45dd58f74, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Rug
+    second: {fileID: 2100000, guid: 743cb9b9a88a5124a9f9b7c7a8584e28, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_ScreenVitals
+    second: {fileID: 2100000, guid: b78512f46054aa74883222b544a3b5ee, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Silver
+    second: {fileID: 2100000, guid: f59401cdd42cc2247853316d0b4eace5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Soil
+    second: {fileID: 2100000, guid: 2cb660d9d28983d48804e345d4e94c03, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Stainless
+    second: {fileID: 2100000, guid: ea348767d27998249834525fbce162cc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Stem
+    second: {fileID: 2100000, guid: 6110d33cd77eccb498fc09a2b68f4071, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Tissue
+    second: {fileID: 2100000, guid: 15904f934b7488144b69302e348803a6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Towel
+    second: {fileID: 2100000, guid: 65131db61f5412842954abc8b42d0d55, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_TvScreen
+    second: {fileID: 2100000, guid: 5c47993660694aa4dbf37578d3691dee, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_WhitePlastic
+    second: {fileID: 2100000, guid: 84df0bdd92b16504d95f8514cf4dbe3f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_WoodLight
+    second: {fileID: 2100000, guid: a1c389f8e9d3cf54698bf5bbbc9bcc62, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

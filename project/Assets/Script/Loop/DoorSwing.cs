@@ -78,7 +78,7 @@ namespace EscapeProto
 
         private IEnumerator RattleRoutine()
         {
-            ProceduralAudio.PlayAt(ProceduralAudio.DoorRattle(), transform.position + Vector3.up * 1.0f, 0.75f);
+            ProceduralAudio.PlayAt(ProceduralAudio.DoorRattle(Sliding), transform.position + Vector3.up * 1.0f, 0.75f);
             float t = 0f, dur = 0.34f;
             while (t < dur)
             {

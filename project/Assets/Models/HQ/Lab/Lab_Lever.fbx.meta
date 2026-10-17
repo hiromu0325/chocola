@@ -3,7 +3,17 @@ guid: d8a864242559a8a46a0b21c9152685a3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LeverRed
+    second: {fileID: 2100000, guid: aaa517baa82550341a782519805b1520, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_SteelGrey
+    second: {fileID: 2100000, guid: 8eadc6c7576f18245b1ccf30384d1115, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

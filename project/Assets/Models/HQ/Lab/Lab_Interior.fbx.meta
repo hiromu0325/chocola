@@ -3,7 +3,102 @@ guid: a7f6e30199076214eb70d151460233a3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Aluminum
+    second: {fileID: 2100000, guid: 6224d6f8ffaf50e4b98dc5e54edf7a8d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_BlackPlastic
+    second: {fileID: 2100000, guid: 4e3560f752326cf41972bf19c2273ee9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_ChairFabric
+    second: {fileID: 2100000, guid: 5ec387429d0ab9b4380de214154f18f2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_DeviceFront
+    second: {fileID: 2100000, guid: 89bc9d9d9d407324aa5269f4804c0283, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Hazard
+    second: {fileID: 2100000, guid: 5d390bd855e7e1741ab7705fc8fb1dfd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Leaf
+    second: {fileID: 2100000, guid: 3761c7cb485517946a302fa6f3f283a6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LedAmber
+    second: {fileID: 2100000, guid: 08cb8a937bf17be4bae304d7653a726e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LedGreen
+    second: {fileID: 2100000, guid: 7746486d94958d14aa4bd33fd241a42c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LeverRed
+    second: {fileID: 2100000, guid: aaa517baa82550341a782519805b1520, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Lightbox
+    second: {fileID: 2100000, guid: 73ffb4167210c4f4286b01b58c6c53cd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Navy
+    second: {fileID: 2100000, guid: 3dc7dc2cf4b7a43468e819240e3d1a9c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Perforated
+    second: {fileID: 2100000, guid: 53890bb3d785568409d7f3090c2488c8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Pot
+    second: {fileID: 2100000, guid: ec838722ba07cba4eb63b45535147b4c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Soil
+    second: {fileID: 2100000, guid: 7072f91b7d8477d47ac4377c51c3c1dc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_SolidWhite
+    second: {fileID: 2100000, guid: 7d4e94d5d7f3638418670f9deb7457e2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Stainless
+    second: {fileID: 2100000, guid: a18bcfd01a0f013419283ac3ff9ef7b9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_SteelGrey
+    second: {fileID: 2100000, guid: 8eadc6c7576f18245b1ccf30384d1115, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Stem
+    second: {fileID: 2100000, guid: c988ba1494a9c2e43bc66198e8e6463c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Whiteboard
+    second: {fileID: 2100000, guid: 4512548421fa75e4385374905c64bef1, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,57 @@ guid: ebe23707d1da8084dba497c50e832648
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Aluminum
+    second: {fileID: 2100000, guid: 6224d6f8ffaf50e4b98dc5e54edf7a8d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_BlackPlastic
+    second: {fileID: 2100000, guid: 4e3560f752326cf41972bf19c2273ee9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Carpet
+    second: {fileID: 2100000, guid: a10dec1cdc58bac4e9b059c41c3ded0c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_CeilingTile
+    second: {fileID: 2100000, guid: 695f1b6e6e9131a4a82a0b75e76febb6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Cove
+    second: {fileID: 2100000, guid: ef07675aea5812444bfc5fa5d6aec229, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Grid
+    second: {fileID: 2100000, guid: f181ed457d90da041a4591288cf2c0cf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LedBar
+    second: {fileID: 2100000, guid: 42cad61f7da185f4c98f81d55c5231c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Oak
+    second: {fileID: 2100000, guid: 7ebedb2aabdc071479f778df97ccfe4b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Paint
+    second: {fileID: 2100000, guid: e148b561cb7844d468c576d994732706, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_SolidWhite
+    second: {fileID: 2100000, guid: 7d4e94d5d7f3638418670f9deb7457e2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

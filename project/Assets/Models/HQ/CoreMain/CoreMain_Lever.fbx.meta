@@ -3,7 +3,17 @@ guid: b684c95da2f205648a309126b1ab2fe3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Brass
+    second: {fileID: 2100000, guid: 39e85a39c07108747b215b6a34c04e68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_LeverRed
+    second: {fileID: 2100000, guid: a400789e7354c7e41987d8b25067b71e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

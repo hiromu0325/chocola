@@ -45,7 +45,7 @@ namespace EscapeProto
 
         /// <summary>
         /// 情報を追記（同idは上書き更新）。新規に追記できたら true。
-        /// vars はレイアウトDSL（MemoBoardLayout.txt）の {key} で参照できる表示用変数。
+        /// vars は資料ごとの表示用変数（セーブに残る）。
         /// </summary>
         public static bool Add(string id, string title, string body,
             params (string key, string value)[] vars)

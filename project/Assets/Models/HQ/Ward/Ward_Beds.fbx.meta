@@ -3,7 +3,102 @@ guid: 1ae465dd5f52a5244a3e9b9c711e9198
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Aluminum
+    second: {fileID: 2100000, guid: a4ac1d17ecee6ca4998ee072924f8cb9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_BedCards
+    second: {fileID: 2100000, guid: 514c00dbe3c6f2b49bf4ff2f34172083, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Black
+    second: {fileID: 2100000, guid: 0b73f6effc878c84493f015ef37b946f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Blanket
+    second: {fileID: 2100000, guid: 1a9b79a08bae65d44acb749095252f54, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Chrome
+    second: {fileID: 2100000, guid: 399066446a1462546be7d7093f0b8034, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Curtain
+    second: {fileID: 2100000, guid: 9fedca3aef094964a8c555b278cbcef8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_CurtainNet
+    second: {fileID: 2100000, guid: 894a0679201739d42b3f06eac01dbf1f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GreyPlastic
+    second: {fileID: 2100000, guid: ee425332634a84f44bc7c825054dafec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_IvBag
+    second: {fileID: 2100000, guid: 29b6cc7e90ab59d4680be5c0e6312bec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Ivory
+    second: {fileID: 2100000, guid: 6fe6375cbb24fa24890571c56f5cf8e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Laminate
+    second: {fileID: 2100000, guid: 9f7da4d02093c9044a6341854ada2070, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Mattress
+    second: {fileID: 2100000, guid: 336948a00b2d5ff4f8158922744c2422, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Rubber
+    second: {fileID: 2100000, guid: d109a299dac581d48bc2ed88749147c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_ScreenVitals
+    second: {fileID: 2100000, guid: 6ff1c3ba721e41c4eaf7ce9d97403b20, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_SeatBlue
+    second: {fileID: 2100000, guid: 59c7a7130527e0e47bdb6b733aabea75, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Sheet
+    second: {fileID: 2100000, guid: d2b376ba96495a64088c10f9640c19be, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Tissue
+    second: {fileID: 2100000, guid: cf5bcaf9765f35e49a126fb23ffde6f1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Towel
+    second: {fileID: 2100000, guid: 7c0fef7aaea2f6c46acc02372649110e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_TvScreen
+    second: {fileID: 2100000, guid: db4f311b9b6315843bf99ddc78b87c2f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

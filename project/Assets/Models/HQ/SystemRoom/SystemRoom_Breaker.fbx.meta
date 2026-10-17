@@ -3,7 +3,32 @@ guid: f85d4c90d0e5f92498ce63c09411ca72
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Black
+    second: {fileID: 2100000, guid: 297fd24d826853447995f08b3de928c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Chrome
+    second: {fileID: 2100000, guid: f9dc5f961e4b6d54187f6df4c8890c4a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Hazard
+    second: {fileID: 2100000, guid: 0795a8bc2eabe73429d0d67ce9ca9c5c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_LeverRed
+    second: {fileID: 2100000, guid: e75ef3c08fb35d549af0da14b8dd6e9e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalLight
+    second: {fileID: 2100000, guid: 4118f9987f75ace44a30bcd7c977dd16, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

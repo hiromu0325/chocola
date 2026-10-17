@@ -3,7 +3,57 @@ guid: 04a19a146c77b234d9fc9785277f32be
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Black
+    second: {fileID: 2100000, guid: 7096bf4bef264b64086c3997f8d1dd68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_BlueLight
+    second: {fileID: 2100000, guid: 957f73fdfaa34de4196bb3eba7ca4154, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Brass
+    second: {fileID: 2100000, guid: 39e85a39c07108747b215b6a34c04e68, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Cable
+    second: {fileID: 2100000, guid: 76f9fcfa0da1c444d9cbe77a77d15cc3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Ceiling
+    second: {fileID: 2100000, guid: cd8f616b172af4248a0f8ea23507d423, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Downlight
+    second: {fileID: 2100000, guid: 6fff85cb12ee45b438e5297301de5ad6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_GoldLight
+    second: {fileID: 2100000, guid: 801992ffc120dd64692f39501e079395, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_MetalDark
+    second: {fileID: 2100000, guid: 55b3a4686a37a7846a1b1e9766de2011, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_Stone
+    second: {fileID: 2100000, guid: d8ffe02807151384d83078ec76e846b5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CMN_WallRib
+    second: {fileID: 2100000, guid: 35c6e934f426b4f42940da6d7993d7c6, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

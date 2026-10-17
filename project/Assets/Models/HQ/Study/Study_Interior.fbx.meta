@@ -3,7 +3,47 @@ guid: 67acda54246db5d4eb1412227d52d82e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Black
+    second: {fileID: 2100000, guid: 05ac307afe02278469d3983c1552bba3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_BookPages
+    second: {fileID: 2100000, guid: 78d5eb506f4a9aa4191f79fe8246096e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_BookSpine
+    second: {fileID: 2100000, guid: 7b115a0d743ed1743a27ab94282604fe, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Brass
+    second: {fileID: 2100000, guid: dd356095c343bda41b5004440d3fd089, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_ClockFace
+    second: {fileID: 2100000, guid: 977fbcbcdb7eed9429e82592bb6323b0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_DarkWood
+    second: {fileID: 2100000, guid: ccf656578a4f1854da49d09867d70d91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_FrameNote
+    second: {fileID: 2100000, guid: 3edb811bfa9c40341ba209a80d8cad23, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: STD_Glass
+    second: {fileID: 2100000, guid: eee33dcf1e44b1c499e12c0ec5a131c5, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,27 @@ guid: 0518345bb1d1d504eb43c5dc75a9fa40
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_BlackPlastic
+    second: {fileID: 2100000, guid: 1ad89a5eea041364da94ef7e6ded1408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Glass
+    second: {fileID: 2100000, guid: aa9776dd97a3a314d8a02a9dfa889b5a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Metal
+    second: {fileID: 2100000, guid: 467359470b8c2c74f9f190e900145212, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Rubber
+    second: {fileID: 2100000, guid: 78c5e1ac950a6884885d53e1c18605ba, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

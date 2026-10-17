@@ -3,7 +3,17 @@ guid: b7f798d2ff010bc4fa90a40270f0839c
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_NotebookBrown
+    second: {fileID: 2100000, guid: c9d27878b20af834da497523dc9aa4d4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_NotebookRules
+    second: {fileID: 2100000, guid: af338296ad41ce3448c9c643e8d38532, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

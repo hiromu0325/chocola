@@ -3,7 +3,17 @@ guid: 610a46660f1cf834294d557eefd692e6
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_LeverRed
+    second: {fileID: 2100000, guid: b8f2474a096ecb947a0f206daaf9783d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Silver
+    second: {fileID: 2100000, guid: f59401cdd42cc2247853316d0b4eace5, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

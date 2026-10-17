@@ -3,7 +3,137 @@ guid: ea99535c6ff616245807268faa0346c7
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Aluminum
+    second: {fileID: 2100000, guid: a4ac1d17ecee6ca4998ee072924f8cb9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Black
+    second: {fileID: 2100000, guid: 0b73f6effc878c84493f015ef37b946f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Blind
+    second: {fileID: 2100000, guid: 97475624261cf0f4888ce966d55b69b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Bumper
+    second: {fileID: 2100000, guid: 0ee9b9b078824b84dae2110b8e486ac1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_CallRed
+    second: {fileID: 2100000, guid: 5e5caf1c7b881f44eb8127812ff7dcbc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_CeilingTile
+    second: {fileID: 2100000, guid: 7c3f82b4b2884bc45afcbf4d29007cdf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Chrome
+    second: {fileID: 2100000, guid: 399066446a1462546be7d7093f0b8034, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_ClockFace
+    second: {fileID: 2100000, guid: 0c5239b75a67da9488bc9f661d9b8f32, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Cord
+    second: {fileID: 2100000, guid: aba21d1a622f284429ba4d4f9dc0e08d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Cove
+    second: {fileID: 2100000, guid: 82df61ed88098ee4989d999344a4357b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_ExitSign
+    second: {fileID: 2100000, guid: 3a3da5858684f50408b92a25c1316b16, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GreyPlastic
+    second: {fileID: 2100000, guid: ee425332634a84f44bc7c825054dafec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Grid
+    second: {fileID: 2100000, guid: 20efc3365764d4f4991022f45257644f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Ivory
+    second: {fileID: 2100000, guid: 6fe6375cbb24fa24890571c56f5cf8e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_LabelSanitizer
+    second: {fileID: 2100000, guid: f8e1fa42977db3b49aa51b16eb69702f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_LedPanel
+    second: {fileID: 2100000, guid: 3695a47069acfd648905543036a04c91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_O2Green
+    second: {fileID: 2100000, guid: 801552b6ce73a774593cecab47ed088c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Paint
+    second: {fileID: 2100000, guid: c875cedfec02fa441a6dd20d38554f65, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_PosterVisit
+    second: {fileID: 2100000, guid: 00b11b0951cc7db4f96afaba66c37770, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_SignNurse
+    second: {fileID: 2100000, guid: e4ae4e2049d66d54ebaad2f57449df9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_SkyDay
+    second: {fileID: 2100000, guid: 9a1a78eaa943433458e2451d4bdd105d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_SuctionYellow
+    second: {fileID: 2100000, guid: 7bac565ca73ddfc41b3fd8bc7967312b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Vinyl
+    second: {fileID: 2100000, guid: 0c5965e3be623cc44847b4c125675050, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Wainscot
+    second: {fileID: 2100000, guid: 278b591d10003e849ba5f4d9b6cb48c8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Whiteboard
+    second: {fileID: 2100000, guid: 54f4c6d95f280914eb0322ed61638241, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_WindowGlass
+    second: {fileID: 2100000, guid: dc3161b930ac8a14ca6b43e9f8f473a7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

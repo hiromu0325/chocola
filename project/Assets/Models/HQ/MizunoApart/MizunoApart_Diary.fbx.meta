@@ -3,7 +3,17 @@ guid: 79b782759b2904041ac69852860aba23
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_Diary
+    second: {fileID: 2100000, guid: ecae120ac30323e439bf84b270b184a8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MZA_DiaryCover
+    second: {fileID: 2100000, guid: 5cbb8890ae61865428d48f1f452a51d7, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

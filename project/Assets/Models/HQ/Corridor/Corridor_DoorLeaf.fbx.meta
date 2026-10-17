@@ -3,7 +3,27 @@ guid: f3d28b2b7e334804d833cfbf381d1b27
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Black
+    second: {fileID: 2100000, guid: 4c952aff7621e8f48b2cb4407db35f4f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Brass
+    second: {fileID: 2100000, guid: fec5dd3c12d2db9478bd4e3a0ec0bc7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Door
+    second: {fileID: 2100000, guid: e35d5c4326823ad44911f8a0d3e7f4d7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Steel
+    second: {fileID: 2100000, guid: f6695f2ff7a13f0429d4e414b64ee1b8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

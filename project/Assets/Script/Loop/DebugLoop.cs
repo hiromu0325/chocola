@@ -52,6 +52,36 @@ namespace EscapeProto
             return "stage=" + max;
         }
 
+        /// <summary>
+        /// 恐怖演出の強さ（0=通常 1=軽減 2=なし）。今起きている襲撃にもすぐ効かせる：
+        /// 軽減・なしでは居る異形を退場させ、なしでは落ちているブレイカーを上げて包囲も解く
+        /// </summary>
+        public static string Horror(int level)
+        {
+            HorrorSettings.Level = (HorrorLevel)Mathf.Clamp(level, 0, 2);
+            var bs = BreakerSystem.Instance;
+            if (!HorrorSettings.Searchers)
+                foreach (var s in Object.FindObjectsByType<LoopSearcher>(FindObjectsSortMode.None))
+                    if (!s.IsRetreating) s.Retreat();
+            if (!HorrorSettings.Attacks && bs != null)
+            {
+                if (bs.Siege) bs.SetSiege(false);
+                if (bs.DownRoomId != null) bs.DebugRaise();
+            }
+            return "恐怖演出=" + HorrorSettings.Label(HorrorSettings.Level);
+        }
+
+        /// <summary>章の途中（部屋ごと）から始める。Id は部屋Id か finale_toys / finale_upload</summary>
+        public static string StartAt(string pointId) => DebugStart.StartAt(pointId);
+
+        /// <summary>開始地点の一覧</summary>
+        public static string Points()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var p in DebugStart.Points()) sb.Append($"{p.Id}  [{p.Chapter}] {p.Label}\n");
+            return sb.ToString();
+        }
+
         /// <summary>鳴っている警報音源の一覧（音が残っていないかの確認用）</summary>
         public static string Alarms()
         {

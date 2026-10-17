@@ -3,7 +3,22 @@ guid: ab7af2c0dda76bb4e86795ced3644e76
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_PaperPlain
+    second: {fileID: 2100000, guid: b1c81c108b23ddd4388d7dab88022a0e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Plog
+    second: {fileID: 2100000, guid: 39465d7f36831204aab42ffb399c9e3e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,77 @@ guid: e582fcf4a0afdca4086bb32fa10912d5
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_AdEikaiwa
+    second: {fileID: 2100000, guid: 3e9a82dfdce15e547b3c051321d17bc5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_AdMedicine
+    second: {fileID: 2100000, guid: b55a84c9d4ffaae4390749527c9afe43, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_AdTravel
+    second: {fileID: 2100000, guid: 32fa398fcf9abd64699a999f5bb3e544, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Aluminum
+    second: {fileID: 2100000, guid: 9dc515a3c327a6a489c8ea9ca0942542, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_DarkGrille
+    second: {fileID: 2100000, guid: 4bdf10c06fc7b504b818c613e4c0cec1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Melamine
+    second: {fileID: 2100000, guid: bf3944c14e0e0984fa1069c2791cd042, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Moquette
+    second: {fileID: 2100000, guid: b12364d9ef96cc440a2ccfb0d64d8d3f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Net
+    second: {fileID: 2100000, guid: 82a628f6e6137f240966d23570e01316, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_RouteMap
+    second: {fileID: 2100000, guid: a005031bf77b48744b9fe25cb00f7522, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_SideClinic
+    second: {fileID: 2100000, guid: 4cce40b009dc2bc42b0cf7c3d2aada57, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_SideRealEstate
+    second: {fileID: 2100000, guid: 09098e68cd2a99b42a99a6d7303ff4f9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_Stainless
+    second: {fileID: 2100000, guid: 18765ae5f4fe4c64ca7e4926ddaedee2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_StrapBelt
+    second: {fileID: 2100000, guid: b971f0714c17636469598e9a364d5d7d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TRN_StrapWhite
+    second: {fileID: 2100000, guid: a828322fa5302c747b39a2d6584ecb4e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

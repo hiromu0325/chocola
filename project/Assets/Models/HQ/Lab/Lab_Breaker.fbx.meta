@@ -3,7 +3,37 @@ guid: 5cf7fc5c3693c6447b394907671a72ca
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_BlackPlastic
+    second: {fileID: 2100000, guid: 4e3560f752326cf41972bf19c2273ee9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Hazard
+    second: {fileID: 2100000, guid: 5d390bd855e7e1741ab7705fc8fb1dfd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_LeverRed
+    second: {fileID: 2100000, guid: aaa517baa82550341a782519805b1520, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_PanelWhite
+    second: {fileID: 2100000, guid: b70391bfff11d21448c2098707c2c05d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Rubber
+    second: {fileID: 2100000, guid: 8b57e8c3a05092342b106a661c84017e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_SteelGrey
+    second: {fileID: 2100000, guid: 8eadc6c7576f18245b1ccf30384d1115, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

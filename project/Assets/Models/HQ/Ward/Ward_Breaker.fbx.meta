@@ -3,7 +3,37 @@ guid: 70c2918d55384204890d7f32e658ba0d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Black
+    second: {fileID: 2100000, guid: 0b73f6effc878c84493f015ef37b946f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_GreyPlastic
+    second: {fileID: 2100000, guid: ee425332634a84f44bc7c825054dafec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Hazard
+    second: {fileID: 2100000, guid: 070dae9fce0498d48b54495134792ffd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Ivory
+    second: {fileID: 2100000, guid: 6fe6375cbb24fa24890571c56f5cf8e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_LeverRed
+    second: {fileID: 2100000, guid: 1935365c3cc2458408e1ea7acabbf2f7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Rubber
+    second: {fileID: 2100000, guid: d109a299dac581d48bc2ed88749147c6, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

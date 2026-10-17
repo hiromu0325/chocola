@@ -3,7 +3,22 @@ guid: c70d2bb792c563c4b98635f149439889
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Chrome
+    second: {fileID: 2100000, guid: 399066446a1462546be7d7093f0b8034, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_Clipboard
+    second: {fileID: 2100000, guid: aac22dda06b628c4e8cb00749cc37897, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WRD_ObsSheet
+    second: {fileID: 2100000, guid: 55df60d1210105c43b51f89d0c0f5a59, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

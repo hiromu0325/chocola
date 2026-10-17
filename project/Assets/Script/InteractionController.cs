@@ -17,6 +17,7 @@ namespace StarterAssets
         private IInteractable _currentInteractable;
         private bool _interactInput;
         private StarterAssetsInputs _inputs;
+        private bool _waitRelease = true;   // 一度離すまで受け付けない（資料などを閉じた E がそのまま「調べる」にならないように）
 
         private void Awake()
         {
@@ -24,6 +25,9 @@ namespace StarterAssets
                 _camera = Camera.main;
             _inputs = GetComponent<StarterAssetsInputs>();
         }
+
+        // 操作が戻った時（資料・手帳・装置の画面を閉じた時）は、押しっぱなしの E をいったん離すまで受け付けない
+        private void OnEnable() => _waitRelease = true;
 
         private void Update()
         {
@@ -62,6 +66,19 @@ namespace StarterAssets
         private void HandleInteractInput()
         {
             _interactInput = _inputs != null && _inputs.interact;
+            // 画面が開いている間・閉じたフレームに押されていた E は、離すまで次の「調べる」に使わない
+            if (EscapeProto.InspectView.IsOpen || EscapeProto.InspectView.ClosedThisFrame || EscapeProto.NotebookUI.IsOpen ||
+                (EscapeProto.PuzzleUI.Instance != null && EscapeProto.PuzzleUI.Instance.IsOpen) ||
+                (EscapeProto.LoopPuzzleUI.Instance != null && EscapeProto.LoopPuzzleUI.Instance.IsOpen))
+            {
+                if (_interactInput) _waitRelease = true;
+                return;
+            }
+            if (_waitRelease)
+            {
+                if (!_interactInput) _waitRelease = false;
+                return;
+            }
 
             if (_interactInput && _currentInteractable != null && _currentInteractable.CanInteract)
             {

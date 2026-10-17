@@ -3,7 +3,82 @@ guid: 0d28d8a48de34564aae4d071a1380bab
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Black
+    second: {fileID: 2100000, guid: 297fd24d826853447995f08b3de928c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_BlueStrip
+    second: {fileID: 2100000, guid: 7edb44916d665834c9e0c53eb11f0d73, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Cable
+    second: {fileID: 2100000, guid: f9ae04c77dc6650448d146d5a009288d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_CableBlue
+    second: {fileID: 2100000, guid: edea1bf0d316e9a4a93b0a55a2491add, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Ceiling
+    second: {fileID: 2100000, guid: 3cfc39982ab640544a044c3d40e95eec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Downlight
+    second: {fileID: 2100000, guid: 867cbaa4dd6d0c64dbdb5f7be6e2027a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_Floor
+    second: {fileID: 2100000, guid: 6f7d1d327754fb64cbabbc6705647973, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_LightRing
+    second: {fileID: 2100000, guid: 5a659b86f0f3413439df3cbea89fe9e1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalDark
+    second: {fileID: 2100000, guid: 9d7246168aeb23d41be9a8fcc44b8a3a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_MetalLight
+    second: {fileID: 2100000, guid: 4118f9987f75ace44a30bcd7c977dd16, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenConnectome
+    second: {fileID: 2100000, guid: 054c778404b8bda458172ca5fb547e80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenRestore
+    second: {fileID: 2100000, guid: 361609fae41d23a41bdc9ba6a70f0bdc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenStatus
+    second: {fileID: 2100000, guid: c155b2abfc174274c97ecde6abfc5d4b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_ScreenWave
+    second: {fileID: 2100000, guid: 02740555938ee7f4d869481cfb7a227a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SYS_WallPanel
+    second: {fileID: 2100000, guid: 80bc81a306437c246a96cf2778235e07, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

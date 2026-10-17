@@ -3,7 +3,22 @@ guid: e0a0e5234d5491145b14d5c38e63f63a
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Drawing
+    second: {fileID: 2100000, guid: 1e98bf91c4678a14f86e683340c1434a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Lacquer
+    second: {fileID: 2100000, guid: 4c4125515bc08ae4494abd9bb5860815, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Magnet
+    second: {fileID: 2100000, guid: a1811b732f066a943b0b99fb8aff3349, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

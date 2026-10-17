@@ -3,7 +3,122 @@ guid: 302164dce4ff4d7448054e253d586902
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Bear
+    second: {fileID: 2100000, guid: 87b7f2d62d63f9c4e801081d13ddca01, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Black
+    second: {fileID: 2100000, guid: 6a1f6f607617465439c7aa60aa486fa5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_CabinetCream
+    second: {fileID: 2100000, guid: 42bec569c458c37479400fda426df381, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Calendar
+    second: {fileID: 2100000, guid: 8003831a0799ebb46ba0a0d9191adc45, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_ClockFace
+    second: {fileID: 2100000, guid: ffb12807d44fcb248a1ca2546c072660, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_DrawingsWall
+    second: {fileID: 2100000, guid: e71de3e8fc037df4a8dab9ac7b46a141, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_FamilyPhoto
+    second: {fileID: 2100000, guid: b17e7ebb59d10d54d84ed91bbb2c7e35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Fridge
+    second: {fileID: 2100000, guid: 4b9a26e5e9f6890429df6def80844704, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Leaf
+    second: {fileID: 2100000, guid: 06cc163b2938e614aa32d70f6b2ddfba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Magnet
+    second: {fileID: 2100000, guid: a1811b732f066a943b0b99fb8aff3349, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_PaperPlain
+    second: {fileID: 2100000, guid: 6693ef8b14acda14086376911115665d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_PlantPot
+    second: {fileID: 2100000, guid: ba3a1a10197373e4ab7d00316a4b4a5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_PotRed
+    second: {fileID: 2100000, guid: d5a5f20740c8a03479911dc247cab6e4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Randoseru
+    second: {fileID: 2100000, guid: 33678501746cd98488c4435ef1271f53, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Rug
+    second: {fileID: 2100000, guid: 75b7c9c302ec5eb4289be662d9f9483f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Sofa
+    second: {fileID: 2100000, guid: b6c482881a3982a498ff1095678518a7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Soil
+    second: {fileID: 2100000, guid: d6f5c0074fec1a243906f18fb0e2f31b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stainless
+    second: {fileID: 2100000, guid: 10448f6c1c5b53749ada057fca2c512f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Stem
+    second: {fileID: 2100000, guid: 3d4f1998f7c8b714fbab257a0e44291c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_TvScreen
+    second: {fileID: 2100000, guid: 6e829cb02b420464d9ece2634a723798, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WhitePlastic
+    second: {fileID: 2100000, guid: e944e28a8ddc71f4c81972f3cd9cb506, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Wood
+    second: {fileID: 2100000, guid: 1693eac367c13064fbb75e5e6b5d3340, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WoodDark
+    second: {fileID: 2100000, guid: c631edc7d2efdf24caea7ada0dcb7e96, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -12,10 +12,34 @@ namespace EscapeProto
 
         public static bool IsLoopScene => LoopRooms.Get(LoopProgress.StartRoomId) != null;
 
+        /// <summary>目標の種類（HUDの見た目を変える）</summary>
+        public enum Tone { Normal, Warning, Done }
+
+        private static Tone _tone;
+
+        /// <summary>「目標: …」の1行（色付き）。ログや検証用</summary>
         public static string Text()
         {
+            string s = Plain(out var tone);
+            if (string.IsNullOrEmpty(s)) return "";
+            var c = tone == Tone.Warning ? UiTheme.Danger : tone == Tone.Done ? UiTheme.Positive : UiTheme.Accent;
+            return $"<color={UiTheme.Rgb(c)}>目標: {s}</color>";
+        }
+
+        /// <summary>目標の文（「目標:」も色も付けない）と種類。HUD はこれを使う</summary>
+        /// <param name="anyState">true ならプレイ中以外（一時停止など）でも作る</param>
+        public static string Plain(out Tone tone, bool anyState = false)
+        {
+            _tone = Tone.Normal;
+            string s = Compute(anyState);
+            tone = _tone;
+            return s;
+        }
+
+        private static string Compute(bool anyState)
+        {
             var gm = GameManager.Instance;
-            if (gm == null || gm.State != GameState.Playing) return "";
+            if (gm == null || (!anyState && gm.State != GameState.Playing)) return "";
             string cur = LoopRooms.CurrentRoomId;
             var room = LoopRooms.Get(cur);
             var bs = BreakerSystem.Instance;
@@ -63,11 +87,20 @@ namespace EscapeProto
                     foreach (var l in room.GetComponentsInChildren<LoopLockBase>(true))
                         if (!l.Solved && System.Array.IndexOf(room.RequiredFindables, l.Id) >= 0) { lockLeft = true; break; }
                     int docs = remain - CountUnsolvedLocks(room);
+                    // 残りが黒塗りの資料の入れ物の中の資料だけ：埋めるように案内する
+                    var fill = FillHint(room, out int insideLeft);
+                    if (fill != null && docs - insideLeft <= 0 && !lockLeft) return Main($"{fill}（残り{remain}）");
                     if (docs > 0 && lockLeft) return Main($"『{room.Name}』で資料を読み、装置を解く（残り{remain}）");
                     if (lockLeft) return Main($"『{room.Name}』の装置を解く──答えは資料の中（残り{remain}）");
                     return Main($"『{room.Name}』で資料を探す（残り{remain}）");
                 }
-                if (!string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom)) return Warn("警報が鳴っている。部屋を出て、鳴っている部屋へ向かう");
+                if (!string.IsNullOrEmpty(StoryProgress.PendingUnlockRoom))
+                {
+                    // 襲撃は画面を閉じてから始まる。まだ落ちていない間は「揃った」とだけ出す
+                    var bsys = BreakerSystem.Instance;
+                    if (bsys != null && bsys.DownRoomId == null && bsys.PendingRoomId == null) return Good("この部屋の情報は揃った");
+                    return Warn("警報が鳴っている。部屋を出て、鳴っている部屋へ向かう");
+                }
                 var nxt = NextRoom();
                 if (nxt == null) return Good("この部屋の情報は揃った。部屋を出る");
                 return Main($"部屋を出て『{nxt.Name}』{DoorHint(nxt)}へ向かう");
@@ -93,6 +126,31 @@ namespace EscapeProto
             return best;
         }
 
+        /// <summary>
+        /// 必須の資料が黒塗りの資料の入れ物の中にある時の案内（無ければ null）。insideLeft = 入れ物の中の未発見の必須の数
+        /// </summary>
+        private static string FillHint(LoopRoomRoot room, out int insideLeft)
+        {
+            insideLeft = 0;
+            string hint = null;
+            foreach (var fc in room.GetComponentsInChildren<FillContainer>(true))
+            {
+                if (fc.Inside == null) continue;
+                foreach (var go in fc.Inside)
+                {
+                    var f = go != null ? go.GetComponent<LoopFindable>() : null;
+                    if (f == null || f.Found || System.Array.IndexOf(room.RequiredFindables, f.Id) < 0) continue;
+                    insideLeft++;
+                    var d = FillDocs.Get(fc.RoomId, fc.FillId);
+                    if (d == null || hint != null) continue;
+                    if (FillDocs.IsSolved(d)) hint = $"開いた{fc.DisplayName}の中を調べる";
+                    else if (FillDocs.IsFound(d)) hint = $"『{d.TitleText}』の黒塗りの所に、資料から切り取った言葉を当てはめる──手帳のメモ";
+                    else hint = $"『{room.Name}』で資料を探す";
+                }
+            }
+            return hint;
+        }
+
         private static int CountUnsolvedLocks(LoopRoomRoot room)
         {
             int n = 0;
@@ -105,8 +163,8 @@ namespace EscapeProto
         public static string DoorHint(LoopRoomRoot r) =>
             r == null ? "" : $"（{SideNames[r.Side % 4]}側 {r.Slot + 1}番）";
 
-        private static string Main(string s) => $"<color=#FFD060>目標: {s}</color>";
-        private static string Warn(string s) => $"<color=#FF6060>目標: {s}</color>";
-        private static string Good(string s) => $"<color=#7CFC8C>目標: {s}</color>";
+        private static string Main(string s) { _tone = Tone.Normal; return s; }
+        private static string Warn(string s) { _tone = Tone.Warning; return s; }
+        private static string Good(string s) { _tone = Tone.Done; return s; }
     }
 }

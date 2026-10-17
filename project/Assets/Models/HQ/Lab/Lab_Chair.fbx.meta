@@ -3,7 +3,27 @@ guid: f81563df876c9a343a2e04bb3353963e
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Aluminum
+    second: {fileID: 2100000, guid: 6224d6f8ffaf50e4b98dc5e54edf7a8d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_BlackPlastic
+    second: {fileID: 2100000, guid: 4e3560f752326cf41972bf19c2273ee9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_ChairFabric
+    second: {fileID: 2100000, guid: 5ec387429d0ab9b4380de214154f18f2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LAB_Mesh
+    second: {fileID: 2100000, guid: dcbff97802931f648ae5b3768c96608a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

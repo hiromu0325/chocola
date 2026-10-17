@@ -30,6 +30,9 @@ namespace EscapeProto
         {
             if (Running) return "already running";
             Sb.Clear(); ErrorMsgs.Clear(); _errors = 0; Report = ""; Done = false; Running = true;
+            // 検証は恐怖演出「通常」で行う（襲撃・異形も含めて通す）。終わったら元に戻す
+            _prevHorror = HorrorSettings.Level;
+            HorrorSettings.Level = HorrorLevel.Full;
             var go = new GameObject("LoopPlaythroughTest");
             DontDestroyOnLoad(go);
             go.AddComponent<LoopPlaythroughTest>();
@@ -43,9 +46,12 @@ namespace EscapeProto
             StartCoroutine(Run());
         }
 
+        private static HorrorLevel _prevHorror;
+
         private void OnDestroy()
         {
             Application.logMessageReceived -= OnLog;
+            HorrorSettings.Level = _prevHorror;
             Running = false;
         }
 
@@ -112,9 +118,10 @@ namespace EscapeProto
 
                 if (StoryScript.AttackOnComplete.TryGetValue(room.Id, out var target))
                 {
-                    // 降下の前に予兆（照明とモニターのちらつき）が入るので、落ちるまで待つ
+                    // 襲撃は画面を閉じて少し間を置いてから始まり、降下の前に予兆（照明とモニターのちらつき）が入るので、落ちるまで待つ
+                    ClosePuzzleUi();
                     yield return WaitUntil(() => bs != null && bs.DownRoomId != null,
-                        BreakerSystem.PreludeSeconds + 2f, "scripted drop");
+                        LoopProgress.AttackDelayAfterClose + BreakerSystem.PreludeSeconds + 3f, "scripted drop");
                     if (bs == null || bs.DownRoomId != target)
                         Log($"FAIL: 脚本襲撃が起きていない（期待={target} 実際={bs?.DownRoomId ?? "-"}）");
                     else
@@ -204,6 +211,7 @@ namespace EscapeProto
             var findable = FindById<LoopFindable>(room.transform, req);
             if (findable != null)
             {
+                yield return OpenFillContainerFor(room, findable);
                 yield return Reachable(findable.gameObject, $"{room.Id}/{req}");
                 findable.OnInteract();
                 yield return null;
@@ -224,6 +232,38 @@ namespace EscapeProto
                 else Log($"FAIL: {room.Id}/{req} に対応するオブジェクトが部屋内に無い");
             }
             Log(LoopProgress.IsFound(room.Id, req) ? $"   ✓ {req}" : $"FAIL: {room.Id}/{req} を調べたが発見扱いにならない");
+        }
+
+        /// <summary>
+        /// 必須の資料が黒塗りの資料の入れ物の中にあれば、先に黒塗りの資料を見つけて正しい言葉で埋め、入れ物を開ける
+        /// （言葉のカードは答えだけを書いた仮の資料から切り取る＝判定と言葉の消費の流れを通す）
+        /// </summary>
+        private IEnumerator OpenFillContainerFor(LoopRoomRoot room, LoopFindable findable)
+        {
+            foreach (var fc in room.GetComponentsInChildren<FillContainer>(true))
+            {
+                if (fc.Inside == null || System.Array.IndexOf(fc.Inside, findable.gameObject) < 0) continue;
+                var d = FillDocs.Get(fc.RoomId, fc.FillId);
+                if (d == null) { Log($"FAIL: {fc.RoomId}/{fc.FillId} の黒塗りの資料の定義が無い"); yield break; }
+                foreach (var p in room.GetComponentsInChildren<FillDocFindable>(true))
+                {
+                    if (p.Id != fc.FillId) continue;
+                    yield return Reachable(p.gameObject, $"{room.Id}/{p.Id}（黒塗り）");
+                    p.OnInteract();
+                    yield return null;
+                    ClosePuzzleUi();
+                }
+                if (!FillDocs.IsFound(d)) Log($"FAIL: 黒塗りの資料 {d.EntryId} を見つけられない");
+                var answers = FillDocs.Answers(d);
+                var result = FillDocs.Result.None;
+                for (int i = 0; i < answers.Count; i++)
+                {
+                    var s = MemoSnippets.Add($"test_{d.Id}_{i}", answers[i], 0, answers[i].Length);
+                    result = FillDocs.Place(s, d, i);
+                }
+                Log(result == FillDocs.Result.Solved ? $"   ✓ 黒塗りの資料 {d.Id} を埋めた → {fc.DisplayName}" : $"FAIL: 黒塗りの資料 {d.Id} の判定が {result}");
+                yield return new WaitForSeconds(fc.Seconds + 0.6f);   // 入れ物が開き切るまで
+            }
         }
 
         /// <summary>視線が届くか（4方向の目線からレイ）。届かなければFAILを記録</summary>
@@ -311,6 +351,7 @@ namespace EscapeProto
 
         private static void ClosePuzzleUi()
         {
+            if (InspectView.IsOpen) InspectView.Instance.Close(true);   // 資料を調べる画面
             var ui = PuzzleUI.Instance;
             if (ui == null || !ui.IsOpen) return;
             typeof(PuzzleUI).GetMethod("Close", BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(ui, null);

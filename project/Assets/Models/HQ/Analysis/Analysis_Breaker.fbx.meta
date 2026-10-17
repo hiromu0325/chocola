@@ -3,7 +3,32 @@ guid: 7c5a4c72c163b254ab294fb0a1c2c4ef
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Black
+    second: {fileID: 2100000, guid: 5cf903be8c946d542bff12f7f110a60f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_LeverRed
+    second: {fileID: 2100000, guid: a6222e1299ccaed4dbf357ef477515d9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_Panel
+    second: {fileID: 2100000, guid: 222d9e72c2245e24cab0502f9e10594f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SignCaution
+    second: {fileID: 2100000, guid: 2248e330c0e4dbf408de96df9d1fcbd8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ANA_SteelGrey
+    second: {fileID: 2100000, guid: 6c7b197c06d342549ba9eb4c325dc88b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

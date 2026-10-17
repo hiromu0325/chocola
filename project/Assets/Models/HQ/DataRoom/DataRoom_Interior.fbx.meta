@@ -3,7 +3,97 @@ guid: 2aa0ec701fdf0ce49bdeaaeb275ae4d0
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_ArchiveBox
+    second: {fileID: 2100000, guid: b8c94809e5cf7cd41857aed1c3b03c72, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_BlankPanel
+    second: {fileID: 2100000, guid: e353d18d9930646498ac0fcd61902f04, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CabinetGrey
+    second: {fileID: 2100000, guid: 6becf9b1bf3034549b0cbb023f34b27c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CabinetLabels
+    second: {fileID: 2100000, guid: c3780a1f77e566443a1a47d0e6d0e468, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableBlue
+    second: {fileID: 2100000, guid: 6865c6a9d578fab4ba2787a7612b1093, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableRed
+    second: {fileID: 2100000, guid: 2d994ba8ea7ad764cb0369365d4c4683, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_CableYellow
+    second: {fileID: 2100000, guid: d9a63e56eaa8fb94692de839635422e7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Chrome
+    second: {fileID: 2100000, guid: 5c381413e35881a498977c8fb8c8d573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_FolderBuff
+    second: {fileID: 2100000, guid: f25ca28522747d84db93cba54b35c741, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_FolderGreen
+    second: {fileID: 2100000, guid: 026399a3813498246bfea77eb1f01d86, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedAmber
+    second: {fileID: 2100000, guid: 9f4bf8993e25b8b408caa7553c0ffbda, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedBlue
+    second: {fileID: 2100000, guid: 23594768b8c222545af62537c3822bd9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_LedGreen
+    second: {fileID: 2100000, guid: 6e85c45c535ef1c419148fcecf68d4a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_RackBlack
+    second: {fileID: 2100000, guid: 122eab69704fc804bb149cb3addec6c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_RackLabels
+    second: {fileID: 2100000, guid: 124ce51bbea675243abe1ff0e1cada3c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_RackRail
+    second: {fileID: 2100000, guid: fde8ec59b7f06d14a883a8576b86e525, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_Scribble
+    second: {fileID: 2100000, guid: 05c9cc9fe7d79c348ba6412523db5ae9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DAT_ServerFronts
+    second: {fileID: 2100000, guid: 98e43cf11f39d2e408b5fd74a66219be, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

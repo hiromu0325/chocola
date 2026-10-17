@@ -3,7 +3,32 @@ guid: fbab876a06c43444a8e6601c9a1db22f
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Black
+    second: {fileID: 2100000, guid: 6a1f6f607617465439c7aa60aa486fa5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_Bulb
+    second: {fileID: 2100000, guid: b79cf7dd2dfc45042a5333c6293a5182, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_CeilingLight
+    second: {fileID: 2100000, guid: d5cd7f20fa9089140914604441725d9e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_LampShade
+    second: {fileID: 2100000, guid: dc1f0f1dd854f0640bcec6355d8d630f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KUR_WhitePlastic
+    second: {fileID: 2100000, guid: e944e28a8ddc71f4c81972f3cd9cb506, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

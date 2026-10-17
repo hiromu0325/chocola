@@ -3,7 +3,47 @@ guid: 851062e36148c924b87e27d249677cac
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Brass
+    second: {fileID: 2100000, guid: 9668d3093caa4174a85005f55ae3993d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Carpet
+    second: {fileID: 2100000, guid: d30591574fdb3f0409ee91215bcc32d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_FrostGlass
+    second: {fileID: 2100000, guid: f7d45de93ce7e8c43a2b6a7af0c96458, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Plaster
+    second: {fileID: 2100000, guid: 6111bb85fe283c3469d858bdff1884f9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Stain
+    second: {fileID: 2100000, guid: 88ee1660b63c3d343abf7037b6276bcb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_SwitchPlate
+    second: {fileID: 2100000, guid: 00f6872399895df48b7faf253a713a2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Trim
+    second: {fileID: 2100000, guid: 0e0c540c96ee41643b3a198eb16095f8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DIM_Wallpaper
+    second: {fileID: 2100000, guid: 7bdd2328ebbbb3844a9b2b8874d44dbf, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

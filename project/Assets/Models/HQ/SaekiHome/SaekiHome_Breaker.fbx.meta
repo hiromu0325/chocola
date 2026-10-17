@@ -3,7 +3,27 @@ guid: ce2a748ca635f36459cce65a165c1055
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_Black
+    second: {fileID: 2100000, guid: 64f078e5453d0e2499a0e9408987a8d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_LeverRed
+    second: {fileID: 2100000, guid: 542a6a0c6b1ea2b49918cd31b8de46bb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_SwitchPlate
+    second: {fileID: 2100000, guid: 8fc19d6127158ad42b58041a71864f10, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SAE_TrimPaint
+    second: {fileID: 2100000, guid: 0122983da345c8b42ace81b717619934, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

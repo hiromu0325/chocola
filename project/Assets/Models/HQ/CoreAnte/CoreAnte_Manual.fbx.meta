@@ -3,7 +3,22 @@ guid: 24c6a8ee1ff98d1438bb817d7dca8c45
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Binder
+    second: {fileID: 2100000, guid: 6368a7fff721da3469c885a929c087bb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Chrome
+    second: {fileID: 2100000, guid: 2aeeac765fb0c2c4799ba7751d99f03f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAN_Manual
+    second: {fileID: 2100000, guid: 85efa8104c07e2d4280f12c31b853ee3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

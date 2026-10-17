@@ -3,7 +3,22 @@ guid: 74327d399d98be14994881be4af34e52
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Brass
+    second: {fileID: 2100000, guid: fec5dd3c12d2db9478bd4e3a0ec0bc7e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Oak
+    second: {fileID: 2100000, guid: 37c7681e9f4b33f49a97032dada192fc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: COR_Trim
+    second: {fileID: 2100000, guid: df843142a88dcdc45baeac672a46a187, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
