@@ -44,8 +44,8 @@ namespace EscapeProto
         public static void Apply(GameObject item, InspectView.Request req, float scale)
         {
             if (!Areas.TryGetValue(req.Info.Kind.ToString(), out var area) || area.rects == null || area.rects.Length == 0) return;
-            string title = req.Title ?? "";
-            string body = req.Info.Audio ? "" : (req.Body ?? "");
+            string title = Ruby.Strip(req.Title ?? "");
+            string body = req.Info.Audio ? "" : Ruby.Strip(req.Body ?? "");   // 実物の紙にはルビを載せない
             var ink = req.Info.Ink;
 
             switch (req.Info.Kind)
@@ -103,11 +103,12 @@ namespace EscapeProto
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             var scaler = go.AddComponent<CanvasScaler>();
-            scaler.dynamicPixelsPerUnit = 3f;   // 小さな文字でもにじまない程度に細かく（上げすぎると文字の画像置き場があふれる）
+            scaler.dynamicPixelsPerUnit = 3f;   // 最初の1コマだけ。以後は PrintSharpness が画面に映る大きさに合わせる
 
             var font = FontFor(ink);
             var color = InkColor(ink);
             float pad = Mathf.Min(w, h) * 0.06f;
+            go.AddComponent<PrintSharpness>();
 
             if (labelOnly)
             {
@@ -115,6 +116,7 @@ namespace EscapeProto
                                  Fit(body, w - pad, h - pad, 1.1f, (int)(h * 0.8f)));
                 Stretch(t.rectTransform, pad * 0.5f);
                 t.text = body;
+                FreezeWrap(t);
                 return;
             }
 
@@ -129,6 +131,7 @@ namespace EscapeProto
                 tt.rectTransform.offsetMax = new Vector2(-pad, -pad);
                 tt.text = title;
                 if (ink != InkStyle.Hand && ink != InkStyle.Crayon) tt.fontStyle = FontStyle.Bold;
+                FreezeWrap(tt);
             }
             float bodyH = h - pad * 2f - (titleH > 0f ? titleH * 1.6f : 0f);
             float spacing = ink == InkStyle.Hand ? 1.25f : 1.1f;
@@ -139,14 +142,53 @@ namespace EscapeProto
             bt.lineSpacing = spacing;
             if (ink == InkStyle.Crayon) bt.alignment = TextAnchor.MiddleCenter;
             bt.text = body;
+            FreezeWrap(bt);
         }
 
-        /// <summary>印字の大きさ：最大から少しずつ小さくして、収まる大きさを1つだけ選ぶ（4段階）</summary>
+        /// <summary>
+        /// 改行の位置を今の細かさ（3）で決めて文に書き込み、以後は折り返させない。
+        /// Text は描く細かさ（PrintSharpness が寄り引きで変える）ごとに字幅の丸めが変わって折り返し位置が動くので、
+        /// そのままだと寄るたびに行の終わりの字が次の行へ飛ぶ
+        /// </summary>
+        private static void FreezeWrap(Text t)
+        {
+            if (string.IsNullOrEmpty(t.text) || t.horizontalOverflow != HorizontalWrapMode.Wrap) return;
+            var settings = t.GetGenerationSettings(t.rectTransform.rect.size);
+            settings.scaleFactor = 3f;
+            var gen = new TextGenerator();
+            gen.Populate(t.text, settings);
+            var lines = gen.lines;
+            string s = t.text;
+            if (lines.Count == 0) return;
+            // 下が切れている（入りきらない）時は、見えている字までで止める（残りを最後の行につなぐと横にはみ出す）
+            bool cut = gen.characterCountVisible < s.TrimEnd('\n').Length - 1;
+            int end = cut ? Mathf.Clamp(gen.characterCountVisible, 0, s.Length) : s.Length;
+            var sb = new System.Text.StringBuilder(s.Length + lines.Count);
+            int count = lines.Count;
+            if (cut && count >= 2) count--;   // 収まらない時は最後の行を「次頁へ続く」に譲る（全文は読む画面で読める）
+            for (int i = 0; i < count; i++)
+            {
+                int a = Mathf.Clamp(lines[i].startCharIdx, 0, s.Length);
+                int b = i + 1 < lines.Count ? Mathf.Clamp(lines[i + 1].startCharIdx, a, s.Length) : Mathf.Max(a, end);
+                if (i > 0) sb.Append('\n');
+                sb.Append(s, a, b - a).Replace("\n", "", sb.Length - (b - a), b - a);
+            }
+            t.text = sb.ToString().TrimEnd('\n') + (cut ? "\n" + Continued : "");
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        }
+
+        /// <summary>
+        /// 印字の大きさ：最大から少しずつ小さくして、収まる大きさを1つだけ選ぶ（4段階）。
+        /// それより小さくすると寄っても読めないので、長い文書は収まる所まで載せて「次頁へ続く」とする（FreezeWrap）
+        /// </summary>
         private static int Fit(string text, float w, float h, float spacing, int max)
         {
             max = Mathf.Max(3, max);
             return UiTheme.FitFontSize(text, w, h, spacing, max, Mathf.Max(3, max * 3 / 4), Mathf.Max(3, max / 2), Mathf.Max(3, max / 3));
         }
+
+        /// <summary>紙に収まらない文書の最後の行</summary>
+        private const string Continued = "（次頁へ続く）";
 
         private static Text MakeText(RectTransform parent, string name, Font font, Color color, TextAnchor anchor, int size)
         {

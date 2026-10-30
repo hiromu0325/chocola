@@ -144,19 +144,27 @@ def screen_spectrogram(w=640, h=400, seed=651):
 
 
 def screen_anomaly(w=640, h=426):
-    """異常レポート（佐伯→所長）。調べる資料の画面"""
-    img = Image.new("RGB", (w, h), (18, 8, 10))
+    """異常報告のメール（久賀→三木所長）。調べる資料の画面（本文は 進行/文書/ja/doc_analysis.anomaly.body.txt）"""
+    img = Image.new("RGB", (w, h), (14, 16, 20))
     d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, w, 44], fill=(150, 24, 30))
-    d.text((16, 8), "⚠ ANOMALY REPORT　異常報告", font=_font(26, mincho=False), fill=(255, 235, 235))
-    f = _font(22, mincho=False)
-    lines = ["報告者：佐伯　　宛先：所長", "", "・存在しないはずの記憶が生成されている", "・システムが研究員自身の脳情報で",
-             "　学習している可能性がある", "・至急、運用の停止を進言する", "", "返信：「今は結論を出すな」"]
-    for i, s in enumerate(lines):
-        d.text((24, 64 + i * 40), s, font=f, fill=(240, 200, 200) if i != 7 else (255, 120, 120))
+    d.rectangle([0, 0, w, 40], fill=(36, 44, 58))
+    d.text((14, 8), "受信メール", font=_font(22, mincho=False), fill=(220, 228, 240))
+    d.rectangle([w - 92, 9, w - 14, 31], fill=(150, 30, 34))
+    d.text((w - 84, 10), "重要", font=_font(18, mincho=False), fill=(255, 235, 235))
+    f = _font(19, mincho=False)
+    head = [("件名：", "記憶抽出試験における異常報告"), ("送信者：", "久賀 夏樹"), ("宛先：", "三木 宗英")]
+    for i, (k, v) in enumerate(head):
+        d.text((18, 52 + i * 30), k, font=f, fill=(150, 160, 175))
+        d.text((100, 52 + i * 30), v, font=f, fill=(225, 230, 238))
+    d.line([(14, 146), (w - 14, 146)], fill=(60, 70, 86), width=1)
+    body = ["三木所長", "", "記憶抽出試験において、装置装着者の意識および", "記憶機能に異常が確認されました。",
+            "抽出処理中、装着者に一時的な意識障害が発生。", "試験終了後も、直前の行動や会話の一部を",
+            "思い出せないなど、記憶の欠落が確認されています。"]
+    for i, line in enumerate(body):
+        d.text((18, 158 + i * 30), line, font=f, fill=(205, 210, 220))
     a = np.asarray(img).astype(float)
     yy = np.arange(h)[:, None]
-    a *= (0.88 + 0.12 * (np.sin(yy * np.pi / 2) ** 2))[..., None]
+    a *= (0.9 + 0.1 * (np.sin(yy * np.pi / 2) ** 2))[..., None]
     save("screen_anomaly", rgb(a))
 
 
@@ -166,13 +174,13 @@ def id_card(w=856, h=540):
     img = Image.new("RGB", (w, h), (240, 242, 246))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, w, 110], fill=(30, 70, 140))
-    d.text((30, 26), "小川脳神経総合研究所", font=_font(46, mincho=False), fill=(255, 255, 255))
+    d.text((30, 26), "三木脳神経総合研究所", font=_font(46, mincho=False), fill=(255, 255, 255))
     d.text((620, 40), "職員証", font=_font(40, mincho=False), fill=(220, 230, 250))
     ph = lab._id_photo(220, 280, True, 271)
     img.paste(ph, (40, 150))
-    d.text((300, 160), "佐伯 恒一", font=_font(64, mincho=False), fill=(20, 20, 20))
-    d.text((300, 260), "主任研究員補佐", font=_font(34, mincho=False), fill=(60, 60, 60))
-    d.text((300, 312), "補完アルゴリズム担当", font=_font(30, mincho=False), fill=(60, 60, 60))
+    d.text((300, 160), "松原 翼", font=_font(64, mincho=False), fill=(20, 20, 20))
+    d.text((300, 260), "研究員・神経計測担当", font=_font(34, mincho=False), fill=(60, 60, 60))
+    d.text((300, 312), "脳神経活動の計測・データ収集", font=_font(30, mincho=False), fill=(60, 60, 60))
     d.text((300, 400), "ID 08-0417", font=_font(34, mincho=False), fill=(30, 70, 140))
     for i in range(34):
         d.rectangle([300 + i * 14, 460, 300 + i * 14 + (4 if i % 3 else 8), 510], fill=(20, 20, 20))
@@ -183,30 +191,40 @@ def documents():
     w, h = 740, 1040
     img = Image.new("RGB", (w, h), (240, 238, 232))
     d = ImageDraw.Draw(img)
+    # 表紙（本文はゲームの資料 進行/文書/ja/doc_analysis.plan.body.txt と同じ）
+    d.text((64, 70), "文書番号：MNR-RP-0001", font=_font(24, mincho=False), fill=(60, 60, 60))
     d.text((60, 120), "RENASCITA", font=_font(96, mincho=False), fill=(30, 50, 90))
     d.text((64, 250), "研究計画書", font=_font(64, mincho=True), fill=(30, 30, 30))
     d.line([(60, 340), (680, 340)], fill=(30, 50, 90), width=4)
     f = _font(28, mincho=True)
-    for i, s in enumerate(["対象：遷延性意識障害", "方針：記憶・人格野の外部補完", "脳情報の取得：ヘルメット型スキャン装置", "",
-                           "極秘　小川脳神経総合研究所"]):
+    for i, s in enumerate(["研究課題：", "　人工知能による記憶構造の再構成", "　および意識機能回復に関する研究", "",
+                           "研究責任者：三木 宗英"]):
         d.text((64, 400 + i * 56), s, font=f, fill=(40, 40, 40))
     d.ellipse([520, 780, 660, 920], outline=(170, 40, 40), width=6)
     d.text((548, 822), "極秘", font=_font(40, mincho=True), fill=(170, 40, 40))
     save("doc_plan", img)
     img = Image.new("RGB", (w, h), (244, 244, 240))
     d = ImageDraw.Draw(img)
-    d.text((60, 60), "補完アルゴリズム 概略　担当：佐伯", font=_font(34, mincho=False), fill=(20, 20, 20))
-    marks = "○△□"
-    rnd = random.Random(661)
-    for j in range(5):
-        for i in range(5):
-            x, y = 110 + i * 110, 160 + j * 100
-            d.rectangle([x, y, x + 80, y + 80], outline=(60, 60, 60), width=3)
-            c = "?" if (i, j) in ((2, 1), (3, 3)) else rnd.choice(marks)
-            d.text((x + 20, y + 12), c, font=_font(48, mincho=False), fill=(170, 40, 40) if c == "?" else (30, 30, 30))
-    f = _font(28, mincho=False)
-    for i, s in enumerate(["規則：欠損区画には、経路上の両隣と同じ傾向を置く", "異なる傾向を置くと光が濁り、補完は失敗する"]):
-        d.text((60, 700 + i * 50), s, font=f, fill=(30, 30, 30))
+    # 仕様書の紙（本文は 進行/文書/ja/doc_analysis.spec.body.txt と同じ。欄外に手書き）
+    d.text((60, 52), "文書番号：MNR-DS-0012", font=_font(22, mincho=False), fill=(70, 70, 70))
+    d.text((60, 92), "記憶補完アルゴリズム仕様書", font=_font(44, mincho=True), fill=(20, 20, 20))
+    d.line([(60, 160), (680, 160)], fill=(30, 50, 90), width=3)
+    f = _font(24, mincho=True)
+    d.text((60, 182), "対象システム：RENASCITA（リナシータ）", font=f, fill=(40, 40, 40))
+    d.text((60, 218), "管理責任者：三木 宗英", font=f, fill=(40, 40, 40))
+    d.text((60, 276), "2．処理手順", font=_font(26, mincho=True), fill=(30, 30, 30))
+    steps = ["情報取得", "関連付け", "欠損補完", "構造再構成", "整合性検証"]
+    for i, st in enumerate(steps):
+        y = 322 + i * 66
+        d.rectangle([90, y, 330, y + 46], outline=(60, 60, 60), width=2)
+        d.text((112, y + 8), st, font=_font(26, mincho=False), fill=(30, 30, 30))
+        if i < len(steps) - 1:
+            d.line([(210, y + 46), (210, y + 66)], fill=(60, 60, 60), width=2)
+    d.text((380, 340), "人物・出来事・感情", font=_font(22, mincho=True), fill=(70, 70, 70))
+    d.text((380, 372), "時間・場所を相互に接続", font=_font(22, mincho=True), fill=(70, 70, 70))
+    d.text((60, 680), "3．注意事項", font=_font(26, mincho=True), fill=(30, 30, 30))
+    d.text((60, 722), "整合性が高いことは、事実であることを保証しない。", font=_font(22, mincho=True), fill=(50, 50, 50))
+    d.text((60, 990), "文書管理区分：研究所内部資料", font=_font(20, mincho=False), fill=(90, 90, 90))
     d.text((80, 860), "補完された記憶は、本当に本人のものか？", font=lab.hand(34), fill=(30, 60, 150))
     save("doc_spec", img)
 

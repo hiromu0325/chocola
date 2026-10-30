@@ -76,8 +76,12 @@ namespace EscapeProto
 
         /// <summary>
         /// IDの文面を返す。表に無ければ builtIn（コード側の組み込みテキスト）をそのまま返す。
+        /// ルビの印（｜漢字《かんじ》）は外して返す。ルビを出せる画面に渡す文は GetMarked で取る
         /// </summary>
-        public static string Get(string id, string builtIn = null)
+        public static string Get(string id, string builtIn = null) => Ruby.Strip(GetMarked(id, builtIn));
+
+        /// <summary>IDの文面をルビの印を付けたまま返す（読む画面・手帳の引用元など、ルビを出せる所で Ruby.Parse して使う）</summary>
+        public static string GetMarked(string id, string builtIn = null)
         {
             if (string.IsNullOrEmpty(id)) return builtIn;
             EnsureLoaded();

@@ -36,11 +36,11 @@ namespace EscapeProto
         protected string TextKey => GameText.LockKey(RoomId, Id);
         public string Name => GameText.Get(TextKey + ".name", DisplayName);
         public string SuccessTitle => GameText.Get(TextKey + ".success_title", SuccessNoteTitle);
-        public string SuccessBody => GameText.Get(TextKey + ".success_body", SuccessNoteBody);
-        public string RequireText => GameText.Get(TextKey + ".require", RequireMessage);
+        public string SuccessBody => GameText.GetMarked(TextKey + ".success_body", SuccessNoteBody);   // 以下3つはルビの印付き（出す画面で Ruby を出す）
+        public string RequireText => GameText.GetMarked(TextKey + ".require", RequireMessage);
         /// <summary>装置ごとの問題文（派生クラスの Title / Body）</summary>
         protected string TitleText(string builtIn) => GameText.Get(TextKey + ".title", builtIn);
-        protected string BodyText(string builtIn) => GameText.Get(TextKey + ".body", builtIn);
+        protected string BodyText(string builtIn) => GameText.GetMarked(TextKey + ".body", builtIn);
 
         public void OnInteract()
         {

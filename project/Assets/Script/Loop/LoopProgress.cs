@@ -6,11 +6,12 @@ namespace EscapeProto
 {
     /// <summary>
     /// 探索の進行管理。部屋ごとの必須アイテムを全て見つけると次の部屋が解放される。
-    /// 解放順: 薄暗い部屋(dim) → 書斎(study) → 電車車内(train) → 研究所応接室(lab)
+    /// 解放順は各部屋の UnlockStage：薄暗い部屋(0) → 電車車内 → 研究所応接室 → 所長の書斎 → 脳神経解析室 → 松原の自宅
+    /// → 臨床病棟 → CORE前室 → 川崎のアパート → データ管理室 → SYSTEM ROOM → 海尾の自宅 → MAIN CORE ROOM → 息子の部屋(13)
     /// </summary>
     public static class LoopProgress
     {
-        /// <summary>最初の部屋（チュートリアル。一度出ると再入場不可）</summary>
+        /// <summary>最初の部屋（チュートリアル。記録端末があり、いつでも入り直せる）</summary>
         public const string StartRoomId = "dim";
 
         private static readonly HashSet<string> FoundKeys = new HashSet<string>();
@@ -134,6 +135,22 @@ namespace EscapeProto
         }
 
         /// <summary>completedRoomの次の段階を解放する</summary>
+        /// <summary>
+        /// ロード直後に呼ぶ：脚本襲撃の途中（警報中・襲撃が始まる前）に保存されていたら、次の部屋を開ける。
+        /// 襲撃の「済み」の印はセーブに残るが、ブレイカーの状態と解放の持ち越しは残らないので、そのままだと次が開かない
+        /// </summary>
+        public static void ResolveInterruptedAttacks()
+        {
+            foreach (var kv in StoryScript.AttackOnComplete)
+            {
+                if (!IsFound("story", "attack_" + kv.Key)) continue;
+                var room = LoopRooms.Get(kv.Key);
+                if (room == null || LoopRooms.Stage > room.UnlockStage || !IsRoomComplete(room)) continue;
+                Debug.Log($"[LoopProgress] {room.DisplayName} の脚本襲撃の途中で保存されていた → 次の部屋を開ける");
+                UnlockNext(room);
+            }
+        }
+
         private static void UnlockNext(LoopRoomRoot room)
         {
             int next = room.UnlockStage + 1;

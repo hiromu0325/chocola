@@ -49,9 +49,9 @@ namespace EscapeProto
 
         // 解放順（仮シナリオv2）:
         //   チュートリアル: 薄暗い部屋 → 電車車内 → 研究所応接室
-        //   1章 佐伯: 所長の書斎(起) → 脳神経解析室(転) → 佐伯の自宅(結)
-        //   2章 水野: 臨床病棟(起) → CORE前室(転) → 水野のアパート(結)
-        //   3章 黒田: データ管理室(起) → SYSTEM ROOM(転) → 黒田の自宅(結)
+        //   1章 松原: 所長の書斎(起) → 脳神経解析室(転) → 松原の自宅(結)
+        //   2章 川崎: 臨床病棟(起) → CORE前室(転) → 川崎のアパート(結)
+        //   3章 海尾: データ管理室(起) → SYSTEM ROOM(転) → 海尾の自宅(結)
         //   終章: MAIN CORE ROOM → 息子の部屋
         // 出口は自動で「入口の反対側の辺」の同スロットに繋がる
         private static readonly RoomDef[] RoomDefs =
@@ -66,20 +66,20 @@ namespace EscapeProto
             new RoomDef("study",        "所長の書斎",         3, 0, 2,  5.5f,  7.0f, 2.9f),
             // 第8研究室。1章転（研究の正体・異常レポート）
             new RoomDef("analysis",     "脳神経解析室",       4, 1, 1,  8.0f,  9.0f, 3.0f),
-            // 回廊に滲み出した記憶の部屋。1章結（佐伯という人間）
-            new RoomDef("saeki_home",   "佐伯の自宅",         5, 2, 7,  7.0f,  8.0f, 2.6f),
+            // 回廊に滲み出した記憶の部屋。1章結（松原という人間）
+            new RoomDef("saeki_home",   "松原の自宅",         5, 2, 7,  7.0f,  8.0f, 2.6f),
             // 2章起（患者たちの領域・娘のファイル）
             new RoomDef("ward",         "臨床病棟",           6, 0, 5,  9.0f, 12.0f, 3.2f),
             // 第13前室。2章転（BRAIN DATA一覧・停電の間）
             new RoomDef("core_ante",    "CORE前室",           7, 3, 8,  7.0f,  8.0f, 3.4f),
-            // 2章結（水野の原点。奥が病室に滲む）
-            new RoomDef("mizuno_apart", "水野のアパート",     8, 2, 1,  5.0f,  9.0f, 2.5f),
+            // 2章結（川崎の原点。奥が病室に滲む）
+            new RoomDef("mizuno_apart", "川崎のアパート",     8, 2, 1,  5.0f,  9.0f, 2.5f),
             // 3章起（記録層・入退室ログ）
             new RoomDef("data_room",    "データ管理室",       9, 1, 4,  9.0f, 10.0f, 3.0f),
             // 第12研究室。3章転（反転の部屋）
             new RoomDef("system_room",  "SYSTEM ROOM",       10, 0, 8, 10.0f, 10.0f, 4.0f),
-            // 3章結（黒田という父親）
-            new RoomDef("kuroda_home",  "黒田の自宅",        11, 2, 6,  7.0f,  8.0f, 2.6f),
+            // 3章結（海尾という父親）
+            new RoomDef("kuroda_home",  "海尾の自宅",        11, 2, 6,  7.0f,  8.0f, 2.6f),
             // 第13研究室。終章（主任のメッセージ）
             new RoomDef("core_main",    "MAIN CORE ROOM",    12, 0, 0, 12.0f, 12.0f, 5.0f),
             // 終章・隠し（誰の記憶でもない、祈りで作られた部屋）
@@ -379,13 +379,13 @@ namespace EscapeProto
             "train" => new Color(0.3f, 0.6f, 0.75f),     // 青緑（電車）
             "lab" => new Color(0.75f, 0.75f, 0.8f),      // 白銀（研究所）
             "analysis" => new Color(0.35f, 0.55f, 0.8f),     // 青（解析室のモニター光）
-            "saeki_home" => new Color(0.72f, 0.55f, 0.35f),  // 夕暮れの橙（佐伯の自宅）
+            "saeki_home" => new Color(0.72f, 0.55f, 0.35f),  // 夕暮れの橙（松原の自宅）
             "ward" => new Color(0.55f, 0.75f, 0.65f),        // 薄緑（病棟）
             "core_ante" => new Color(0.75f, 0.3f, 0.28f),    // 非常灯の赤（CORE前室）
             "mizuno_apart" => new Color(0.8f, 0.65f, 0.5f),  // 暖色（アパート）
             "data_room" => new Color(0.4f, 0.45f, 0.6f),     // 青白（データ管理室）
             "system_room" => new Color(0.35f, 0.7f, 0.85f),  // 淡青のパルス（SYSTEM ROOM）
-            "kuroda_home" => new Color(0.65f, 0.5f, 0.35f),  // 食卓の灯（黒田の自宅）
+            "kuroda_home" => new Color(0.65f, 0.5f, 0.35f),  // 食卓の灯（海尾の自宅）
             "core_main" => new Color(0.85f, 0.75f, 0.45f),   // 金色（MAIN CORE）
             "son_room" => new Color(0.85f, 0.85f, 0.8f),     // 白い光（息子の部屋）
             _ => Color.gray,
@@ -935,14 +935,14 @@ namespace EscapeProto
                 "《被験体経過報告 抜粋》\n\n" +
                 "・被験体は自身を『研究員』と認識している\n" +
                 "・記憶の再生時、同一の空間を反復して認知する\n" +
-                "  （回廊状の構造として観測される）\n" +
+                "  （被験体は「長い回廊のような場所」と証言している）\n" +
                 "・移植したAI領域が宿主の記憶を再構成している\n" +
                 "  可能性がある\n\n" +
                 "報告者名の欄は黒く塗り潰されている。");
 
-            // ---- 1章 起「佐伯恒一」: 招聘状・主任の手帳の切れ端・伏せられた家族写真 ----
+            // ---- 1章 起「松原 翼」: 招聘状・主任の手帳の切れ端・伏せられた家族写真 ----
 
-            // 招聘状（サイドテーブルの上）→ 記憶回復①「私は二宮秀樹」
+            // 招聘状（サイドテーブルの上）→ 記憶回復①「私は久賀 夏樹」
             var side = new GameObject("SideTable");
             side.transform.SetParent(t, false);
             // 本棚の前に置くので、本棚（前面 x=hw-0.435）と重ならない位置へ
@@ -955,12 +955,12 @@ namespace EscapeProto
                 new Vector3(0.3f, 0.02f, 0.22f),
                 "招聘状",
                 "《招聘状》　2015年3月25日\n\n" +
-                "二宮秀樹 様\n\n" +
+                "久賀 夏樹 様\n\n" +
                 "貴殿の情報科学における業績、ならびに\n" +
                 "調査業でのご経験を高く評価し、当研究所の\n" +
                 "特別研究員としてお迎えしたく存じます。\n\n" +
-                "　小川脳神経総合研究所　所長\n\n" +
-                "──二宮秀樹。\n" +
+                "　三木脳神経総合研究所　所長\n\n" +
+                "──久賀 夏樹。\n" +
                 "その名前を目でなぞった瞬間、胸の奥が軋んだ。\n" +
                 "私だ。私の名前だ。情報科学と、探偵。");
 
@@ -969,12 +969,12 @@ namespace EscapeProto
                 new Vector3(0.24f, 0.01f, 0.12f),
                 "主任の手帳の切れ端",
                 "《手帳の切れ端》\n\n" +
-                "　4/2　佐伯と面談。\n" +
-                "　　　 例の件、佐伯にだけは話しておく。\n" +
+                "　4/2　松原と面談。\n" +
+                "　　　 例の件、松原にだけは話しておく。\n" +
                 "　　　 彼なら気づいている。\n\n" +
-                "　4/9　佐伯より報告。「今は結論を出すな」と\n" +
+                "　4/9　松原より報告。「今は結論を出すな」と\n" +
                 "　　　 伝えた。時間が要る。\n\n" +
-                "破り取られたページ。所長と佐伯──\n" +
+                "破り取られたページ。所長と松原──\n" +
                 "二人だけが共有していた「例の件」とは。");
 
             // 伏せられた家族写真（棚の上。読める演出・進行必須ではない）
@@ -990,11 +990,11 @@ namespace EscapeProto
                 "色が薄くなっている。\n\n" +
                 "……どうして、伏せてあったんだろう。");
 
-            // 残響〈主任と佐伯の密談〉──主人公の記憶（廊下から見かけただけ。声は聞こえない）
-            Echo(t, "study_secret", "残響：主任と佐伯の密談（私の記憶）",
+            // 残響〈主任と松原の密談〉──主人公の記憶（廊下から見かけただけ。声は聞こえない）
+            Echo(t, "study_secret", "残響：主任と松原の密談（私の記憶）",
                 "書斎の隅で、二つの影が額を寄せ合っている。\n" +
                 "声は、聞こえない。廊下からただ見かけただけの記憶だから。\n" +
-                "所長と、名簿の男・佐伯。二人は何を話していた？",
+                "所長と、名簿の男・松原。二人は何を話していた？",
                 2.0f, 1f, 0f,   // 無音の場面
                 (new Vector3(-hw + 0.9f, 0f, 0.4f), 110f, 1.0f, 3f, 1f, false),
                 (new Vector3(-hw + 1.5f, 0f, -0.3f), -50f, 0.95f, -3f, 1f, false));
@@ -1281,7 +1281,7 @@ namespace EscapeProto
                 new Vector3(-hw + 1.8f, 0f, 2.4f), new Vector3(-hw + 1.8f, 0f, 0.4f), new Vector3(-hw + 1.8f, 0f, -1.6f),
                 new Vector3(hw - 1.8f, 0f, 1.6f), new Vector3(hw - 1.8f, 0f, -0.8f),
             };
-            var deskNames = new[] { "佐伯", "水野", "黒田", "", "" };
+            var deskNames = new[] { "松原", "川崎", "海尾", "", "" };
             bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("lab", "Desk")) != null;
             for (int i = 0; i < deskPos.Length; i++)
             {
@@ -1314,7 +1314,7 @@ namespace EscapeProto
                         "脳神経活動の解析と人工知能（AI）による情報補完を通じ、意識機能の回復および人格の連続性の維持を目指す。\n\n" +
                         "概要\n" +
                         "脳波（EEG）等から得られる神経活動データを解析し、記憶情報と人格特性の関連性をモデル化する。\n\n" +
-                        "損なわれた記憶を人工知能で補い、人格の連続性を保つ。記憶を回廊構造で写し取り、情報間の関連性を空間的に再構成することで、記憶構造の解析および補完を試みる。\n\n" +
+                        "損なわれた記憶を人工知能で補い、人格の連続性を保つ。情報間の関連性を再構成することで、記憶構造の解析および補完を試みる。\n\n" +
                         "段階\n" +
                         "現在、神経活動データの解析精度向上と、記憶構造モデルの有効性検証を進めている。臨床応用に向けた安全性および再現性の評価を継続する。\n\n" +
                         "文書管理区分：研究所内部資料");
@@ -1337,14 +1337,14 @@ namespace EscapeProto
                 new Vector3(2.7f, 1.2f, 0.06f),
                 "社員名簿",
                 "《社員名簿》\n\n" +
-                "　佐伯 恒一　主任研究員補佐（写真あり）\n" +
-                "　水野 美奈　臨床研究員　　［顔・判読不能］\n" +
-                "　黒田 恒一　上席研究員　　［顔・判読不能］\n" +
-                "　──── 　所長　　　　　［顔・判読不能］\n\n" +
+                "　松原 翼　　　研究員・神経計測担当（写真あり）\n" +
+                "　川崎 千咲都　研究員・AI解析担当　　［顔・判読不能］\n" +
+                "　海尾 諒多郎　研究員・臨床評価担当　［顔・判読不能］\n" +
+                "　────　　　所長　　　　　　　　　［顔・判読不能］\n\n" +
                 "3人分の顔写真は薬品で溶かされたように\n" +
-                "黒く滲んでいる。無事なのは佐伯、ただ一人。\n" +
+                "黒く滲んでいる。無事なのは松原、ただ一人。\n" +
                 "……この顔、どこかで。");
-            // 顔写真4枚（佐伯以外の3枚は黒く潰れている）
+            // 顔写真4枚（松原以外の3枚は黒く潰れている）
             var photo = GetMat("LP_Photo", new Color(0.75f, 0.74f, 0.7f), 0.1f);
             var blacked = GetMat("LP_PhotoBlacked", new Color(0.08f, 0.07f, 0.07f), 0.05f);
             for (int i = 0; i < 4; i++)
@@ -1396,7 +1396,7 @@ namespace EscapeProto
             return new[] { "summary", "members", "visitlog" };
         }
 
-        // ============================== 1章 佐伯恒一 ==============================
+        // ============================== 1章 松原 翼 ==============================
 
         /// <summary>第8研究室 脳神経解析室（1章転）：モニター群・作業台・職員証・異常レポート</summary>
         private static string[] FurnishAnalysis(Transform t, float hw, float hd, float h)
@@ -1468,17 +1468,28 @@ namespace EscapeProto
             brain.transform.localScale = new Vector3(0.3f, 0.26f, 0.34f);
             brain.GetComponent<Renderer>().sharedMaterial = GetMat("LP_BrainModel", new Color(0.8f, 0.6f, 0.6f), 0.4f);
             Object.DestroyImmediate(brain.GetComponent<Collider>());
-            // ヘルメット型スキャン装置（読める。進行必須ではない）
-            var helmet = Findable(table.transform, "helmet", "ヘルメット型スキャン装置", new Vector3(0.55f, 0.98f, 0.1f), dark,
+            // 記憶転送用ヘルメット（読める。進行必須ではない）
+            var helmet = Findable(table.transform, "helmet", "記憶転送用ヘルメット", new Vector3(0.55f, 0.98f, 0.1f), dark,
                 new Vector3(0.4f, 0.18f, 0.4f),
-                "ヘルメット型スキャン装置",
-                "頭にすっぽり被せる、黒い半球のヘルメット。\n" +
-                "内側には無数の電極。顎の固定ベルトが付いている。\n\n" +
-                "装置のラベル:\n" +
-                "「装着中は強い不快感を伴います。\n" +
-                "　被験者が耐えられない場合は直ちに中断すること」\n\n" +
-                "ベルトの内側に、爪で引っ掻いたような跡。\n" +
-                "……誰かが、外そうとした跡だ。");
+                "記憶転送用ヘルメット　取扱説明",
+                "記憶転送用ヘルメット　取扱説明\n" +
+                "\n" +
+                "概要\n" +
+                "本装置は、装着者の神経活動を読み取り、記憶情報を抽出するための機器です。取得した情報は、接続先のRENASCITAへ転送されます。\n" +
+                "\n" +
+                "使用方法\n" +
+                "1.ヘルメットを対象者の頭部に装着する。\n" +
+                "2.内部端末から対象者の認識・接続状態を確認する。\n" +
+                "3.転送先をRENASCITAに設定し、記憶抽出を開始する。\n" +
+                "4.転送完了後、装置を停止してからヘルメットを取り外す。\n" +
+                "\n" +
+                "注意事項\n" +
+                "・使用中は装置の電源を切らないでください。\n" +
+                "・転送中に対象者の神経活動に異常が見られた場合、直ちに処理を中断してください。\n" +
+                "・抽出された記憶情報には、欠損や混濁が含まれる場合があります。\n" +
+                "・転送された記憶が、対象者本人の記憶と完全に一致する保証はありません。\n" +
+                "\n" +
+                "（ベルトの内側に、爪で引っ掻いたような跡）");
             var dome = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             dome.name = "Dome"; dome.transform.SetParent(helmet.transform, false);
             dome.transform.localPosition = new Vector3(0f, 0.02f, 0f);
@@ -1493,14 +1504,14 @@ namespace EscapeProto
             for (int i = 0; i < 3; i++)
                 Box(t, "Cabinet", new Vector3(-hw + 0.35f, 1.0f, -2.0f + i * 1.4f), new Vector3(0.5f, 2.0f, 1.2f), dark);
 
-            // 職員証（作業台の上＝佐伯のIDがなぜかここに残されている）
+            // 職員証（作業台の上＝松原のIDがなぜかここに残されている）
             var idGo = Findable(table.transform, "idcard", "職員証", new Vector3(-0.05f, 0.9f, 0.35f), cardMat,
                 new Vector3(0.13f, 0.01f, 0.09f),
-                "職員証（佐伯恒一）",
-                "《職員証》　小川脳神経総合研究所\n\n" +
-                "　氏名: 佐伯 恒一\n" +
-                "　役職: 主任研究員補佐\n" +
-                "　担当: 補完アルゴリズム\n\n" +
+                "職員証（松原 翼）",
+                "《職員証》　三木脳神経総合研究所\n\n" +
+                "　氏名: 松原 翼\n" +
+                "　役職: 研究員（神経計測担当）\n" +
+                "　担当: 脳神経活動の計測・データ収集\n\n" +
                 "名簿で唯一顔が残っていた男。\n" +
                 "そして──あの異形と、同じ顔。");
 
@@ -1508,64 +1519,123 @@ namespace EscapeProto
             var planGo = Findable(table.transform, "plan", "研究計画書", new Vector3(-0.1f, 0.9f, -0.3f), paper,
                 new Vector3(0.4f, 0.02f, 0.3f),
                 "リナシータ研究計画書",
-                "《RENASCITA 研究計画書 表紙》\n\n" +
-                "対象: 遷延性意識障害（いわゆる植物状態）\n" +
-                "方針: 損傷した脳の記憶・人格野を\n" +
-                "　　　外部より補完し、意識の再構成を促す\n\n" +
-                "《スキャン手順 抜粋》\n" +
-                "・脳情報はヘルメット型スキャン装置で取得する\n" +
-                "・スキャンは強い不快感を伴い、覚醒下・睡眠下では\n" +
-                "　正常なデータが取れない。機能停止薬で脳の\n" +
-                "　生命維持以外を止めた状態で行うこと\n" +
-                "・取得後は機能回復薬で覚醒させる。ただし\n" +
-                "　記憶と意識の混濁が生じる（後述 4-3）\n\n" +
-                "──リナシータ。イタリア語で「再誕」。\n" +
-                "この響きを、私は知っている。\n" +
-                "祈るように口にしたことが、ある。");
-            Tape(table.transform, new Vector3(0.28f, 0.9f, -0.08f), -18f, "補完試験 口述 No.12　佐伯");
-            var specGo = Findable(table.transform, "spec", "アルゴリズム仕様", new Vector3(0.75f, 0.9f, -0.25f), paper,
+                "研究計画書 project:RENASCITA\n" +
+                "\n" +
+                "文書番号：MNR-RP-0001\n" +
+                "研究課題：人工知能による記憶構造の再構成および意識機能回復に関する研究\n" +
+                "研究責任者：三木 宗英\n" +
+                "\n" +
+                "\n" +
+                "1．研究目的\n" +
+                "脳神経活動データの解析と人工知能（AI）による情報補完を通じ、意識機能の回復および人格の連続性の維持を目指す。\n" +
+                "\n" +
+                "2．研究概要\n" +
+                "脳波（EEG）等から得られる神経活動データを解析し、記憶情報と人格特性の関連性をモデル化する。\n" +
+                "\n" +
+                "損なわれた記憶をAIで補い、人格の連続性を保つ。情報間の関連性を再構成することで、記憶構造の解析および補完を試みる。\n" +
+                "\n" +
+                "本研究で開発する人工知能システムを「RENASCITA（リナシータ）」と称する。\n" +
+                "\n" +
+                "3．研究実施計画\n" +
+                "第一段階：基礎解析\n" +
+                "神経活動データの収集・解析\n" +
+                "記憶情報の関連性のモデル化\n" +
+                "\n" +
+                "第二段階：システム開発\n" +
+                "記憶構造モデルの構築\n" +
+                "AIによる記憶情報の補完機能の開発\n" +
+                "\n" +
+                "第三段階：検証\n" +
+                "統合モデルの有効性評価\n" +
+                "意識機能および人格特性の変化の観察\n" +
+                "\n" +
+                "第四段階：臨床応用\n" +
+                "対象症例の選定\n" +
+                "安全性および再現性の評価\n" +
+                "\n" +
+                "4．研究体制\n" +
+                "\n" +
+                "三木 宗英： 研究統括・臨床応用の判断\n" +
+                "松原 翼： 神経活動データの取得・管理\n" +
+                "川崎 千咲都： AIモデルの開発・情報補完\n" +
+                "海尾 諒多郎： 対象者の状態観察・実験記録\n" +
+                "久賀 夏樹： 記憶構造の解析・統合モデルの評価\n" +
+                "\n" +
+                "5．研究上の留意事項\n" +
+                "AIによる情報補完が、対象者本人の記憶や主観的体験と一致するとは限らない。\n" +
+                "記憶情報の再構成と人格の再現は同一ではないことを認識し、研究成果の有効性および限界について慎重に評価する。\n" +
+                "\n" +
+                "\n" +
+                "以上");
+            Tape(table.transform, new Vector3(0.28f, 0.9f, -0.08f), -18f, "補完試験 口述 No.12　松原");
+            var specGo = Findable(table.transform, "spec", "アルゴリズム仕様書", new Vector3(0.75f, 0.9f, -0.25f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
-                "補完アルゴリズム仕様（佐伯）",
-                "《補完アルゴリズム 概略》　担当: 佐伯\n\n" +
-                "記憶は「傾向」で分類される。\n" +
-                "　○ 感情　△ 言語　□ 行動\n\n" +
-                "欠損した記憶は、残された記憶の傾向から\n" +
-                "「その人らしい記憶」を推定して埋める。\n" +
-                "　→ 規則: 欠損区画には、経路上の両隣と\n" +
-                "　　 同じ傾向を置く。異なる傾向を置くと\n" +
-                "　　 光が濁り、補完は失敗する。\n\n" +
+                "記憶補完アルゴリズム仕様書",
+                "記憶補完アルゴリズム仕様書\n" +
+                "\n" +
+                "文書番号：MNR-DS-0012\n" +
+                "対象システム：RENASCITA（リナシータ）\n" +
+                "管理責任者：三木 宗英\n" +
+                "\n" +
+                "1．概要\n" +
+                "欠損した記憶情報をAIによって推定・補完し、記憶構造の再構成を行う。\n" +
+                "\n" +
+                "2．処理手順\n" +
+                "情報取得：神経活動データから記憶に関連する情報を抽出する。\n" +
+                "関連付け：人物、出来事、感情、時間、場所などの情報を相互に接続する。\n" +
+                "欠損補完：関連する記憶をもとに、不足している情報を推定する。\n" +
+                "構造再構成：補完した情報を記憶構造モデルに統合する。\n" +
+                "整合性検証：他の記憶との矛盾を確認し、結果を記録する。\n" +
+                "\n" +
+                "3．注意事項\n" +
+                "記憶間の整合性が高いことは、補完された情報が事実であることを保証しない。\n" +
+                "\n" +
+                "本システムは記憶を再構成するものであり、本人の実際の経験を完全に復元するものではない。\n" +
+                "\n" +
+                "以上\n" +
+                "文書管理区分：研究所内部資料\n" +
+                "\n" +
                 "欄外の書き込み:\n" +
                 "「補完された記憶は、本当に本人のものか？」\n" +
                 "「本人を本人たらしめるものは、何だ」");
 
-            // 記憶回路端末（西のモニターラック）。仕様を読んだ人だけが迷わず通せる
+            // 記憶回路端末（西のモニターラック）。欠損区画の決まり（両隣と同じ傾向）は端末の説明に書いてある
             var circuit = Lock<LoopCircuitLock>(t, "CircuitTerminal", new Vector3(-2.2f, 1.2f, hd - 0.49f),
                 new Vector3(0.9f, 0.6f, 0.04f), EmissiveMat("LP_CircuitScreen", new Color(0.35f, 0.25f, 0.1f), new Color(1f, 0.7f, 0.3f) * 0.8f),
                 "analysis", "circuit", "記憶回路端末", "analysis_spec");
             circuit.Title = "記憶回路　── 補完テスト ──";
-            circuit.Body = "提供体の記憶（左）を対象者（右）へ通す。回転で経路を作り、欠損区画（?）には傾向を補完すること。";
+            circuit.Body = "提供体の記憶（左）を対象者（右）へ通す。回転で経路を作り、欠損区画（?）には、経路上の両隣と同じ傾向（○ 感情・△ 言語・□ 行動）を置くこと。";
             circuit.Level = LoopCircuitLock.Level5x5();
             circuit.SuccessNoteTitle = "記憶回路：補完テスト成功";
             circuit.SuccessNoteBody =
                 "欠損区画に両隣と同じ傾向を置くと、光は通った。\n" +
-                "──仕様どおりだ。私はこの手順を、何度もやった気がする。\n\n" +
-                "通した記憶は、異常レポートの言う\n" +
-                "「存在しないはずの記憶」として登録された。";
+                "──仕様どおりだ。私はこの手順を、何度もやった気がする。\n" +
+                "\n" +
+                "通した記憶は、補完された記憶として登録された。\n" +
+                "整合性は高い。──それが事実だという保証は、どこにもない。";
             circuit.Lamp = circuit.GetComponent<Renderer>();
             TextPlate(t, "MEMORY CIRCUIT", new Vector3(-2.2f, 1.62f, hd - 0.49f), 0f, new Color(1f, 0.75f, 0.4f), 0.022f);   // 180°だと部屋側から左右反転して見えた
 
-            // 異常レポート（モニターの前。読了で1章転の核心）
-            var anomalyGo = Findable(t, "anomaly", "異常レポート", new Vector3(0f, 1.5f, hd - 0.5f), screen,
+            // 異常報告のメール（モニターの前。読了で1章転の核心）
+            var anomalyGo = Findable(t, "anomaly", "異常報告", new Vector3(0f, 1.5f, hd - 0.5f), screen,
                 new Vector3(0.6f, 0.4f, 0.04f),
-                "異常レポート（佐伯→所長）",
-                "《異常報告》　報告者: 佐伯\n\n" +
-                "・存在しないはずの記憶が生成されている\n" +
-                "・システムが研究員自身の脳情報で\n" +
-                "　学習している可能性がある\n" +
-                "・至急、運用の停止を進言する\n\n" +
-                "所長からの返信は、一行だけ。\n" +
-                "「今は結論を出すな」\n\n" +
-                "……私は、ここで働いていた。思い出してきた。");
+                "記憶抽出試験における異常報告",
+                "件名：記憶抽出試験における異常報告\n" +
+                "\n" +
+                "送信者：久賀 夏樹\n" +
+                "宛先：三木 宗英\n" +
+                "\n" +
+                "三木所長\n" +
+                "\n" +
+                "記憶抽出試験において、装置装着者の意識および記憶機能に異常が確認されました。\n" +
+                "抽出処理中、装着者に一時的な意識障害が発生。試験終了後も、直前の行動や会話の一部を思い出せないなど、記憶の欠落が確認されています。\n" +
+                "\n" +
+                "現段階では症状と記憶抽出処理の因果関係は断定できません。しかし、記憶情報を読み取る過程で、対象者自身の記憶にも影響が及んでいる可能性があります。\n" +
+                "\n" +
+                "このまま本番規模での記憶抽出を実施した場合、装着者の脳機能に回復不能な損傷が生じ、最悪の場合、脳死に至る危険性も否定できません。\n" +
+                "原因の特定と安全性の再検証が完了するまで、本番試験への移行を見合わせるよう強く要請します。\n" +
+                "\n" +
+                "久賀 夏樹");
 
             if (hq)
             {
@@ -1594,7 +1664,7 @@ namespace EscapeProto
             return new[] { "idcard", "plan", "spec", "anomaly", "circuit" };
         }
 
-        /// <summary>佐伯の自宅（1章結）：二人分のコーヒー・妻の手紙・残響〈口論・佐伯視点〉</summary>
+        /// <summary>松原の自宅（1章結）：二人分のコーヒー・妻の手紙・残響〈口論・松原視点〉</summary>
         private static string[] FurnishSaekiHome(Transform t, float hw, float hd, float h)
         {
             var wood = GetMat("LP_Furniture", new Color(0.4f, 0.3f, 0.22f), 0.2f);
@@ -1687,7 +1757,7 @@ namespace EscapeProto
                 new Vector3(0.24f, 0.01f, 0.16f),
                 "妻の書きかけの手紙",
                 "《便箋》\n\n" +
-                "「お母さんへ。恒一さんのことで相談があります。\n" +
+                "「お母さんへ。翼さんのことで相談があります。\n" +
                 "　最近、帰りがとても遅いんです。\n" +
                 "　何を聞いても『大丈夫だ』としか──\n" +
                 "　昨日は夜中に、書斎で一人で\n" +
@@ -1696,9 +1766,9 @@ namespace EscapeProto
                 "投函されることは、なかったんだろう。");
             var plogGo = Findable(desk.transform, "plog", "私的ログ", new Vector3(-0.2f, 0.76f, 0.05f), paper,
                 new Vector3(0.3f, 0.02f, 0.22f),
-                "佐伯の私的ログ（最終頁）",
+                "松原の私的ログ（最終頁）",
                 "《私的記録 最終頁》\n\n" +
-                "「所長は動かない。黒田さんは正論しか言わない。\n" +
+                "「所長は動かない。海尾さんは正論しか言わない。\n" +
                 "　なら、私が直接あの人と話すしかない。\n" +
                 "　悪い人ではないんだ。ただ、追い詰められている。\n" +
                 "　今夜、解析室で会う約束をした」\n\n" +
@@ -1717,12 +1787,12 @@ namespace EscapeProto
                 "──いや。書けなかったのか。\n" +
                 "この「あなた」とは、誰のことだ。");
 
-            // 残響〈口論・佐伯視点〉＝冷静な対話に見える
-            Echo(t, "argue_saeki", "残響：口論（佐伯の記憶）",
+            // 残響〈口論・松原視点〉＝冷静な対話に見える
+            Echo(t, "argue_saeki", "残響：口論（松原の記憶）",
                 "居間の隅で、二つの影が距離を取って向かい合っている。\n" +
                 "声は低く抑えられ、時折、片方が静かにうなずく。\n" +
                 "激した言葉はどこにもない。──冷静な、議論。\n" +
-                "佐伯の記憶の中では、そうだった。",
+                "松原の記憶の中では、そうだった。",
                 2.2f, 0.85f, 0.3f,
                 (new Vector3(-1.2f, 0f, -0.6f), 90f, 1.0f, 2f, 1f, false),
                 (new Vector3(0.6f, 0f, -0.6f), -90f, 1.0f, -2f, 0.8f, false));
@@ -1760,7 +1830,7 @@ namespace EscapeProto
                 if (Visual(unsentGo.transform, HqModel("saeki_home", "Unsent"), Vector3.zero) != null) HideRenderers(desk.transform, unsentGo.name);
             }
 
-            // 黒塗りの資料（任意）：書斎机の上の、佐伯の日記の欠けたページ。2章の病棟の言葉が要る（戻ってきて埋める）。
+            // 黒塗りの資料（任意）：書斎机の上の、松原の日記の欠けたページ。2章の病棟の言葉が要る（戻ってきて埋める）。
             // 埋めると書斎机の引き出しが手前に出て、中に妻に宛てた封筒（留守番電話「書斎の机を見てくれ」の答え）
             FillPaper(desk.transform, "saeki_home", "diarypage", "日記の切れ端", "DiaryPage", new Vector3(-0.55f, 0.75f, 0.08f), 8f, new Vector2(0.148f, 0.21f));
             if (hq)
@@ -1788,7 +1858,7 @@ namespace EscapeProto
             return new[] { "letter", "plog", "unsent" };
         }
 
-        // ============================== 2章 水野美奈 ==============================
+        // ============================== 2章 川崎 千咲都 ==============================
 
         /// <summary>臨床病棟（2章起）：空のベッド列・娘のファイル・残響〈最後の会話・主人公視点〉</summary>
         private static string[] FurnishWard(Transform t, float hw, float hd, float h)
@@ -1878,11 +1948,11 @@ namespace EscapeProto
                         ?? Desk(t, "NurseDesk", new Vector3(1.8f, 0f, -hd + 1.6f), frameM);
                 Prop(t, "OfficeChair", new Vector3(1.8f, 0f, -hd + 0.85f));
             }
-            Tape(nurse.transform, new Vector3(0.18f, 0.76f, 0.12f), -8f, "面会用　二宮さん　No.31");
+            Tape(nurse.transform, new Vector3(0.18f, 0.76f, 0.12f), -8f, "面会用　久賀さん　No.31");
             var obsGo = Findable(nurse.transform, "obs", "観察記録", new Vector3(-0.45f, 0.76f, 0.0f), paper,
                 new Vector3(0.36f, 0.02f, 0.26f),
-                "水野の患者観察記録",
-                "《患者観察記録》　記録者: 水野\n\n" +
+                "川崎の患者観察記録",
+                "《患者観察記録》　記録者: 川崎\n\n" +
                 "・301号 佐々木さん　今日は目元が和らいでいた\n" +
                 "・302号 田中さん　娘さんの面会。手を握ると脈が上がる\n" +
                 "・303号 ──\n\n" +
@@ -1922,17 +1992,17 @@ namespace EscapeProto
                 if (Visual(girlGo.transform, HqModel("ward", "GirlFile"), Vector3.zero) != null) HideRenderers(t, girlGo.name);
             }
 
-            // 黒塗りの資料（任意）：ナースデスクの、水野の観察記録の続きのページ。水野のアパートの言葉が要る（戻ってきて埋める）。
-            // 埋めると入口の西の職員ロッカー（3つ並びの真ん中＝水野）が開き、中に渡せなかった手紙
+            // 黒塗りの資料（任意）：ナースデスクの、川崎の観察記録の続きのページ。川崎のアパートの言葉が要る（戻ってきて埋める）。
+            // 埋めると入口の西の職員ロッカー（3つ並びの真ん中＝川崎）が開き、中に渡せなかった手紙
             // 置き場所は机の上の何も無い所（観察記録のクリップボードとキーボードの間。電話・マウス・ファイル立てにも掛からない。
             // 他の物に重ならないことは hq/check_fill_overlap.py で確かめる）
             FillPaper(nurse.transform, "ward", "page303", "観察記録の続き", "Page303", new Vector3(-0.145f, 0.75f, -0.18f), 2f, new Vector2(0.21f, 0.297f));
-            var lockers = FillBox(t, "ward", "page303", "水野のロッカー", HqModel("ward", "FillLockers"), "WardFill_Door",
+            var lockers = FillBox(t, "ward", "page303", "川崎のロッカー", HqModel("ward", "FillLockers"), "WardFill_Door",
                 // x = fill_props.WARD_LOCKER_X。後ろの巾木とバンパーレールは切ってあり、背は腰壁（4mm）の 2mm 手前
                 new Vector3(-2.0f, 0f, -hd + 0.075f + 0.006f + 0.25f), 0f, FillContainer.Motion.Hinge, new Vector3(0f, -100f, 0f),
                 (Vector3.zero, Vector3.zero),
                 (new Vector3(0f, 0.9f, -0.04f), new Vector3(1.35f, 1.8f, 0.42f)));
-            // 名札（田村／水野／森）はモデルのテクスチャ（FIL_NameCards）
+            // 名札（田村／川崎／森）はモデルのテクスチャ（FIL_NameCards）
             // 封筒は棚の奥に立てかけてある。調べる判定は封筒から扉の面まで伸ばす（本体の当たり判定より手前で当たるように）
             FillInside(lockers.transform, lockers, "letter303", "封筒", new Vector3(0.05f, 1.58f, 0.01f), new Vector3(0.24f, 0.13f, 0.42f),
                 "渡せなかった手紙",
@@ -2078,7 +2148,7 @@ namespace EscapeProto
                 "……「提供体」。\n" +
                 "健常な、成人。それは、どこから？");
 
-            // 配電盤（2章転・順序転記型）: 手順書3-3の順に給電する。3本目で脚本襲撃（水野初登場）
+            // 配電盤（2章転・順序転記型）: 手順書3-3の順に給電する。3本目で脚本襲撃（川崎初登場）
             //（以前は z=hd-1.9 で3台目の端末デスクの真後ろに隠れ、未送信メッセージの画面とも重なっていた → 北へ寄せる）
             var panel = Lock<LoopSequenceLock>(t, "PowerPanel", new Vector3(-hw + 0.2f, 1.3f, hd - 1.25f),
                 new Vector3(0.14f, 0.9f, 0.7f), metal, "core_ante", "power", "配電盤", "core_ante_manual");
@@ -2114,8 +2184,8 @@ namespace EscapeProto
                 "この数字に、指先が冷たくなる。");
             var memoGo = Findable(t, "wmemo", "発見メモ", new Vector3(-hw + 0.75f, 0.76f, 1.6f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
-                "水野の発見メモ",
-                "《メモ》　筆跡: 水野\n\n" +
+                "川崎の発見メモ",
+                "《メモ》　筆跡: 川崎\n\n" +
                 "「照合結果。脳情報の一部が、うちの研究員の\n" +
                 "　ものと一致する。そんなはずない。\n" +
                 "　所長に報告 → 『そのデータには触るな』と。\n" +
@@ -2123,7 +2193,7 @@ namespace EscapeProto
             // 以前は z=2.4 で配電盤と重なっていた → 南の壁寄りの空いた壁へ
             var unsentGo = Findable(t, "unsentmsg", "未送信メッセージ", new Vector3(-hw + 0.18f, 1.4f, -3.05f), deadScreen,
                 new Vector3(0.06f, 0.5f, 0.8f),
-                "未送信メッセージ（水野）",
+                "未送信メッセージ（川崎）",
                 "《送信トレイ》　宛先: 所長\n\n" +
                 "「主任、あの人を止めてください。\n" +
                 "　私はもう、黙っていられません。\n" +
@@ -2145,7 +2215,7 @@ namespace EscapeProto
             return new[] { "manual", "brainlist", "wmemo", "unsentmsg", "power" };
         }
 
-        /// <summary>水野のアパート（2章結）：暖かい部屋の奥が病室に滲む。残響〈黒い影〉〈叔父の病室〉</summary>
+        /// <summary>川崎のアパート（2章結）：暖かい部屋の奥が病室に滲む。残響〈黒い影〉〈叔父の病室〉</summary>
         private static string[] FurnishMizunoApart(Transform t, float hw, float hd, float h)
         {
             var wood = GetMat("LP_Furniture", new Color(0.4f, 0.3f, 0.22f), 0.2f);
@@ -2200,7 +2270,7 @@ namespace EscapeProto
             Box(lowT.transform, "Legs", new Vector3(0f, 0.17f, 0f), new Vector3(0.8f, 0.34f, 0.5f), wood);
             var diaryGo = Findable(lowT.transform, "diary", "日記帳", new Vector3(-0.15f, 0.38f, 0f), paper,
                 new Vector3(0.24f, 0.02f, 0.18f),
-                "水野の日記",
+                "川崎の日記",
                 "《日記》\n\n" +
                 "3月2日\n" +
                 "「誕生日。同期の子がケーキをくれた。29歳」\n\n" +
@@ -2221,14 +2291,14 @@ namespace EscapeProto
             counter.transform.localPosition = new Vector3(-hw + 0.6f, 0f, -0.2f);
             Box(counter.transform, "Top", new Vector3(0f, 0.85f, 0f), new Vector3(1.0f, 0.06f, 0.8f), fusuma);
             Box(counter.transform, "Base", new Vector3(0f, 0.42f, 0f), new Vector3(0.95f, 0.8f, 0.75f), wood);
-            // 水野のノートPC（2章結・転記型）: パスワードは"叔父の"命日 0914
+            // 川崎のノートPC（2章結・転記型）: パスワードは"叔父の"命日 0914
             var laptop = Lock<LoopCodeLock>(counter.transform, "Laptop", new Vector3(-0.28f, 0.9f, -0.15f),
                 new Vector3(0.32f, 0.03f, 0.24f), GetMat("LP_Laptop", new Color(0.2f, 0.2f, 0.22f), 0.5f),
-                "mizuno_apart", "pcfile", "水野のノートPC", "mizuno_apart_diary");
-            laptop.Title = "水野のノートPC";
+                "mizuno_apart", "pcfile", "川崎のノートPC", "mizuno_apart_diary");
+            laptop.Title = "川崎のノートPC";
             laptop.Body = "ログインパスワード（4桁）\nヒント欄: 「忘れられない日」";
             laptop.Length = 4; laptop.Answer = "0914";
-            laptop.SuccessNoteTitle = "水野のPC：第12研究室 入室情報";
+            laptop.SuccessNoteTitle = "川崎のPC：第12研究室 入室情報";
             laptop.SuccessNoteBody =
                 "デスクトップに、ひとつだけファイル。\n" +
                 "「第12研究室 入室ID: MIZ-0417 / 仮パス: 8821」\n" +
@@ -2242,8 +2312,8 @@ namespace EscapeProto
                 new Vector3(0.05f, 0.02f, 0.12f),
                 "最後の録音",
                 "《録音 再生》\n\n" +
-                "「──佐伯さん、電話に出ない。\n" +
-                "　黒田さんも会議中。主任も出ない。\n" +
+                "「──松原さん、電話に出ない。\n" +
+                "　海尾さんも会議中。主任も出ない。\n" +
                 "　決めた。今夜、外部の窓口に全部話す。\n" +
                 "　荷物まとめて、いったん実家に──」\n\n" +
                 "ドアの開く音。\n\n" +
@@ -2304,8 +2374,8 @@ namespace EscapeProto
                 Deco(t, "BedsideCabinet", new Vector3(-0.6f, 0.3f, hd - 0.6f), new Vector3(0.5f, 0.6f, 0.45f), frameM);
             }
 
-            // 残響〈叔父の病室〉幼い水野
-            Echo(t, "mizuno_uncle", "残響：病室（幼い水野の記憶）",
+            // 残響〈叔父の病室〉幼い川崎
+            Echo(t, "mizuno_uncle", "残響：病室（幼い川崎の記憶）",
                 "病院のベッドの脇に、小さな影が立っている。\n" +
                 "眠ったままの誰かに、ずっと話しかけている。\n" +
                 "返事はない。それでも、毎日。\n" +
@@ -2313,8 +2383,8 @@ namespace EscapeProto
                 1.2f, 1.35f, 0.14f,
                 (new Vector3(-0.9f, 0f, hd - 2.3f), 60f, 0.55f, 2f, 1f, false));
 
-            // 残響〈最後の会話・水野視点〉＝顔のない黒い影（正体はまだ明かさない）
-            Echo(t, "talk_mizuno", "残響：会話（水野の記憶）",
+            // 残響〈最後の会話・川崎視点〉＝顔のない黒い影（正体はまだ明かさない）
+            Echo(t, "talk_mizuno", "残響：会話（川崎の記憶）",
                 "部屋の中で、小柄な影が出口を背にして立ちすくんでいる。\n" +
                 "向かいには──顔のない、真っ黒な影。\n" +
                 "闇より濃い輪郭だけがそこにあり、\n" +
@@ -2349,9 +2419,9 @@ namespace EscapeProto
             return new[] { "diary", "recorder", "pcfile" };
         }
 
-        // ============================== 3章 黒田恒一 ==============================
+        // ============================== 3章 海尾 諒多郎 ==============================
 
-        /// <summary>データ管理室（3章起）：サーバーラック・紙ファイル・残響〈口論・黒田視点〉</summary>
+        /// <summary>データ管理室（3章起）：サーバーラック・紙ファイル・残響〈口論・海尾視点〉</summary>
         private static string[] FurnishDataRoom(Transform t, float hw, float hd, float h)
         {
             var rack = GetMat("LP_ServerRack", new Color(0.12f, 0.13f, 0.15f), 0.4f);
@@ -2412,9 +2482,9 @@ namespace EscapeProto
             var minutesGo = Findable(admin.transform, "minutes", "議事録", new Vector3(0.45f, 0.76f, -0.05f), paper,
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "停止要求の議事録",
-                "《緊急会議 議事録》　起案: 黒田\n" +
+                "《緊急会議 議事録》　起案: 海尾\n" +
                 "日時: 4月18日〜19日（2日間）\n" +
-                "出席: 黒田・佐伯・水野\n" +
+                "出席: 海尾・松原・川崎\n" +
                 "欠席: 所長（学会出張のため札幌に滞在。\n" +
                 "　　　 19日夜まで戻らず、電話で参加）\n\n" +
                 "「システムは登録された脳情報を\n" +
@@ -2422,8 +2492,8 @@ namespace EscapeProto
                 "　扱い始めている。これは治療ではない。\n" +
                 "　直ちに運用を停止すべきだ」\n\n" +
                 "・所長（電話）: 保留\n" +
-                "・佐伯: 検証に時間を要すると発言\n\n" +
-                "……黒田。名簿の上席研究員。\n" +
+                "・松原: 検証に時間を要すると発言\n\n" +
+                "……海尾。名簿の臨床評価担当。\n" +
                 "この施設で、最初に「止めろ」と言った人。");
 
             // 入退室ログ照合端末（3章起・照合型）: CRT本体を操作する
@@ -2440,10 +2510,10 @@ namespace EscapeProto
                 "CRTが一行だけ吐き出した。\n" +
                 "「……主任じゃない。」\n\n" +
                 "なら、誰が主任のIDを使った。";
-            var kmemoGo = Findable(admin.transform, "kmemo", "黒田のメモ", new Vector3(-0.5f, 0.76f, 0.12f), paper,
+            var kmemoGo = Findable(admin.transform, "kmemo", "海尾のメモ", new Vector3(-0.5f, 0.76f, 0.12f), paper,
                 new Vector3(0.26f, 0.02f, 0.18f),
-                "黒田のメモ（一部欠損）",
-                "《個人メモ》　筆跡: 黒田\n\n" +
+                "海尾のメモ（一部欠損）",
+                "《個人メモ》　筆跡: 海尾\n\n" +
                 "「主任は3人を犠牲にする覚悟を決めた。\n" +
                 "　止められるのは私しかいない──」\n\n" +
                 "後半は破り取られて読めない。\n\n" +
@@ -2456,13 +2526,13 @@ namespace EscapeProto
                 "「主任を信用しすぎないほうがいい。\n" +
                 "　あの人は優しすぎる。\n" +
                 "　優しさは、時に何も止められない」\n\n" +
-                "──筆跡は黒田。\n" +
+                "──筆跡は海尾。\n" +
                 "「信用するな」ではなく「しすぎるな」。\n" +
                 "この言い回しが、妙に引っかかる。");
 
-            // 残響〈口論・黒田視点〉＝同じ場面が「怒鳴られている」ように見える
-            Echo(t, "argue_kuroda", "残響：口論（黒田の記憶）",
-                "……この場面を、知っている。佐伯の家で見た、あの口論だ。\n" +
+            // 残響〈口論・海尾視点〉＝同じ場面が「怒鳴られている」ように見える
+            Echo(t, "argue_kuroda", "残響：口論（海尾の記憶）",
+                "……この場面を、知っている。松原の家で見た、あの口論だ。\n" +
                 "だが、まるで違う。\n" +
                 "向かいの影は一回り大きく、覆いかぶさるように迫り、\n" +
                 "割れた声を張り上げている。もう片方の影は\n" +
@@ -2495,7 +2565,7 @@ namespace EscapeProto
             return new[] { "minutes", "kmemo", "scribble", "audit" };
         }
 
-        /// <summary>SYSTEM ROOM（3章転）：中枢コア・NINOMIYA HIDEKIの反転</summary>
+        /// <summary>SYSTEM ROOM（3章転）：中枢コア・KUGA NATSUKIの反転</summary>
         private static string[] FurnishSystemRoom(Transform t, float hw, float hd, float h)
         {
             var rack = GetMat("LP_ServerRack", new Color(0.12f, 0.13f, 0.15f), 0.4f);
@@ -2607,8 +2677,8 @@ namespace EscapeProto
             var gaplogGo = Findable(console.transform, "gaplog", "照合ログ", new Vector3(0.3f, 0.76f, 0.1f),
                 GetMat("LP_Paper", new Color(0.85f, 0.83f, 0.75f), 0.1f),
                 new Vector3(0.28f, 0.02f, 0.2f),
-                "黒田の照合ログ",
-                "《入退室照合 手書きの検算》　筆跡: 黒田\n\n" +
+                "海尾の照合ログ",
+                "《入退室照合 手書きの検算》　筆跡: 海尾\n\n" +
                 "「深夜帯に第12へ3回の入室。使用IDは主任。\n" +
                 "　だが主任は当日、学会で北海道にいた。\n" +
                 "　IDでは説明できない移動記録がある。\n\n" +
@@ -2619,9 +2689,9 @@ namespace EscapeProto
                 new Vector3(0.06f, 0.5f, 0.8f),
                 "復元された操作記録",
                 "《BRAIN DATA 登録操作 復元ログ》\n\n" +
-                "　DATA:01 登録実行者──NINOMIYA HIDEKI\n" +
-                "　DATA:02 登録実行者──NINOMIYA HIDEKI\n" +
-                "　DATA:03 登録実行者──NINOMIYA HIDEKI\n\n" +
+                "　DATA:01 登録実行者──KUGA NATSUKI\n" +
+                "　DATA:02 登録実行者──KUGA NATSUKI\n" +
+                "　DATA:03 登録実行者──KUGA NATSUKI\n\n" +
                 "………………。\n\n" +
                 "違う。何かの間違いだ。だって私は、私は──\n\n" +
                 "──思い出した。\n" +
@@ -2647,7 +2717,7 @@ namespace EscapeProto
             return new[] { "devlog", "gaplog", "restored" };
         }
 
-        /// <summary>黒田の自宅（3章結）：父の席だけ空いた食卓・子供の絵・残響〈食卓〉</summary>
+        /// <summary>海尾の自宅（3章結）：父の席だけ空いた食卓・子供の絵・残響〈食卓〉</summary>
         private static string[] FurnishKurodaHome(Transform t, float hw, float hd, float h)
         {
             var wood = GetMat("LP_Furniture", new Color(0.4f, 0.3f, 0.22f), 0.2f);
@@ -2752,8 +2822,8 @@ namespace EscapeProto
             Box(sideb.transform, "Body", new Vector3(0f, 0.45f, 0f), new Vector3(0.5f, 0.9f, 1.6f), wood);
             var rulesGo = Findable(sideb.transform, "rules", "個人記録", new Vector3(0f, 0.93f, -0.3f), paper,
                 new Vector3(0.28f, 0.02f, 0.2f),
-                "黒田の個人記録",
-                "《手帳》　筆跡: 黒田\n\n" +
+                "海尾の個人記録",
+                "《手帳》　筆跡: 海尾\n\n" +
                 "「規則は人を縛るためにあるんじゃない。\n" +
                 "　守るためにある。\n" +
                 "　それを娘たちに教えられる父親でいたい」\n\n" +
@@ -2765,34 +2835,34 @@ namespace EscapeProto
                 new Vector3(0.26f, 0.02f, 0.18f),
                 "最後の対峙の記録（破損）",
                 "《ICレコーダー 復元断片》\n\n" +
-                "黒田:「もう分かっているんです。あなたでしょう」\n" +
+                "海尾:「もう分かっているんです。あなたでしょう」\n" +
                 "　　 「──あなたは娘を救いたいんじゃない。\n" +
                 "　　　 娘を失うことを、受け入れられないだけだ」\n\n" +
                 "（長い沈黙）\n\n" +
-                "黒田:「……そうか。その顔が、答えか」\n\n" +
+                "海尾:「……そうか。その顔が、答えか」\n\n" +
                 "記録はここで破損している。\n" +
                 "彼は最後まで、逃げなかった。");
 
             // 残響の判定（3章結・照合型）: 口論を両方の視点で見た人だけが第三の答えに辿り着く
             var verdict = Lock<LoopChoiceLock>(sideb.transform, "Verdict", new Vector3(0f, 0.93f, 0.02f),
                 new Vector3(0.2f, 0.03f, 0.15f), GetMat("LP_KurodaNotebook", new Color(0.15f, 0.15f, 0.2f), 0.3f),
-                "kuroda_home", "verdict", "黒田の手帳（白紙のページ）", "echo_argue_kuroda");
-            verdict.Title = "黒田の手帳　── 白紙のページ ──";
+                "kuroda_home", "verdict", "海尾の手帳（白紙のページ）", "echo_argue_kuroda");
+            verdict.Title = "海尾の手帳　── 白紙のページ ──";
             verdict.Body = "あの口論で、怒鳴っていたのは誰だったのか。\n私は、答えを書き込まなければならない。";
-            verdict.Options = new[] { "佐伯", "黒田", "どちらでもない──記憶は主観で歪む" };
+            verdict.Options = new[] { "松原", "海尾", "どちらでもない──記憶は主観で歪む" };
             verdict.CorrectIndex = 2;
             verdict.RequireNotes = new[] { "echo_argue_saeki", "echo_argue_kuroda" };
             verdict.NotEnoughMessage = "まだ判断できない。あの口論を、両方の側から見ていない。";
             verdict.SuccessNoteTitle = "判定：どちらも、怒鳴ってはいなかった";
             verdict.SuccessNoteBody =
-                "佐伯の記憶では冷静な対話。黒田の記憶では一方的な怒鳴り声。\n" +
+                "松原の記憶では冷静な対話。海尾の記憶では一方的な怒鳴り声。\n" +
                 "同じ場面のはずなのに。\n\n" +
                 "──記憶は主観で歪む。\n" +
                 "なら、私がここまで「見てきた」ものは、どこまで本当だ。\n" +
                 "終章で、私はこの目で娘の記憶を選り分けることになる。";
 
             // 残響〈食卓〉家族の夕食（父の席だけ空いている）
-            Echo(t, "kuroda_family", "残響：食卓（黒田の家族の記憶）",
+            Echo(t, "kuroda_family", "残響：食卓（海尾の家族の記憶）",
                 "食卓に、小さな影がふたつ。\n" +
                 "楽しそうに揺れて、笑い声のような響きが漏れる。\n" +
                 "母親らしき影が、料理を並べていく。\n" +
@@ -2822,7 +2892,7 @@ namespace EscapeProto
                 if (Visual(verdict.transform, HqModel("kuroda_home", "Verdict"), Vector3.zero) != null) HideRenderers(sideb.transform, "Verdict");
             }
 
-            // 黒塗りの資料（任意）：東の壁の書き物机（ライティングビューロー）の上の、黒田のメモの破り取られた後半。
+            // 黒塗りの資料（任意）：東の壁の書き物机（ライティングビューロー）の上の、海尾のメモの破り取られた後半。
             // 3章の真相の後までに答えがそろう。埋めると斜めのふたが手前に倒れ、中に娘たちへの手紙
             const float buLean = 38.07f;  // 閉じたふたの傾き（fill_props.BU_LEAN と同じ）
             var bureau = FillBox(t, "kuroda_home", "kmemo2", "書き物机", HqModel("kuroda_home", "FillBureau"), "KurodaFill_Flap",
@@ -2946,8 +3016,8 @@ namespace EscapeProto
             var msgGo = Findable(altar.transform, "message", "操作端末", new Vector3(0f, 1.15f, 0f), screen,
                 new Vector3(0.7f, 0.45f, 0.06f),
                 "主任のメッセージ",
-                "《再生メッセージ》　小川 暁\n\n" +
-                "「二宮さん。ここまで来たなら、もう思い出しましたね。\n" +
+                "《再生メッセージ》　三木 宗英\n\n" +
+                "「久賀さん。ここまで来たなら、もう思い出しましたね。\n" +
                 "　あなたは3人に薬を使い、脳を丸ごと写し取って登録した。\n" +
                 "　3人は今も、病棟で眠っています。\n" +
                 "　私はそれに気づきながら、告発しなかった。\n" +
@@ -3022,8 +3092,8 @@ namespace EscapeProto
                 new Vector3(0.32f, 0.02f, 0.24f),
                 "書きかけの治療計画書",
                 "《治療計画書（初版・手書き）》\n\n" +
-                "対象: 小川 ▓▓（当時7歳）\n" +
-                "起案: 小川 暁\n\n" +
+                "対象: 三木 ▓▓（当時7歳）\n" +
+                "起案: 三木 宗英\n\n" +
                 "「必ず、もう一度あの声を聞く」\n\n" +
                 "余白いっぱいの計算式。何百回も消した跡。\n" +
                 "計画書は、完成しないまま古びていた。\n\n" +
@@ -3105,7 +3175,7 @@ namespace EscapeProto
         private static readonly Dictionary<string, float[]> EchoLinePitch = new Dictionary<string, float[]>
         {
             { "talk_mizuno", new[] { 0.78f, 1f, 0.78f, 1f } },   // 顔のない影の声だけ低く
-            { "argue_kuroda", new[] { 1f, 0.92f, 1f, 0.92f } },   // 怒鳴る佐伯を少し太く
+            { "argue_kuroda", new[] { 1f, 0.92f, 1f, 0.92f } },   // 怒鳴る松原を少し太く
         };
 
         /// <summary>
@@ -4006,7 +4076,7 @@ namespace EscapeProto
                 rec.Clips = clips;
 
                 if (info.Kind != InspectKind.Cassette && info.Kind != InspectKind.Recorder) continue;
-                // 部屋に専用のモデルが既にある（水野のレコーダー・黒田のICレコーダー）なら、そちらを使う
+                // 部屋に専用のモデルが既にある（川崎のレコーダー・海尾のICレコーダー）なら、そちらを使う
                 bool hasVisual = false;
                 foreach (var r in f.GetComponentsInChildren<Renderer>(true))
                     if (r.gameObject != f.gameObject) { hasVisual = true; break; }
@@ -4333,7 +4403,7 @@ namespace EscapeProto
                 case "SUS_Ika":    return HqLit(n, Color.white, 0.55f, 0f, HqTex("Sushi/ika"), HqTex("Sushi/ika_n", true), 0.6f);
                 case "SUS_Tamago": return HqLit(n, Color.white, 0.35f, 0f, HqTex("Sushi/tamago"), HqTex("Sushi/tamago_n", true), 0.4f);
                 case "SUS_Anago":  return HqLit(n, Color.white, 0.8f, 0f, HqTex("Sushi/anago"), HqTex("Sushi/anago_n", true), 0.4f);   // つめのつや
-                // ---- 黒田の自宅 ----
+                // ---- 海尾の自宅 ----
                 case "KUR_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("KurodaHome/flooring"), HqTex("KurodaHome/flooring_n", true), 0.4f);
                 case "KUR_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("KurodaHome/wallpaper"), HqTex("KurodaHome/wallpaper_n", true), 0.4f);
                 case "KUR_Ceiling":   return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.05f);
@@ -4485,7 +4555,7 @@ namespace EscapeProto
                 case "DAT_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
                 case "DAT_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
                 case "DAT_DoorLaminate": return HqLit(n, new Color(0.8f, 0.82f, 0.84f), 0.5f, 0f, HqTex("Lab/oak"), HqTex("Lab/oak_n", true), 0.3f);
-                // ---- 水野のアパート ----
+                // ---- 川崎のアパート ----
                 case "MZA_Flooring":  return HqLit(n, Color.white, 0.45f, 0f, HqTex("MizunoApart/flooring"), HqTex("MizunoApart/flooring_n", true), 0.4f);
                 case "MZA_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("MizunoApart/wallpaper"), HqTex("MizunoApart/wallpaper_n", true), 0.4f);
                 case "MZA_Ceiling":   return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.05f);
@@ -4684,7 +4754,7 @@ namespace EscapeProto
                 case "WRD_ClockFace": return HqLit(n, new Color(0.95f, 0.95f, 0.93f), 0.6f);
                 case "WRD_LeverRed":  return HqLit(n, new Color(0.75f, 0.12f, 0.1f), 0.5f);
                 case "WRD_Hazard":    return HqLit(n, Color.white, 0.4f, 0f, HqTex("Lab/hazard", clamp: true));
-                // ---- 佐伯の自宅 ----
+                // ---- 松原の自宅 ----
                 case "SAE_Wallpaper": return HqLit(n, Color.white, 0.1f, 0f, HqTex("SaekiHome/wallpaper"), HqTex("SaekiHome/wallpaper_n", true), 0.4f);
                 case "SAE_Floor":     return HqLit(n, Color.white, 0.45f, 0f, HqTex("SaekiHome/floor"), HqTex("SaekiHome/floor_n", true), 0.5f);
                 case "SAE_Wood":      return HqLit(n, Color.white, 0.5f, 0f, HqTex("SaekiHome/wood"), HqTex("SaekiHome/wood_n", true), 0.35f);

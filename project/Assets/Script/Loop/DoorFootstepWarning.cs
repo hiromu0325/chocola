@@ -6,6 +6,8 @@ namespace EscapeProto
     /// <summary>
     /// 部屋の中に居るとき、回廊側で異形がこの部屋の扉（入口／出口）に近づいていたら、
     /// 対応する室内の扉から足音を鳴らす。「出た瞬間に襲われる」を音で避けられるようにする。
+    /// この部屋へ入ろうとしている異形（LoopSearcher.ApproachRoom）は、向かっている扉からだけ聞こえる。
+    /// 遠さは回廊を歩いた道のりで測り、近いほど大きく速くなる。
     /// </summary>
     public class DoorFootstepWarning : MonoBehaviour
     {
@@ -41,7 +43,9 @@ namespace EscapeProto
                 foreach (var s in searchers)
                 {
                     if (s == null || !s.InCorridor || s.IsRetreating) continue;
-                    float d = Vector3.Distance(s.transform.position, front);
+                    // この部屋へ入ろうとしている異形は、向かっている扉からだけ聞こえる（反対側の扉では鳴らさない）
+                    if (s.ApproachRoom == cur && s.ApproachExit != door.IsExitDoor) continue;
+                    float d = LoopSearcher.RingDistance(s.transform.position, front);
                     if (d < nearest) nearest = d;
                 }
                 if (nearest > HearRange) continue;
@@ -62,7 +66,7 @@ namespace EscapeProto
                     _sources[door] = src;
                 }
                 src.pitch = Random.Range(0.85f, 1.05f);
-                src.PlayOneShot(ProceduralAudio.Footstep(), Mathf.Lerp(0.25f, 0.9f, t));
+                src.PlayOneShot(ProceduralAudio.Footstep(), Mathf.Lerp(0.15f, 1f, t * t));   // 遠い間はかすかに、扉の前ではっきり
             }
         }
     }

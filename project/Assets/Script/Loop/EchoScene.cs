@@ -7,7 +7,7 @@ namespace EscapeProto
     /// 【決定事項】主人公との対話は無い。文章では伝わらない情景の補強に使う。
     /// 同じ場面を別人物の記憶として2箇所に置き、パラメータ差分
     /// （揺れの激しさ・声の高さ/大きさ・シルエットの大きさ）で
-    /// 視点のすれ違いを表現する（例: 佐伯視点=冷静な対話 / 黒田視点=怒鳴られている）。
+    /// 視点のすれ違いを表現する（例: 松原視点=冷静な対話 / 海尾視点=怒鳴られている）。
     ///
     /// 挙動:
     /// ・普段は薄く佇む（干渉しない。コライダー無し）
@@ -19,7 +19,7 @@ namespace EscapeProto
     {
         [Tooltip("手帳記録用の一意ID")]
         public string EchoId;
-        [Tooltip("手帳タイトル（例: 残響：口論（佐伯の記憶））")]
+        [Tooltip("手帳タイトル（例: 残響：口論（松原の記憶））")]
         public string NoteTitle;
         [TextArea] public string NoteBody;
 
@@ -63,7 +63,7 @@ namespace EscapeProto
         // ---- 記録文はテキスト表（多言語）から引く。表に無ければ上のフィールドを使う ----
         private string TextKey => GameText.EchoKey(EchoId);
         public string Title => GameText.Get(TextKey + ".title", NoteTitle);
-        public string Body => GameText.Get(TextKey + ".body", NoteBody);
+        public string Body => GameText.GetMarked(TextKey + ".body", NoteBody);   // ルビの印付き（読む画面で Ruby.Parse）
 
         private Transform _player;
         private AudioSource _voice;

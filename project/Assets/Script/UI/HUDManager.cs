@@ -287,11 +287,15 @@ namespace EscapeProto
             _objLabel.text = warn ? "警報" : done ? "完了" : "目標";
             _objLabel.color = warn ? UiTheme.Danger : done ? UiTheme.Positive : UiTheme.Accent;
             _objRule.color = _objLabel.color;
-            _objText.text = HighlightKeys(text ?? "");
+            // 文はルビの印付きでよい（ルビがあれば、その分だけ文を下げて字の上に乗せる）
+            bool ruby = RubyText.SetMarked(_objText, text ?? "", HighlightKeys);
+            float pad = ruby ? RubyText.RoomAbove(_objText) : 0f;
+            _objText.lineSpacing = ruby ? 1.65f : 1.3f;
+            _objText.rectTransform.anchoredPosition = new Vector2(0f, -34f - pad);
             // 文の長さに合わせて暗幕の大きさを変える
             float w = Mathf.Min(_objText.preferredWidth, 760f);
             float h = _objText.preferredHeight;
-            _objPlate.rectTransform.sizeDelta = new Vector2(w + 48f, h + 62f);
+            _objPlate.rectTransform.sizeDelta = new Vector2(w + 48f, h + 62f + pad);
         }
 
         /// <summary>[E] のような操作キーを真鍮色に</summary>
@@ -371,13 +375,19 @@ namespace EscapeProto
         }
         private IEnumerator SubtitleRoutine(string text, float seconds)
         {
-            _subtitle.text = text;
+            // 文はルビの印付きでよい（ルビがあれば字の上に乗せ、その分だけ暗幕を上へ広げる）
+            _subtitleShown = text;
+            bool ruby = RubyText.SetMarked(_subtitle, text);
+            _subtitle.lineSpacing = ruby ? 1.6f : 1.15f;
+            float pad = ruby ? RubyText.RoomAbove(_subtitle) : 0f;
             _subtitlePlate.gameObject.SetActive(true);
             _subtitlePlate.rectTransform.sizeDelta = new Vector2(Mathf.Min(_subtitle.preferredWidth, 1400f) + 64f,
-                                                                 _subtitle.preferredHeight + 28f);
+                                                                 _subtitle.preferredHeight + 28f + pad);
+            _subtitlePlate.rectTransform.anchoredPosition = _subtitle.rectTransform.anchoredPosition + new Vector2(0f, pad * 0.5f);
             yield return new WaitForSeconds(seconds);
-            if (_subtitle.text == text) { _subtitle.text = ""; _subtitlePlate.gameObject.SetActive(false); }
+            if (_subtitleShown == text) { _subtitleShown = null; RubyText.SetMarked(_subtitle, ""); _subtitlePlate.gameObject.SetActive(false); }
         }
+        private string _subtitleShown;
 
         // ============= イベント演出 =============
         private void OnEventStart()

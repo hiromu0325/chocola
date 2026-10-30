@@ -87,6 +87,16 @@ namespace EscapeProto
             return m;
         }
 
+        /// <summary>本文の枠の大きさを変えた時（長い資料で枠を伸ばした時など）に、塗りの層も合わせる</summary>
+        public void SyncLayout()
+        {
+            if (_layer == null || Text == null) return;
+            var trt = Text.rectTransform;
+            _layer.anchoredPosition = trt.anchoredPosition;
+            _layer.sizeDelta = trt.sizeDelta;
+            _dirtyFrames = 2;
+        }
+
         public void SetBody(string entryId, string body)
         {
             EntryId = entryId;

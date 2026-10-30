@@ -37,7 +37,7 @@ namespace EscapeProto
         public string Title => GameText.Get(TextKey + ".title", NoteTitle);
         public string Body => DocCatalog.IsAudio(RoomId, Id)
             ? DocCatalog.Transcript(RoomId, Id)          // 音声記録は台詞の書き起こし
-            : GameText.Get(TextKey + ".body", NoteBody);
+            : GameText.GetMarked(TextKey + ".body", NoteBody);   // ルビの印付き（読む画面で Ruby.Parse）
         public string Hint => GameText.Get(TextKey + ".hint", PickupHint);
 
         private void Start()

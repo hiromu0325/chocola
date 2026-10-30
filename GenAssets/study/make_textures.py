@@ -142,7 +142,7 @@ def documents():
     d = ImageDraw.Draw(img)
     f = hand(34)
     lines = ["被験体経過報告　抜粋", "", "被験体は自身を研究員と認識している", "記憶の再生時、同一の空間を反復して認知する",
-             "（回廊状の構造として観測される）", "移植したAI領域が宿主の記憶を", "再構成している可能性がある", "",
+             "（被験体は「長い回廊のような場所」と", "　証言している）", "移植したAI領域が宿主の記憶を", "再構成している可能性がある", "",
              "報告者名の欄は黒く塗り潰されている。"]
     y = 70
     for s in lines:
@@ -160,16 +160,16 @@ def documents():
     for i in range(7):
         d.line([(0, 40 + i * 38), (w, 40 + i * 38)], fill=(170, 186, 210), width=2)
     f = hand(28)
-    for i, s in enumerate(["4/2　佐伯と面談。例の件、佐伯にだけは", "　　　話しておく。彼なら気づいている。",
-                           "4/9　佐伯より報告。「今は結論を出すな」と", "　　　伝えた。時間が要る。"]):
+    for i, s in enumerate(["4/2　松原と面談。例の件、松原にだけは", "　　　話しておく。彼なら気づいている。",
+                           "4/9　松原より報告。「今は結論を出すな」と", "　　　伝えた。時間が要る。"]):
         d.text((24, 14 + i * 38), s, font=f, fill=(30, 40, 90))
     save("doc_scrap", img)
     # 封筒（表：宛名、裏：封）
     w, h = 800, 440
     img = Image.new("RGB", (w, h), (238, 234, 222))
     d = ImageDraw.Draw(img)
-    d.text((290, 120), "二宮秀樹 様", font=_font(64, mincho=True), fill=(30, 30, 30))
-    d.text((80, 330), "小川脳神経総合研究所", font=_font(34, mincho=True), fill=(60, 60, 60))
+    d.text((290, 120), "久賀 夏樹 様", font=_font(64, mincho=True), fill=(30, 30, 30))
+    d.text((80, 330), "三木脳神経総合研究所", font=_font(34, mincho=True), fill=(60, 60, 60))
     d.rectangle([640, 40, 740, 150], outline=(170, 40, 40), width=4)
     d.text((660, 70), "親展", font=_font(34, mincho=True), fill=(170, 40, 40))
     save("envelope", img)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""水野のアパート（mizuno_apart）のテクスチャを手続き的に作る（継ぎ目なし＋法線マップ）。
+"""川崎のアパート（mizuno_apart）のテクスチャを手続き的に作る（継ぎ目なし＋法線マップ）。
 
     python GenAssets/mizuno/make_textures.py
 
@@ -190,7 +190,7 @@ def calendar(w=600, h=840):
 
 
 def diary():
-    """水野の日記（開いた頁。左：3月2日、右：9月14日と最終頁）"""
+    """川崎の日記（開いた頁。左：3月2日、右：9月14日と最終頁）"""
     w, h = 1480, 1040
     img = Image.new("RGB", (w, h), (246, 242, 230))
     d = ImageDraw.Draw(img)
@@ -219,7 +219,7 @@ def laptop_screen(w=640, h=400):
     d = ImageDraw.Draw(img)
     d.ellipse([w / 2 - 44, 70, w / 2 + 44, 158], fill=(220, 226, 236))
     d.ellipse([w / 2 - 18, 88, w / 2 + 18, 124], fill=(150, 160, 180))
-    d.text((w / 2 - 60, 170), "Mizuno", font=_font(34, mincho=False), fill=(255, 255, 255))
+    d.text((w / 2 - 60, 170), "Kawasaki", font=_font(34, mincho=False), fill=(255, 255, 255))
     d.rectangle([w / 2 - 150, 230, w / 2 + 150, 270], fill=(240, 242, 246))
     d.text((w / 2 - 140, 236), "パスワード（4桁）", font=_font(22, mincho=False), fill=(150, 150, 160))
     d.text((w / 2 - 150, 290), "ヒント：忘れられない日", font=_font(24, mincho=False), fill=(230, 236, 246))

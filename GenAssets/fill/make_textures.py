@@ -87,25 +87,25 @@ def guide():
     d = ImageDraw.Draw(img)
     # 上の帯とロゴ代わりの細罫
     d.rectangle([60, 70, w - 60, 74], fill=(60, 80, 110))
-    d.text((60, 86), "小川脳神経総合研究所", font=gothic(26), fill=(60, 80, 110))
-    d.text((w - 60 - gothic(20).getlength("OGAWA NEURO INSTITUTE"), 92), "OGAWA NEURO INSTITUTE", font=gothic(20), fill=(120, 130, 150))
+    d.text((60, 86), "三木脳神経総合研究所", font=gothic(26), fill=(60, 80, 110))
+    d.text((w - 60 - gothic(20).getlength("MIKI NEURO INSTITUTE"), 92), "MIKI NEURO INSTITUTE", font=gothic(20), fill=(120, 130, 150))
     f = _font(34)
     lines = ["《ご来訪の皆さまへ》", "",
              "当研究所では、損傷した記憶領域をAIで補完し、",
              "［人格の連続性］を維持する研究を進めております。", "",
-             "本日のご案内は、［主任研究員補佐］の［佐伯］が",
+             "本日のご案内は、［神経計測担当］の［松原］が",
              "務めます。"]
     y = 240
     for s in lines:
         draw_line(d, 70, y, s, f, INK_BLACK)
         y += 64 if s else 40
-    d.text((w - 60 - _font(26).getlength("小川脳神経総合研究所"), h - 160), "小川脳神経総合研究所", font=_font(26), fill=INK_BLACK)
+    d.text((w - 60 - _font(26).getlength("三木脳神経総合研究所"), h - 160), "三木脳神経総合研究所", font=_font(26), fill=INK_BLACK)
     d.rectangle([60, h - 90, w - 60, h - 88], fill=(60, 80, 110))
     save("guide", img)
 
 
 def diarypage():
-    """佐伯の日記の欠けたページ（横罫のノートを切り取った頁。左端がミシン目でちぎれている）"""
+    """松原の日記の欠けたページ（横罫のノートを切り取った頁。左端がミシン目でちぎれている）"""
     w, h = 760, 1060
     img = paper(w, h, (240, 237, 226), 21)
     d = ImageDraw.Draw(img)
@@ -131,13 +131,13 @@ def diarypage():
 
 
 def page303():
-    """水野の観察記録の続きのページ（印刷の書式に手書き）"""
+    """川崎の観察記録の続きのページ（印刷の書式に手書き）"""
     w, h = 840, 1188
     img = paper(w, h, (244, 243, 238), 31)
     d = ImageDraw.Draw(img)
     d.text((60, 60), "患者観察記録", font=gothic(36), fill=(50, 60, 70))
     d.text((60, 112), "記録者：", font=gothic(24), fill=(50, 60, 70))
-    d.text((160, 106), "水野", font=hand(32), fill=INK_BLUE)
+    d.text((160, 106), "川崎", font=hand(32), fill=INK_BLUE)
     d.rectangle([56, 160, w - 56, 163], fill=(120, 130, 140))
     for i in range(18):
         d.line([(56, 230 + i * 52), (w - 56, 230 + i * 52)], fill=(200, 205, 210), width=1)
@@ -166,7 +166,7 @@ def page303():
 
 
 def kmemo2():
-    """黒田のメモの破り取られた後半（上の端がちぎれている）"""
+    """海尾のメモの破り取られた後半（上の端がちぎれている）"""
     w, h = 900, 760
     img = paper(w, h, (238, 236, 228), 41)
     d = ImageDraw.Draw(img)
@@ -179,7 +179,7 @@ def kmemo2():
              "第12研究室に入ったのは、［主任じゃない］。",
              "主任のIDを持ち出せたのは、主任に招かれ、",
              "書斎に出入りできた人間だけだ。",
-             "［二宮秀樹］。毎晩、病棟で絵本を読んでいる、",
+             "［久賀 夏樹］。毎晩、病棟で絵本を読んでいる、",
              "あの父親だ。",
              "明日、本人と話す。［正しいこと］をしに行く」"]
     y = 50
@@ -195,7 +195,7 @@ def visitlog():
     img = paper(w, h, (246, 245, 240), 51)
     d = ImageDraw.Draw(img)
     d.text((60, 60), "面会相談　記録票", font=gothic(40), fill=(40, 50, 60))
-    d.text((w - 60 - gothic(22).getlength("小川脳神経総合研究所"), 76), "小川脳神経総合研究所", font=gothic(22), fill=(80, 90, 100))
+    d.text((w - 60 - gothic(22).getlength("三木脳神経総合研究所"), 76), "三木脳神経総合研究所", font=gothic(22), fill=(80, 90, 100))
     rows = [("対応", "所長"), ("相談者", "ご家族（父）"), ("氏名", None), ("内容", "娘さんが、目を覚まさない。"), ("", "受け入れ先を探している。"),
             ("所見", "当研究所の病棟で受け入れる。"), ("", "費用は問わない。"), ("", "以後の対応は、所長が直接行う。")]
     y = 150
@@ -249,12 +249,12 @@ def binders():
 
 
 def namecards():
-    """病棟の職員ロッカーの名札（3段のアトラス：田村／水野／森。札の比率は 0.124 x 0.038）"""
+    """病棟の職員ロッカーの名札（3段のアトラス：田村／川崎／森。札の比率は 0.124 x 0.038）"""
     w, row = 600, 184
     img = Image.new("RGB", (w, row * 3), (246, 246, 242))
     d = ImageDraw.Draw(img)
     f = gothic(120)
-    for i, s in enumerate(("田村", "水野", "森")):
+    for i, s in enumerate(("田村", "川崎", "森")):
         y0 = i * row
         d.rectangle([4, y0 + 4, w - 5, y0 + row - 5], outline=(190, 190, 186), width=4)
         tw = f.getlength(s)

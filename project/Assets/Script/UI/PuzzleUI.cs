@@ -74,8 +74,8 @@ namespace EscapeProto
         public void ShowDocument(string title, string body)
         {
             _mode = Mode.Document;
-            _titleText.text = title;
-            _bodyText.text = body;
+            RubyText.SetMarked(_titleText, title);   // 文はルビの印付きでよい（ルビがあれば字の上に乗せる）
+            RubyText.SetMarked(_bodyText, body);
             _footerText.text = "[E] / [Esc] / 「閉じる」で閉じる";
             ApplyModeLayout();
             Open();
@@ -85,8 +85,8 @@ namespace EscapeProto
         {
             _mode = Mode.Selection;
             _options = options; _onSelect = onSelect;
-            _titleText.text = title;
-            _bodyText.text = body;
+            RubyText.SetMarked(_titleText, title);
+            RubyText.SetMarked(_bodyText, body);
             _footerText.text = "ボタンをクリック、または数字キーで選択 / [E]・[Esc] 中止";
             BuildSelectionButtons(options);
             ApplyModeLayout();
@@ -120,8 +120,8 @@ namespace EscapeProto
         {
             _mode = Mode.Keypad;
             _keypadLength = length; _onSubmit = onSubmit; _keypadInput = "";
-            _titleText.text = title;
-            _bodyText.text = body;
+            RubyText.SetMarked(_titleText, title);
+            RubyText.SetMarked(_bodyText, body);
             _footerText.text = "テンキー（クリック）または数字キーで入力　[E]・[Esc]中止";
             ApplyModeLayout();
             RefreshKeypadDisplay();

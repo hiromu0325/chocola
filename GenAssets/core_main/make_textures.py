@@ -74,11 +74,11 @@ def core_gold(w=2048, h=1024):
 
 
 def screen_message(w=1024, h=640):
-    """祭壇の端末：再生メッセージ（小川 暁）"""
+    """祭壇の端末：再生メッセージ（三木 宗英）"""
     img = Image.new("RGB", (w, h), (18, 14, 8))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, w, 60], fill=(80, 60, 24))
-    d.text((24, 12), "再生メッセージ　─　小川 暁", font=_font(34, mincho=False), fill=(255, 230, 170))
+    d.text((24, 12), "再生メッセージ　─　三木 宗英", font=_font(34, mincho=False), fill=(255, 230, 170))
     pts = []
     for x in range(40, w - 40, 4):
         t = (x - 40) / (w - 80)
@@ -88,7 +88,7 @@ def screen_message(w=1024, h=640):
     d.rectangle([40, 470, w - 40, 490], outline=(200, 160, 80), width=2)
     d.rectangle([44, 474, 44 + int((w - 88) * 0.02), 486], fill=(255, 200, 100))
     d.text((40, 510), "▶  00:03 / 04:12", font=_font(30, mincho=False), fill=(230, 200, 140))
-    d.text((40, 560), "二宮さん。ここまで来たなら──", font=_font(30, mincho=False), fill=(230, 210, 170))
+    d.text((40, 560), "久賀さん。ここまで来たなら──", font=_font(30, mincho=False), fill=(230, 210, 170))
     save("screen_message", img)
 
 

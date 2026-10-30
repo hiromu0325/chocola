@@ -152,7 +152,7 @@ def posters():
     save("side_clinic", _poster(500, 320, (236, 242, 248), [
         ("text", (24, 20), "ねむれない夜に。", 44, (40, 60, 110), "mincho"),
         ("text", (24, 100), "こころとねむりの相談室", 34, (40, 40, 40)),
-        ("text", (24, 170), "小川脳神経総合研究所　附属外来", 26, (80, 80, 80)),
+        ("text", (24, 170), "三木脳神経総合研究所　附属外来", 26, (80, 80, 80)),
         ("rect", [24, 230, 476, 234], (40, 60, 110)),
         ("text", (24, 250), "予約制　平日９時〜１７時", 28, (80, 80, 80)),
     ], "clinic"))
@@ -207,13 +207,13 @@ def route_map(w=1100, h=280):
     f_small = _font(26, mincho=False)
     f_title = _font(30, mincho=False)
     d.text((24, 16), "ご案内　この電車の停車駅", font=f_title, fill=(40, 40, 40))
-    stations = ["港", "北町", "中央", "緑ヶ丘", "白樺台", "小川研究所前", "霧ヶ丘", "終点"]
+    stations = ["港", "北町", "中央", "緑ヶ丘", "白樺台", "三木研究所前", "霧ヶ丘", "終点"]
     y = 150
     x0, x1 = 70, w - 70
     d.rectangle([x0, y - 7, x1, y + 7], fill=(200, 40, 50))
     for i, s in enumerate(stations):
         x = x0 + (x1 - x0) * i / (len(stations) - 1)
-        here = s == "小川研究所前"
+        here = s == "三木研究所前"
         r = 16 if here else 12
         d.ellipse([x - r, y - r, x + r, y + r], fill=(255, 255, 255), outline=(200, 40, 50), width=5)
         if here:

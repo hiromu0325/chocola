@@ -124,14 +124,15 @@ namespace EscapeProto
 
         /// <summary>
         /// 文字。shadow=true なら明るい背景の上でも読めるよう影を付ける（HUD用）。
-        /// 装飾の多い輪郭線（Outline）は使わない
+        /// 装飾の多い輪郭線（Outline）は使わない。
+        /// sharp=true は拡大・縮小される場所（メモのボード）用：拡大率に合わせた細かさで描く（SharpText）
         /// </summary>
         public static Text Label(Transform parent, string name, int size, TextAnchor anchor,
-                                 Color? color = null, bool display = false, bool shadow = true)
+                                 Color? color = null, bool display = false, bool shadow = true, bool sharp = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            var t = go.AddComponent<Text>();
+            var t = sharp ? go.AddComponent<SharpText>() : go.AddComponent<Text>();
             t.font = display ? DisplayFont : BodyFont;
             t.fontSize = size;
             t.alignment = anchor;
@@ -172,7 +173,7 @@ namespace EscapeProto
         /// （色だけに頼らない3つの変化）。無効は薄く表示したまま（隠さない）
         /// </summary>
         public static Button MenuItem(Transform parent, string label, Action onClick, float width = 460f, float height = 56f,
-                                      int fontSize = FsMenu)
+                                      int fontSize = FsMenu, bool sharp = false)
         {
             var go = new GameObject("Item_" + label);
             go.transform.SetParent(parent, false);
@@ -188,7 +189,7 @@ namespace EscapeProto
             btn.targetGraphic = hit;
             if (onClick != null) btn.onClick.AddListener(() => { UiSound.Decide(); onClick(); });
 
-            var text = Label(go.transform, "Label", fontSize, TextAnchor.MiddleLeft, Text, display: false);
+            var text = Label(go.transform, "Label", fontSize, TextAnchor.MiddleLeft, Text, display: false, sharp: sharp);
             Stretch(text.rectTransform, left: 28f);
             text.text = label;
 
