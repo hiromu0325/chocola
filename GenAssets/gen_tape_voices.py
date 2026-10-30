@@ -11,10 +11,13 @@
 import os
 import sys
 
-REPO = r"D:\Source\IrodoriTTS\Irodori-TTS"
+REPO = r"D:\Project\TTS\Irodori-TTS-new"
 OUT = r"D:\Source\chocola\project\Assets\Audio\Tapes"
 REF_DIR = r"D:\Source\chocola\GenAssets\echo_voice_refs"
 sys.path.insert(0, REPO)
+# この環境の sklearn は numpy 2 と合わず import で落ちる。音声合成には要らないので transformers に使わせない
+import transformers.utils.import_utils as _tf_import_utils  # noqa: E402
+_tf_import_utils._sklearn_available = False
 os.chdir(REPO)
 import infer  # noqa: E402
 
@@ -50,7 +53,7 @@ TAPES = {
         ("ogawa", "私はそれに気づきながら、告発しなかった。……私にも、救えなかった息子がいたからです。", "悔いをにじませ、ゆっくり告白する。"),
         ("ogawa", "3人分でも、娘さんは戻らなかった。欠けていた最後のひとつは、『娘さんを知っている記憶』──あなた自身だ。", "静かに、重く説明する。"),
         ("ogawa", "あなたは自ら望み、私が接続した。娘さんに関わる記憶だけを、30%。だからあなたの記憶は、いずれ戻る。3人のようには、ならない。", "穏やかに、安心させるように話す。"),
-        ("ogawa", "その回廊も部屋も、リナシータがあなたと3人の記憶から作った空間です。私は彼らを消さない。それが私の償いです。", "静かに、噛みしめるように話す。"),
+        ("ogawa", "その回廊は、あなたがリナシータと共鳴した時に、あなたの頭の中に生まれたものです。部屋は、あなたと3人の記憶です。私は彼らを消さない。それが私の償いです。", "静かに、噛みしめるように話す。"),
         ("ogawa", "最後の工程──どの記憶が本当に娘さんのものかを選り分けることは、父親のあなたにしか、できない。", "真剣に、託すように話す。"),
         ("ogawa", "全ての部屋を、もう一度回ってきなさい。", "静かに、優しく促す。"),
     ],

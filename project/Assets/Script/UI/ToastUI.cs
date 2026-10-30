@@ -42,7 +42,10 @@ namespace EscapeProto
             while (_queue.Count > 0)
             {
                 string msg = _queue.Dequeue();
-                _text.text = msg;
+                // 文はルビの印付きでよい（ルビがあれば、その分だけ背景を高くし、文を下へ寄せて字の上に乗せる）
+                bool ruby = RubyText.SetMarked(_text, msg);
+                float pad = ruby ? RubyText.RoomAbove(_text) : 0f;
+                _text.rectTransform.offsetMax = new Vector2(-12f, -pad);
                 // 調べる画面を開いている間は右上へ（上中央は資料の見出しと重なるため）
                 var prt = _plate.rectTransform;
                 bool inspecting = InspectView.IsOpen;
@@ -50,7 +53,7 @@ namespace EscapeProto
                 prt.anchoredPosition = inspecting ? new Vector2(-UiTheme.SafeX, -UiTheme.SafeY) : new Vector2(0f, -UiTheme.SafeY);
                 // 文字量に合わせて背景の幅を調整
                 float w = Mathf.Clamp(_text.preferredWidth + 56f, 260f, 900f);
-                _plate.rectTransform.sizeDelta = new Vector2(w, 46f);
+                _plate.rectTransform.sizeDelta = new Vector2(w, 46f + pad);
 
                 ProceduralAudio.PlayAt(ProceduralAudio.Click(),
                     Camera.main != null ? Camera.main.transform.position : Vector3.zero, 0.2f, spatial: false);

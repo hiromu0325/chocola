@@ -16,8 +16,65 @@ namespace EscapeProto
     public class RubyText : MonoBehaviour
     {
         public Text Text;
+        /// <summary>ルビの大きさの既定（親文字の何倍）。本来は半分だが、画面では小さすぎて読みにくいので少し大きめ</summary>
+        public const float DefaultScale = 0.58f;
         /// <summary>ルビの大きさ（親文字の何倍）</summary>
-        public float Scale = 0.5f;
+        public float Scale = DefaultScale;
+
+        private static readonly List<Ruby.Span> TmpSpans = new List<Ruby.Span>();
+
+        /// <summary>
+        /// 印付きの文（｜漢字《かんじ》）を Text に入れる。ルビがあれば字の上に重ね、無ければ（オプションで切っている時も）文だけ入れる。
+        /// decorate は印を外した文に色のタグなどを足す処理（足したタグの分、ルビの位置を後ろへずらす）。
+        /// ルビを出したら true。呼ぶ側は字の上に RoomAbove だけ余白を空ける（複数行なら行間も広げる）
+        /// </summary>
+        public static bool SetMarked(Text text, string marked, System.Func<string, string> decorate = null)
+        {
+            if (text == null) return false;
+            string plain = Ruby.ParseForDisplay(marked ?? "", TmpSpans);
+            string shown = decorate != null ? decorate(plain) : plain;
+            if (TmpSpans.Count > 0 && shown != plain) Remap(plain, shown, TmpSpans);
+            text.text = shown;
+            var rt = text.GetComponent<RubyText>();
+            if (TmpSpans.Count == 0)
+            {
+                if (rt != null) rt.SetSpans(null);
+                return false;
+            }
+            if (rt == null) rt = Attach(text);
+            rt.SetSpans(TmpSpans);
+            return true;
+        }
+
+        /// <summary>ルビを乗せるのに要る、字の上の余白（キャンバスの単位）</summary>
+        public static float RoomAbove(Text text) => text == null ? 0f : Mathf.Ceil(text.fontSize * DefaultScale * 1.3f);
+
+        /// <summary>タグを足した文での位置に直す（Text はタグの文字も幅0の字として番号に数える）</summary>
+        private static void Remap(string plain, string shown, List<Ruby.Span> spans)
+        {
+            var map = new int[plain.Length + 1];
+            int i = 0, j = 0;
+            while (i < plain.Length && j < shown.Length)
+            {
+                if (shown[j] == plain[i]) { map[i++] = j++; continue; }
+                if (shown[j] == '<')
+                {
+                    int close = shown.IndexOf('>', j);
+                    j = close < 0 ? j + 1 : close + 1;
+                    continue;
+                }
+                j++;
+            }
+            for (; i <= plain.Length; i++) map[i] = shown.Length;
+            for (int k = 0; k < spans.Count; k++)
+            {
+                var sp = spans[k];
+                int last = Mathf.Clamp(sp.Start + sp.Length - 1, 0, plain.Length - 1);
+                sp.Start = map[Mathf.Clamp(sp.Start, 0, plain.Length)];
+                sp.Length = Mathf.Max(1, map[last] + 1 - sp.Start);
+                spans[k] = sp;
+            }
+        }
         /// <summary>ルビの色（a=0 なら本文と同じ色）</summary>
         public Color Color = new Color(0f, 0f, 0f, 0f);
 
@@ -123,10 +180,9 @@ namespace EscapeProto
                     if (part.Length == 0) continue;
                     float x0 = chars[a].cursorPos.x / ppu;
                     float x1 = (chars[b - 1].cursorPos.x + chars[b - 1].charWidth) / ppu;
-                    float lineTop = lines[line].topY / ppu;
-                    float lineH = lines[line].height / ppu;
-                    // 字面の上端（行の上 3 割は行間の余白。MarkerText と同じ見立て）
-                    float glyphTop = lineTop - lineH * 0.3f;
+                    // 親文字の字面の上端（描いた字の頂点から測る。ルビはその少し上に乗せる）
+                    float glyphTop = GlyphTop(gen.verts, chars[a].cursorPos.x, chars[b - 1].cursorPos.x + chars[b - 1].charWidth,
+                                              lines[line].topY, lines[line].height) / ppu;
                     float baseW = Mathf.Max(1f, x1 - x0);
                     int size = fs;
                     float room = baseW + fs;   // 前後に半字ずつまで
@@ -139,10 +195,26 @@ namespace EscapeProto
                     lrt.anchorMin = lrt.anchorMax = _layer.pivot;
                     lrt.pivot = new Vector2(0.5f, 0f);
                     lrt.sizeDelta = new Vector2(Mathf.Max(baseW, part.Length * size) + 4f, size * 1.4f);
-                    lrt.anchoredPosition = new Vector2((x0 + x1) * 0.5f, glyphTop - size * 0.15f);
+                    lrt.anchoredPosition = new Vector2((x0 + x1) * 0.5f, glyphTop + size * 0.05f);
                     label.gameObject.SetActive(true);
                 }
             }
+        }
+
+        /// <summary>
+        /// x0〜x1 の範囲にあるその行の字の、頂点のいちばん上（生成した画素の座標）。
+        /// 空白は頂点を持たないので字の番号では引けず、位置で探す。見つからなければ行の上から 14%（字の上の空き）
+        /// </summary>
+        private static float GlyphTop(IList<UIVertex> verts, float x0, float x1, float lineTop, float lineH)
+        {
+            float top = float.MinValue;
+            for (int i = 0; i < verts.Count; i++)
+            {
+                var p = verts[i].position;
+                if (p.x < x0 - 1f || p.x > x1 + 1f || p.y > lineTop + 1f || p.y < lineTop - lineH - 1f) continue;
+                if (p.y > top) top = p.y;
+            }
+            return top > float.MinValue ? top : lineTop - lineH * 0.14f;
         }
 
         private static int LineOf(IList<UILineInfo> lines, int charIdx)

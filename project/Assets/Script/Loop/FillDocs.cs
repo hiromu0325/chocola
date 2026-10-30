@@ -22,7 +22,7 @@ namespace EscapeProto
         private string Key => $"fill/{RoomId}.{Id}";
         public string TitleText => GameText.Get(Key + ".title", Title);
         public string TemplateText => GameText.Get(Key + ".body", Template).Replace("\r", "");
-        public string CommentText => GameText.Get(Key + ".comment", Comment);
+        public string CommentText => GameText.GetMarked(Key + ".comment", Comment);   // ルビの印付き（字幕で出す）
     }
 
     /// <summary>黒塗りの資料の文面を、地の文と空欄に分けたもの</summary>

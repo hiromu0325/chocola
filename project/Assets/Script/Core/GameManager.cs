@@ -73,6 +73,7 @@ namespace EscapeProto
             GameEvents.OnRepairCodeAccepted += HandlePuzzleProgress;
             GameEvents.OnPowerRestored += HandlePuzzleProgress;
             GameEvents.OnSafeOpened += HandlePuzzleProgress;
+            LoopProgress.OnRoomUnlocked += HandleRoomUnlocked;
 
             GameSettings.LoadAndApply();
 
@@ -91,6 +92,7 @@ namespace EscapeProto
             GameEvents.OnRepairCodeAccepted -= HandlePuzzleProgress;
             GameEvents.OnPowerRestored -= HandlePuzzleProgress;
             GameEvents.OnSafeOpened -= HandlePuzzleProgress;
+            LoopProgress.OnRoomUnlocked -= HandleRoomUnlocked;
             if (Instance == this) Instance = null;
         }
 
@@ -122,10 +124,14 @@ namespace EscapeProto
             BeginPlay();
         }
 
-        /// <summary>つづきから（セーブが無ければ新規開始）</summary>
-        public void ContinueGame()
+        /// <summary>つづきから：新しい方の記録から（無ければ新規開始）</summary>
+        public void ContinueGame() => ContinueFrom(SaveSystem.LoadLatest(out _));
+
+        /// <summary>つづきから：選んだ記録（オート／マニュアル）から</summary>
+        public void ContinueGame(SaveSlot slot) => ContinueFrom(SaveSystem.Load(slot));
+
+        private void ContinueFrom(SaveData data)
         {
-            var data = SaveSystem.Load();
             if (data == null || !data.valid) { NewGame(); return; }
 
             _dolls = Mathf.Clamp(data.dolls, 0, _defaultDolls);
@@ -145,6 +151,7 @@ namespace EscapeProto
             MemoSnippets.Import(data.memoSnippets, data.memoStrokes);
             FillDocs.Import(data.fillBoard);
             DocState.Import(data.docsHeard, data.docsCommented);
+            LoopProgress.ResolveInterruptedAttacks();   // 警報中に保存されたセーブでも次の部屋が開くように
             foreach (var f in FindObjectsByType<LoopFindable>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
                 f.RefreshFound();
@@ -180,15 +187,16 @@ namespace EscapeProto
             SetState(GameState.Playing);
         }
 
+        /// <summary>マニュアルの記録（記録端末・一時停止の「記録する」）</summary>
         public void SaveNow()
         {
-            SaveSystem.Save(BuildSaveData());
+            SaveSystem.Save(BuildSaveData(), SaveSlot.Manual);
         }
 
-        /// <summary>ポーズメニュー「タイトルへ戻る」：セーブしてシーンを再読込</summary>
+        /// <summary>ポーズメニュー「タイトルへ戻る」：オートの記録に残してシーンを再読込</summary>
         public void QuitToTitle()
         {
-            if (State == GameState.Playing || State == GameState.Paused) SaveNow();
+            if (State == GameState.Playing || State == GameState.Paused) SaveSystem.Save(BuildSaveData(), SaveSlot.Auto);
             Time.timeScale = 1f;
             RestartGame();
         }
@@ -203,6 +211,8 @@ namespace EscapeProto
                 solvedGimmicks = new List<string>(GimmickBase.GetSolvedNames()),
                 savedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm")
             };
+            var room = LoopRooms.Get(LoopRooms.CurrentRoomId);
+            data.place = room != null ? room.Name : LoopObjective.IsLoopScene ? "回廊" : "";
             if (PuzzleState.Instance != null) PuzzleState.Instance.WriteTo(data);
             data.notes = Notebook.ToList();
             data.loopStage = LoopRooms.Stage;
@@ -217,11 +227,15 @@ namespace EscapeProto
             return data;
         }
 
-        private void AutoSave()
+        /// <summary>オートの記録（段階が進んだ時・捕まって戻った後など。遊んでいる最中だけ）</summary>
+        public void AutoSave()
         {
             if (State != GameState.Playing) return;
-            SaveSystem.Save(BuildSaveData());
+            SaveSystem.Save(BuildSaveData(), SaveSlot.Auto);
         }
+
+        /// <summary>扉が開いた（段階が進んだ）＝オートの記録</summary>
+        private void HandleRoomUnlocked(string roomId) => AutoSave();
 
         private void HandleGimmickSolved(int solved, int total) => AutoSave();
         private void HandleVisitEnd() => AutoSave();

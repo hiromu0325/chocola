@@ -102,6 +102,8 @@ namespace EscapeProto
                 if (!_navOk) { aborted = true; break; }
                 Log($"── {room.DisplayName}({room.Id}) 入室  必須={room.RequiredFindables.Length}　目標:「{Strip(LoopObjective.Text())}」");
 
+                yield return SeeEchoes(room);   // 残響は必須ではないが、海尾の手帳（判定）が2つを要るので実際に近づいて記録する
+
                 var order = new List<string>(room.RequiredFindables);
                 order.Sort((a, b) => a == "notebook" ? -1 : b == "notebook" ? 1 : 0);
                 foreach (var req in order)
@@ -127,6 +129,16 @@ namespace EscapeProto
                     else
                     {
                         Log($"   ⚡ 脚本襲撃 → {target} 降下、異形={FindObjectsByType<LoopSearcher>(FindObjectsSortMode.None).Length}体　目標:「{Strip(LoopObjective.Text())}」");
+                        if (!_checkedInterrupted)
+                        {
+                            // 警報中に保存→つづきから、と同じ状態（解放の持ち越しはセーブに残らない）にして、読み込み時の救済で次が開くか
+                            _checkedInterrupted = true;
+                            StoryProgress.PendingUnlockRoom = null;
+                            LoopProgress.ResolveInterruptedAttacks();
+                            Log(LoopRooms.Stage >= room.UnlockStage + 1
+                                ? $"   ✓ 警報中に保存したセーブを読んだ時も次が開く（stage={LoopRooms.Stage}）"
+                                : $"FAIL: 警報中に保存したセーブを読むと次が開かない（stage={LoopRooms.Stage}）");
+                        }
                         yield return RaiseBreaker(target);
                         Log($"   復旧 → down={bs.DownRoomId ?? "-"} stage={LoopRooms.Stage}");
                     }
@@ -148,6 +160,14 @@ namespace EscapeProto
             if (!aborted)
             {
                 var fin = LoopFinale.Instance;
+                yield return new WaitForSeconds(1f);
+                if (fin != null && fin.Started) Log("FAIL: 息子の部屋の中で終章が始まった（部屋を出た瞬間のはず）");
+                else Log("   ✓ 息子の部屋の中では終章はまだ始まらない");
+                if (!LoopRooms.InCorridor)
+                {
+                    RoomTransitionSystem.Instance?.ExitToCorridor(LoopRooms.CurrentRoomId, true);
+                    yield return WaitUntil(() => LoopRooms.InCorridor, 8f, "exit son_room");
+                }
                 yield return WaitUntil(() => fin != null && fin.Started, 4f, "finale start");
                 if (fin == null || !fin.Started) Log("FAIL: 終章が始まらない（LoopFinale）");
                 else
@@ -224,6 +244,17 @@ namespace EscapeProto
                 if (lockComp != null)
                 {
                     yield return Reachable(lockComp.gameObject, $"{room.Id}/{req}");
+                    var choice = lockComp as LoopChoiceLock;
+                    if (choice != null && choice.RequireNotes != null && choice.RequireNotes.Length > 0)
+                    {
+                        lockComp.OnInteract();
+                        yield return null;
+                        bool opened = PuzzleUI.Instance != null && PuzzleUI.Instance.IsOpen;
+                        Log(opened ? $"   ✓ {req}: 判定に要る記録（{string.Join("・", choice.RequireNotes)}）がそろい、判定の画面が開く"
+                                   : $"FAIL: {req}: 判定に要る記録がそろわず判定できない（{string.Join("・", System.Array.FindAll(choice.RequireNotes, n => !Notebook.Contains(n)))} が無い）");
+                        ClosePuzzleUi();
+                        yield return null;
+                    }
                     var m = typeof(LoopLockBase).GetMethod("Succeed", BindingFlags.NonPublic | BindingFlags.Instance);
                     m.Invoke(lockComp, new object[] { null });
                     ClosePuzzleUi();
@@ -263,6 +294,31 @@ namespace EscapeProto
                 }
                 Log(result == FillDocs.Result.Solved ? $"   ✓ 黒塗りの資料 {d.Id} を埋めた → {fc.DisplayName}" : $"FAIL: 黒塗りの資料 {d.Id} の判定が {result}");
                 yield return new WaitForSeconds(fc.Seconds + 0.6f);   // 入れ物が開き切るまで
+            }
+        }
+
+        private bool _checkedInterrupted;
+
+        /// <summary>部屋の残響に近づき（消えるほど寄らない）、手帳に記録されるまで待つ</summary>
+        private IEnumerator SeeEchoes(LoopRoomRoot room)
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) yield break;
+            foreach (var echo in room.GetComponentsInChildren<EchoScene>(true))
+            {
+                if (echo == null || string.IsNullOrEmpty(echo.EchoId) || !echo.gameObject.activeInHierarchy) continue;
+                string note = "echo_" + echo.EchoId;
+                if (Notebook.Contains(note)) continue;
+                var toCenter = room.transform.position - echo.transform.position; toCenter.y = 0f;
+                var dir = toCenter.sqrMagnitude > 0.01f ? toCenter.normalized : Vector3.forward;
+                var pos = echo.transform.position + dir * Mathf.Clamp(echo.ActivateRadius * 0.5f, echo.DissolveRadius + 0.8f, echo.ActivateRadius - 0.5f);
+                pos.y = player.transform.position.y;
+                var cc = player.GetComponent<CharacterController>();
+                if (cc != null) cc.enabled = false;
+                player.transform.position = pos;
+                if (cc != null) cc.enabled = true;
+                yield return WaitUntil(() => Notebook.Contains(note), 5f, "echo " + echo.EchoId);
+                Log(Notebook.Contains(note) ? $"   ✓ 残響 {echo.EchoId} を見た（手帳に記録）" : $"FAIL: 残響 {echo.EchoId} に近づいても記録されない");
             }
         }
 

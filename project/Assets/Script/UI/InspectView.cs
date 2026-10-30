@@ -86,6 +86,8 @@ namespace EscapeProto
         // ---- 字幕（閉じた後も最後まで流す） ----
         private CanvasGroup _subGroup;
         private Text _subText;
+        private float _subRubyPad;   // 字幕にルビがある時、暗幕を字の上へ広げた量
+        private const float SubLineSpacing = 1.15f, SubLineSpacingRuby = 1.6f;
         private Image _subPlate;
         private Coroutine _subRoutine;
         private readonly Queue<string> _subQueue = new Queue<string>();
@@ -628,8 +630,8 @@ namespace EscapeProto
                 }
                 else
                 {
-                    PlaySfx(line.Text);
-                    dur = Mathf.Max(1.4f, line.Text.Length * 0.09f);
+                    PlaySfx(Ruby.Strip(line.Text));
+                    dur = Mathf.Max(1.4f, Ruby.Strip(line.Text).Length * 0.09f);
                 }
                 for (float t = 0f; t < dur + 0.35f && _playing; t += Time.unscaledDeltaTime) yield return null;
             }
@@ -718,7 +720,7 @@ namespace EscapeProto
                 while (_playing) yield return null;          // 再生中の台詞とは重ねない
                 string line = _subQueue.Dequeue();
                 ShowSubtitleNow(line);
-                float hold = Mathf.Clamp(1.6f + line.Length * 0.11f, 2.4f, 7f);
+                float hold = Mathf.Clamp(1.6f + Ruby.Strip(line).Length * 0.11f, 2.4f, 7f);
                 for (float t = 0f; t < hold && !_playing; t += Time.unscaledDeltaTime) yield return null;
                 if (!_playing) HideSubtitleNow();
                 yield return new WaitForSecondsRealtime(0.25f);
@@ -726,10 +728,15 @@ namespace EscapeProto
             _subRoutine = null;
         }
 
+        /// <summary>字幕を出す。文はルビの印付きでよい（ルビがあれば字の上に乗せ、その分だけ暗幕を上へ広げる）</summary>
         private void ShowSubtitleNow(string text)
         {
-            _subText.text = text;
-            _subPlate.rectTransform.sizeDelta = new Vector2(Mathf.Min(_subText.preferredWidth, 1400f) + 64f, _subText.preferredHeight + 26f);
+            bool ruby = RubyText.SetMarked(_subText, text);
+            _subText.lineSpacing = ruby ? SubLineSpacingRuby : SubLineSpacing;
+            _subRubyPad = ruby ? RubyText.RoomAbove(_subText) : 0f;
+            _subPlate.rectTransform.sizeDelta = new Vector2(Mathf.Min(_subText.preferredWidth, 1400f) + 64f, _subText.preferredHeight + 26f + _subRubyPad);
+            var tp = _subText.rectTransform.anchoredPosition;
+            _subPlate.rectTransform.anchoredPosition = new Vector2(tp.x, tp.y + _subRubyPad * 0.5f);
             _subGroup.alpha = 1f;
         }
 
@@ -746,7 +753,7 @@ namespace EscapeProto
         private void PlaceSubtitle(bool reading)
         {
             float y = UiTheme.SafeY + (reading ? 62f : 120f);
-            _subPlate.rectTransform.anchoredPosition = new Vector2(0f, y);
+            _subPlate.rectTransform.anchoredPosition = new Vector2(0f, y + _subRubyPad * 0.5f);
             _subText.rectTransform.anchoredPosition = new Vector2(0f, y);
         }
 

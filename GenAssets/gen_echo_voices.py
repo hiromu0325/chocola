@@ -12,10 +12,13 @@
 import os
 import sys
 
-REPO = r"D:\Source\IrodoriTTS\Irodori-TTS"
+REPO = r"D:\Project\TTS\Irodori-TTS-new"
 OUT = r"D:\Source\chocola\project\Assets\Audio\Echo"
 REF_DIR = r"D:\Source\chocola\GenAssets\echo_voice_refs"
 sys.path.insert(0, REPO)
+# この環境の sklearn は numpy 2 と合わず import で落ちる。音声合成には要らないので transformers に使わせない
+import transformers.utils.import_utils as _tf_import_utils  # noqa: E402
+_tf_import_utils._sklearn_available = False
 os.chdir(REPO)
 import infer  # noqa: E402  (infer.py がランタイムAPIを全部importしている)
 

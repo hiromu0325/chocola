@@ -189,7 +189,7 @@ namespace EscapeProto
             if (rooms.Count == 0) { _timeLeft = CycleSeconds; return; }
 
             // 対象: 侵入可能な部屋からランダム（ブレイカー持ちのみ。
-            // 最初の部屋は再入場できないため降下対象から除外＝詰み防止）
+            // 最初の部屋は記録端末（セーブ・終章のアップロード）がある安全な場所なので降下対象から除外）
             var candidates = rooms.FindAll(r => r.Breaker != null && r.Id != LoopProgress.StartRoomId);
             if (candidates.Count == 0) { _timeLeft = CycleSeconds; return; }
             BeginDrop(candidates[Random.Range(0, candidates.Count)], spawnSearcherNow: true);

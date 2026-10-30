@@ -171,7 +171,7 @@ namespace EscapeProto
         public static string[] Comment(string roomId, string id)
         {
             BuiltInComments.TryGetValue(roomId + "." + id, out var builtIn);
-            string s = GameText.Get($"doc/{roomId}.{id}.comment", builtIn ?? "");
+            string s = GameText.GetMarked($"doc/{roomId}.{id}.comment", builtIn ?? "");   // ルビの印付き（字幕で Ruby を出す）
             if (string.IsNullOrEmpty(s)) return new string[0];
             var parts = s.Replace("\r", "").Split(new[] { "\n\n" }, System.StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Replace("\n", "").Trim();
@@ -206,7 +206,7 @@ namespace EscapeProto
                 ("ogawa", "私はそれに気づきながら、告発しなかった。……私にも、救えなかった息子がいたからです。"),
                 ("ogawa", "3人分でも、娘さんは戻らなかった。欠けていた最後のひとつは、『娘さんを知っている記憶』──あなた自身だ。"),
                 ("ogawa", "あなたは自ら望み、私が接続した。娘さんに関わる記憶だけを、30%。だからあなたの記憶は、いずれ戻る。3人のようには、ならない。"),
-                ("ogawa", "その回廊も部屋も、リナシータがあなたと3人の記憶から作った空間です。私は彼らを消さない。それが私の償いです。"),
+                ("ogawa", "その回廊は、あなたがリナシータと共鳴した時に、あなたの頭の中に生まれたものです。部屋は、あなたと3人の記憶です。私は彼らを消さない。それが私の償いです。"),
                 ("ogawa", "最後の工程──どの記憶が本当に娘さんのものかを選り分けることは、父親のあなたにしか、できない。"),
                 ("ogawa", "全ての部屋を、もう一度回ってきなさい。") } },
             { "analysis.tape", new[] {
@@ -245,7 +245,7 @@ namespace EscapeProto
                 list.Add(new TapeLine
                 {
                     Speaker = SpeakerNames.TryGetValue(sp, out var n) ? n : "",
-                    Text = GameText.Get($"tape/{roomId}.{id}.{i:00}", text),
+                    Text = GameText.GetMarked($"tape/{roomId}.{id}.{i:00}", text),   // ルビの印付き（字幕で Ruby を出す）
                 });
             }
             return list;

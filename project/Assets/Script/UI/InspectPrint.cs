@@ -164,23 +164,31 @@ namespace EscapeProto
             bool cut = gen.characterCountVisible < s.TrimEnd('\n').Length - 1;
             int end = cut ? Mathf.Clamp(gen.characterCountVisible, 0, s.Length) : s.Length;
             var sb = new System.Text.StringBuilder(s.Length + lines.Count);
-            for (int i = 0; i < lines.Count; i++)
+            int count = lines.Count;
+            if (cut && count >= 2) count--;   // 収まらない時は最後の行を「次頁へ続く」に譲る（全文は読む画面で読める）
+            for (int i = 0; i < count; i++)
             {
                 int a = Mathf.Clamp(lines[i].startCharIdx, 0, s.Length);
                 int b = i + 1 < lines.Count ? Mathf.Clamp(lines[i + 1].startCharIdx, a, s.Length) : Mathf.Max(a, end);
                 if (i > 0) sb.Append('\n');
                 sb.Append(s, a, b - a).Replace("\n", "", sb.Length - (b - a), b - a);
             }
-            t.text = sb.ToString().TrimEnd('\n');
+            t.text = sb.ToString().TrimEnd('\n') + (cut ? "\n" + Continued : "");
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
-        /// <summary>印字の大きさ：最大から少しずつ小さくして、収まる大きさを1つだけ選ぶ（4段階）</summary>
+        /// <summary>
+        /// 印字の大きさ：最大から少しずつ小さくして、収まる大きさを1つだけ選ぶ（4段階）。
+        /// それより小さくすると寄っても読めないので、長い文書は収まる所まで載せて「次頁へ続く」とする（FreezeWrap）
+        /// </summary>
         private static int Fit(string text, float w, float h, float spacing, int max)
         {
             max = Mathf.Max(3, max);
             return UiTheme.FitFontSize(text, w, h, spacing, max, Mathf.Max(3, max * 3 / 4), Mathf.Max(3, max / 2), Mathf.Max(3, max / 3));
         }
+
+        /// <summary>紙に収まらない文書の最後の行</summary>
+        private const string Continued = "（次頁へ続く）";
 
         private static Text MakeText(RectTransform parent, string name, Font font, Color color, TextAnchor anchor, int size)
         {

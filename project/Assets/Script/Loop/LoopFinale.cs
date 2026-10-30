@@ -5,7 +5,7 @@ namespace EscapeProto
 {
     /// <summary>
     /// 終章の工程。
-    /// ①息子の部屋に到達（stage 14）すると、各部屋に「娘の記憶の断片＝思い出のおもちゃ」が1つずつ現れる
+    /// ①息子の部屋の必須を終え（stage 14）、部屋を出ると、各部屋に「娘の記憶の断片＝思い出のおもちゃ」が1つずつ現れる
     /// ②すべて集めて最初の部屋の記録端末で[E]長押し→アップロード
     /// ③アップロード中はブレイカーが絶えず降下し（包囲モード）、復旧しないと進まない
     /// ④100%でクリア
@@ -18,7 +18,7 @@ namespace EscapeProto
         public float UploadSeconds = 60f;
         [Tooltip("包囲モードのブレイカー降下周期（秒）")]
         public float SiegeCycleSeconds = 25f;
-        [Tooltip("この段階に到達すると終章が始まる（息子の部屋の完了）")]
+        [Tooltip("この段階に到達し、息子の部屋を出ると終章が始まる")]
         public int TriggerStage = 14;
 
         public bool Started { get; private set; }
@@ -54,6 +54,7 @@ namespace EscapeProto
             if (Started) return;
             if (GameManager.Instance == null || GameManager.Instance.State != GameState.Playing) return;
             if (LoopRooms.Stage < TriggerStage) return;
+            if (!LoopRooms.InCorridor && LoopRooms.CurrentRoomId == "son_room") return;   // 息子の部屋を出た瞬間に始める
             Begin();
         }
 
@@ -62,6 +63,7 @@ namespace EscapeProto
         {
             if (Started) return;
             Started = true;
+            GameManager.Instance?.AutoSave();   // 終章の始まり（段階が進んだ）＝オートの記録
             _toyRooms.Clear();
             foreach (var f in FindObjectsByType<LoopFindable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {

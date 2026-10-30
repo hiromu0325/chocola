@@ -80,8 +80,8 @@ namespace EscapeProto
             _onDone = onDone;
             _onWrongCell = onWrongCell;
             _level = level;
-            _title.text = title;
-            _body.text = body;
+            RubyText.SetMarked(_title, title);   // 文はルビの印付きでよい
+            _body.lineSpacing = RubyText.SetMarked(_body, body) ? 1.35f : 1f;   // ルビのある本文は行間を広げる
             _footer.text = "左クリック: 回転　　右クリック: 欠損（?）の傾向を切替　　[決定] で光を流す　　[Esc] 閉じる　[Tab] 手帳";
             _message.text = "";
             ClearContent();
@@ -96,8 +96,8 @@ namespace EscapeProto
             _onDone = onDone;
             _onWrongCell = _ => onWrong?.Invoke();
             _level = null;
-            _title.text = title;
-            _body.text = body;
+            RubyText.SetMarked(_title, title);   // 文はルビの印付きでよい
+            _body.lineSpacing = RubyText.SetMarked(_body, body) ? 1.35f : 1f;   // ルビのある本文は行間を広げる
             _footer.text = $"矛盾している行をクリックでチェック（{correct.Length}行）　[決定] で確定　[Esc] 閉じる　[Tab] 手帳";
             _message.text = "";
             ClearContent();
@@ -408,7 +408,9 @@ namespace EscapeProto
             _title.font = UiTheme.DisplayFont;
             SetRect(_title.rectTransform, Center, Center, new Vector2(0, 385), new Vector2(1180, 50));
             _body = MakeLabel(_panel.transform, "", new Vector2(0, 325), 24, UiTheme.TextSub);
-            SetRect(_body.rectTransform, Center, Center, new Vector2(0, 325), new Vector2(1180, 70));
+            SetRect(_body.rectTransform, Center, Center, new Vector2(0, 310), new Vector2(1180, 70));
+            _body.horizontalOverflow = HorizontalWrapMode.Wrap;   // 長い説明はパネルの幅で折り返す
+            _body.alignment = TextAnchor.UpperCenter;             // 題名の下から下向きに並べる（行が増えても題名やルビとぶつからない）
 
             var contentGo = new GameObject("Content");
             contentGo.transform.SetParent(_panel.transform, false);

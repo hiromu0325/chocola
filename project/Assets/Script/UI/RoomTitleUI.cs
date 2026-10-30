@@ -50,19 +50,22 @@ namespace EscapeProto
         /// タイトルを表示する。sub（章節ラベル）はnull可。
         /// 資料ウィンドウ等が開いている間はUiQueueで待機し、閉じてから表示される。
         /// </summary>
-        public void Show(string main, string sub)
+        public void Show(string main, string sub) => Show(main, sub, null);
+
+        /// <summary>帯が出る瞬間に鳴らす音を指定して表示する（扉が開いた時の解錠の音など。null なら小さなクリック音）</summary>
+        public void Show(string main, string sub, AudioClip sound, float volume = 0.8f)
         {
             if (string.IsNullOrEmpty(main)) return;
             if (UiQueue.Instance != null)
                 UiQueue.Instance.Enqueue(
-                    () => StartCoroutine(PlayOnce(main, sub)),
+                    () => StartCoroutine(PlayOnce(main, sub, sound, volume)),
                     () => IsShowing,
-                    "title:" + main);
+                    "title:" + main + sub);
             else
-                StartCoroutine(PlayOnce(main, sub));
+                StartCoroutine(PlayOnce(main, sub, sound, volume));
         }
 
-        private IEnumerator PlayOnce(string main, string sub)
+        private IEnumerator PlayOnce(string main, string sub, AudioClip sound, float volume)
         {
             IsShowing = true;
             _hurry = false;
@@ -74,8 +77,8 @@ namespace EscapeProto
             _sub.gameObject.SetActive(hasSub);
             if (hasSub) _sub.text = sub;
 
-            ProceduralAudio.PlayAt(ProceduralAudio.Click(),
-                Camera.main != null ? Camera.main.transform.position : Vector3.zero, 0.25f, spatial: false);
+            ProceduralAudio.PlayAt(sound != null ? sound : ProceduralAudio.Click(),
+                Camera.main != null ? Camera.main.transform.position : Vector3.zero, sound != null ? volume : 0.25f, spatial: false);
 
             yield return FadeTo(1f, 0.6f);
 

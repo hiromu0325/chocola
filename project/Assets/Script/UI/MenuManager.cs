@@ -21,7 +21,10 @@ namespace EscapeProto
     {
         private const float ColumnX = 160f;   // 左の列の文字の開始位置（セーフエリアの内側）
 
-        private GameObject _titlePanel, _pausePanel, _optionsPanel;
+        private GameObject _titlePanel, _pausePanel, _optionsPanel, _loadPanel;
+        private Button _loadAuto, _loadManual, _loadBack;
+        private Text _loadAutoInfo, _loadManualInfo;
+        private bool _loadOpen;   // 「つづきから」の記録を選ぶ画面
         private Button _continueButton;
         private Text _continueNote, _saveInfoText, _pauseStatusText, _pausePlace, _pauseObjective, _pauseDolls, _guide;
         private Slider _volumeSlider, _sensSlider;
@@ -45,7 +48,7 @@ namespace EscapeProto
         private void HandleStateChanged(GameState s)
         {
             _state = s;
-            if (s == GameState.Playing || s == GameState.Ended) _optionsOpen = false;
+            if (s == GameState.Playing || s == GameState.Ended) { _optionsOpen = false; _loadOpen = false; }
             Refresh();
         }
 
@@ -59,6 +62,7 @@ namespace EscapeProto
             if (WasEscPressed())
             {
                 if (_optionsOpen) { UiSound.Cancel(); CloseOptions(); return; }
+                if (_loadOpen) { UiSound.Cancel(); CloseLoad(); return; }
                 if (_state == GameState.Playing) GameManager.Instance?.Pause();
                 else if (_state == GameState.Paused) { UiSound.Cancel(); GameManager.Instance?.Resume(); }
             }
@@ -98,28 +102,32 @@ namespace EscapeProto
 
         private void Refresh()
         {
-            bool title = _state == GameState.Title && !_optionsOpen;
+            bool load = _state == GameState.Title && _loadOpen && !_optionsOpen;
+            bool title = _state == GameState.Title && !_optionsOpen && !_loadOpen;
             bool pause = _state == GameState.Paused && !_optionsOpen;
 
             _titlePanel.SetActive(title);
             _pausePanel.SetActive(pause);
             _optionsPanel.SetActive(_optionsOpen);
-            _guideRoot.SetActive(title || pause || _optionsOpen);
+            _loadPanel.SetActive(load);
+            _guideRoot.SetActive(title || pause || _optionsOpen || load);
 
             if (title)
             {
-                var d = SaveSystem.Load();
+                var d = SaveSystem.LoadLatest(out var slot);
                 bool has = d != null && d.valid;
                 _continueButton.interactable = has;
                 // 無効の項目は隠さずに薄く出し、理由を隣に書く
                 _continueNote.text = has ? "" : "記録がありません";
-                _saveInfoText.text = has ? $"最後の記録　{d.savedAt}　　陶器の人形 {d.dolls}" : "";
+                _saveInfoText.text = has ? $"最後の記録　{SlotName(slot)}　{SaveInfo(d)}" : "";
             }
+            if (load) RefreshLoad();
             if (pause) RefreshPause();
             UpdateGuide();
 
             // ゲームパッド操作用：表示中パネルの先頭ボタンを選択
             if (_optionsOpen) SelectFirst(_optionsPanel);
+            else if (load) SelectFirst(_loadPanel);
             else if (title) SelectFirst(_titlePanel);
             else if (pause) SelectFirst(_pausePanel);
         }
@@ -151,7 +159,7 @@ namespace EscapeProto
         {
             if (_guide == null) return;
             string back = _state == GameState.Paused && !_optionsOpen ? "再開" : "戻る";
-            _guide.text = _state == GameState.Title && !_optionsOpen
+            _guide.text = _state == GameState.Title && !_optionsOpen && !_loadOpen
                 ? $"{UiTheme.Key("Enter", "A")} 決定"
                 : $"{UiTheme.Key("Enter", "A")} 決定　　{UiTheme.Key("Esc", "B")} {back}";
         }
@@ -175,7 +183,51 @@ namespace EscapeProto
         // ============================== ボタン処理 ==============================
 
         private void OnNewGame() => GameManager.Instance?.NewGame();
-        private void OnContinue() => GameManager.Instance?.ContinueGame();
+        /// <summary>「つづきから」：オートとマニュアルのどちらの記録から始めるか選ぶ画面を開く</summary>
+        private void OnContinue()
+        {
+            _loadOpen = true;
+            Refresh();
+        }
+
+        private void CloseLoad()
+        {
+            _loadOpen = false;
+            Refresh();
+        }
+
+        private void LoadFrom(SaveSlot slot)
+        {
+            _loadOpen = false;
+            GameManager.Instance?.ContinueGame(slot);
+        }
+
+        /// <summary>記録を選ぶ画面：それぞれの記録の日時・場所・人形を出し、無い記録は薄くして選べなくする</summary>
+        private void RefreshLoad()
+        {
+            var auto = SaveSystem.Load(SaveSlot.Auto);
+            var manual = SaveSystem.Load(SaveSlot.Manual);
+            _loadAuto.interactable = auto != null;
+            _loadManual.interactable = manual != null;
+            _loadAutoInfo.text = SaveInfo(auto);
+            _loadManualInfo.text = SaveInfo(manual);
+            // 選べる項目だけを上下でつなぐ（無い記録で止まらないように）
+            var items = new List<Selectable>();
+            if (_loadAuto.interactable) items.Add(_loadAuto);
+            if (_loadManual.interactable) items.Add(_loadManual);
+            items.Add(_loadBack);
+            UiTheme.ChainVertical(items);
+        }
+
+        private static string SlotName(SaveSlot slot) => slot == SaveSlot.Auto ? "オート" : "マニュアル";
+
+        /// <summary>記録の一行の説明（日時・場所・残りの人形）。無ければ「記録がありません」</summary>
+        private static string SaveInfo(SaveData d)
+        {
+            if (d == null) return "記録がありません";
+            string place = string.IsNullOrEmpty(d.place) ? "" : $"　{d.place}";
+            return $"{d.savedAt}{place}　陶器の人形 {d.dolls}";
+        }
         private void OnResume() => GameManager.Instance?.Resume();
         private void OnQuitToTitle() => GameManager.Instance?.QuitToTitle();
 
@@ -205,6 +257,7 @@ namespace EscapeProto
             BuildTitlePanel(canvas.transform);
             BuildPausePanel(canvas.transform);
             BuildOptionsPanel(canvas.transform);
+            BuildLoadPanel(canvas.transform);
 
             // 操作ガイド（右下。全メニュー共通）
             _guideRoot = UiTheme.Rect(canvas.transform, "Guide").gameObject;
@@ -331,6 +384,36 @@ namespace EscapeProto
             var back = UiTheme.MenuItem(col, "戻る", () => { CloseOptions(); }, 900f);
             UiTheme.ChainVertical(new List<Selectable> { _volumeSlider, _sensSlider, invX, invY, ruby, back });
             UpdateOptionLabels();
+        }
+
+        /// <summary>「つづきから」の記録を選ぶ画面（オート／マニュアル）</summary>
+        private void BuildLoadPanel(Transform parent)
+        {
+            _loadPanel = Backdrop(parent, "LoadPanel", 0.82f);
+            var p = _loadPanel.transform;
+            Heading(p, "記録を選ぶ", 250f, UiTheme.FsHeading + 8);
+
+            var col = Column(p, 150f, 1100f);
+            _loadAuto = UiTheme.MenuItem(col, "オートセーブ", () => LoadFrom(SaveSlot.Auto), 1100f);
+            _loadAutoInfo = InfoOnRight(_loadAuto);
+            _loadManual = UiTheme.MenuItem(col, "マニュアルセーブ", () => LoadFrom(SaveSlot.Manual), 1100f);
+            _loadManualInfo = InfoOnRight(_loadManual);
+            _loadBack = UiTheme.MenuItem(col, "戻る", CloseLoad, 1100f);
+            UiTheme.ChainVertical(new List<Selectable> { _loadAuto, _loadManual, _loadBack });
+
+            var note = UiTheme.Label(p, "Note", UiTheme.FsSmall, TextAnchor.UpperLeft, UiTheme.TextFaint);
+            UiTheme.Place(note.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 1f), new Vector2(ColumnX, -60f), new Vector2(1200f, 70f));
+            note.lineSpacing = 1.4f;
+            note.text = "オート：扉が開いた時・終章が始まった時・タイトルへ戻る時・捕まって戻った後に、自動で記録する\n" +
+                        "マニュアル：最初の部屋の記録端末と、一時停止の「記録する」で記録する";
+        }
+
+        /// <summary>記録の項目の右側に、その記録の日時・場所・人形を小さく出す</summary>
+        private static Text InfoOnRight(Button item)
+        {
+            var t = UiTheme.Label(item.transform, "Info", UiTheme.FsSmall, TextAnchor.MiddleRight, UiTheme.TextSub);
+            UiTheme.Place(t.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(300f, 0f), new Vector2(760f, 56f));
+            return t;
         }
 
         /// <summary>切り替え項目の右端に値（オン／オフ）を出す</summary>

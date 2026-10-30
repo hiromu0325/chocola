@@ -16,7 +16,7 @@ namespace EscapeProto
         /// <summary>プレイヤーの現在地（nullなら回廊）</summary>
         public static string CurrentRoomId;
 
-        /// <summary>チュートリアル部屋を一度出たか（出ると再入場できない）</summary>
+        /// <summary>チュートリアル部屋を一度出たか（目標表示の案内から外すのに使う。部屋には何度でも入れる）</summary>
         public static bool TutorialExited;
 
         public static bool InCorridor => string.IsNullOrEmpty(CurrentRoomId);

@@ -226,7 +226,7 @@ def whiteboard():
     d.ellipse([700, 250, 760, 300], outline=red, width=7)
     d.line([(760, 275), (900, 200)], fill=red, width=6)
     f = hand(52); fs = hand(40)
-    d.text((910, 170), "記憶領域 → 回廊構造", font=f, fill=red)
+    d.text((910, 170), "記憶領域 → 構造モデル", font=f, fill=red)
     # 神経回路（ノードと線）
     rnd = random.Random(261)
     nodes = [(1150 + (i % 5) * 110 + rnd.uniform(-20, 20), 120 + (i // 5) * 120 + rnd.uniform(-20, 20)) for i in range(15)]

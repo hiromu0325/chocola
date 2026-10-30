@@ -3,9 +3,9 @@ using UnityEngine;
 namespace EscapeProto
 {
     /// <summary>
-    /// 部屋が解放されたときのダイアログ表示。
-    /// 表示はUiQueue経由：資料ウィンドウを読んでいる間・他のポップアップ表示中は
-    /// 待機し、閉じられてから順番に出る。
+    /// 部屋が解放された時の演出。ブレイカー復旧と同じ、画面中央の帯（RoomTitleUI）に「扉が開いた」と部屋の名前を出し、
+    /// 帯が出る瞬間に解錠の音を鳴らす（閉じる操作は要らない）。
+    /// 表示はUiQueue経由：資料ウィンドウを読んでいる間・他の帯や窓の表示中は待機し、閉じられてから順番に出る。
     /// </summary>
     public class LoopUnlockDialog : MonoBehaviour
     {
@@ -16,21 +16,7 @@ namespace EscapeProto
         {
             var room = LoopRooms.Get(roomId);
             string name = room != null ? room.Name : "新しい部屋";
-
-            if (UiQueue.Instance == null) return;
-            UiQueue.Instance.Enqueue(
-                () =>
-                {
-                    ProceduralAudio.PlayAt(ProceduralAudio.Unlock(),
-                        Camera.main != null ? Camera.main.transform.position : Vector3.zero,
-                        0.8f, spatial: false);
-                    PuzzleUI.Instance?.ShowDocument("扉が開いた",
-                        "見つけた情報が繋がった。\n\n" +
-                        $"廊下の扉のひとつ —— <color={UiTheme.Rgb(UiTheme.Accent)}>{name}</color> —— が開くようになった。\n\n" +
-                        "廊下を回り、その部屋を探そう。");
-                },
-                () => PuzzleUI.Instance != null && PuzzleUI.Instance.IsOpen,
-                "unlock:" + roomId);
+            RoomTitleUI.Instance?.Show("扉が開いた", $"──『{name}』への扉が、回廊のどこかで開いた──", ProceduralAudio.Unlock());
         }
     }
 }
