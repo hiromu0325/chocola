@@ -142,7 +142,7 @@ def core_plate(w=1024, h=256):
     d = ImageDraw.Draw(img)
     d.rectangle([8, 8, w - 8, h - 8], outline=(120, 140, 160), width=6)
     d.text((40, 40), "RENASCITA CORE", font=_font(90, mincho=False), fill=(190, 210, 230))
-    d.text((44, 170), "中枢記憶装置　小川脳神経総合研究所", font=_font(40, mincho=False), fill=(150, 170, 190))
+    d.text((44, 170), "中枢記憶装置　三木脳神経総合研究所", font=_font(40, mincho=False), fill=(150, 170, 190))
     save("core_plate", img)
 
 
@@ -166,7 +166,7 @@ def devlog():
 
 
 def gaplog():
-    """黒田の照合ログ（手書きの検算。端が握り潰されてしわ）"""
+    """海尾の照合ログ（手書きの検算。端が握り潰されてしわ）"""
     w, h = 700, 500
     img = Image.new("RGB", (w, h), (240, 238, 226))
     d = ImageDraw.Draw(img)

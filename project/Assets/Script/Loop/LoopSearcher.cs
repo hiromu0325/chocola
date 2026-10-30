@@ -58,6 +58,13 @@ namespace EscapeProto
         private float _inspectTimer;
         private LoopRoomRoot _inspectRoom;
         private float _enterRoomTimer;
+        // プレイヤーの部屋へ入る前に、回廊を通ってその部屋の扉の前まで歩く（見えていない間も位置は進める）。
+        // 室内では、近づいている扉から足音が聞こえる（DoorFootstepWarning）
+        private string _approachRoom;    // 入ろうとしている部屋（扉へ向かっている間だけ）
+        private bool _approachExit;      // その部屋の出口側の扉から入る
+        /// <summary>扉へ近づく速さ（m/秒）。遠い時は MaxApproachSeconds ほどで着くよう速める</summary>
+        private const float StalkSpeed = 2.4f;
+        private const float MaxApproachSeconds = 10f;
         private float _orphanTimer;
 
         /// <summary>襲撃者が居る空間（null=回廊、それ以外=部屋Id）</summary>
@@ -98,6 +105,10 @@ namespace EscapeProto
         public bool IsRetreating => _state == State.Retreat;
         /// <summary>回廊に居るか（部屋の中に入っていない）</summary>
         public bool InCorridor => _space == null;
+        /// <summary>プレイヤーの居る部屋へ入ろうと、その扉へ向かっている時の部屋Id（向かっていなければ null）</summary>
+        public string ApproachRoom => _approachRoom;
+        /// <summary>向かっている扉が出口側か（false＝入口側）</summary>
+        public bool ApproachExit => _approachExit;
 
         /// <summary>調査ログ用の1行要約</summary>
         public string DebugBrief() =>
@@ -165,6 +176,8 @@ namespace EscapeProto
                 else TickWaitToEnterRoom();   // 回廊で待機しつつ、入室の機を伺う
                 return;
             }
+
+            _approachRoom = null;   // 同じ空間に居る＝扉へ向かう途中ではない
 
             // 調査ログ：状態が変わったら記録する
             if (_state != _prevLoggedState)
@@ -270,34 +283,59 @@ namespace EscapeProto
             return v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.forward;
         }
 
-        /// <summary>回廊に居るとき：プレイヤーが入った部屋へ追って入室する</summary>
+        /// <summary>
+        /// 回廊に居るとき：プレイヤーが入った部屋へ追って入室する。
+        /// 入口と出口のうち回廊を歩いて近い方の扉を選び、見えていない間も回廊を通ってその扉の前まで歩く
+        /// （室内ではその扉から足音がだんだん近づいて聞こえる）。着いて、入ってから EnterRoomDelay 秒たったら、その扉から入る
+        /// </summary>
         private void TickWaitToEnterRoom()
         {
             string playerRoom = LoopRooms.CurrentRoomId;
-            if (string.IsNullOrEmpty(playerRoom)) { _enterRoomTimer = 0f; return; }
+            if (string.IsNullOrEmpty(playerRoom)) { _enterRoomTimer = 0f; _approachRoom = null; return; }
 
             // 最初の部屋（チュートリアル）には入らない＝スポーンしても素通りする仕様
             if (playerRoom == LoopProgress.StartRoomId || !LoopRooms.IsUnlocked(playerRoom))
-            { _enterRoomTimer = 0f; return; }
-
-            _enterRoomTimer += Time.deltaTime;
-            if (_enterRoomTimer < EnterRoomDelay) return;
+            { _enterRoomTimer = 0f; _approachRoom = null; return; }
 
             var room = LoopRooms.Get(playerRoom);
             if (room == null) return;
+
+            if (_approachRoom != playerRoom)
+            {
+                // 入る扉を決める（出口の無い部屋は入口）
+                _approachRoom = playerRoom;
+                _enterRoomTimer = 0f;
+                bool hasExit = room.ExitSpawn != null &&
+                               (RoomTransitionSystem.Instance == null || RoomTransitionSystem.Instance.RoomDoorSwing(playerRoom, true) != null);
+                Vector3 entryFront = LoopCorridorLayout.DoorFrontPosition(room.Side, room.Slot);
+                Vector3 exitFront = LoopCorridorLayout.DoorFrontPosition((room.Side + 2) % 4, room.Slot);
+                _approachExit = hasExit && RingDistance(transform.position, exitFront) < RingDistance(transform.position, entryFront);
+                AttackDebugLog.Log("searcher", $"プレイヤーの部屋（{playerRoom}）の{(_approachExit ? "出口" : "入口")}の扉へ向かう " + DebugBrief());
+            }
+
+            _enterRoomTimer += Time.deltaTime;
+            Vector3 front = LoopCorridorLayout.DoorFrontPosition(_approachExit ? (room.Side + 2) % 4 : room.Side, room.Slot);
+            float left = RingDistance(transform.position, front);
+            float speed = Mathf.Max(StalkSpeed, left / Mathf.Max(0.5f, MaxApproachSeconds - _enterRoomTimer));
+            bool arrived = StepAlongRing(front, speed * Time.deltaTime);
+            if (!arrived || _enterRoomTimer < EnterRoomDelay) return;
+
             // プレイヤーが扉を出入りしている最中は、扉の取り合いになるので待つ
             if (PlayerBusy) return;
-            Vector3 spawn = room.EntrySpawn != null ? room.EntrySpawn.position : room.transform.position;
-            AttackDebugLog.Log("searcher", $"プレイヤーの部屋（{playerRoom}）へ入室開始 " + DebugBrief());
+            bool viaExit = _approachExit;
+            Transform spawnT = viaExit ? room.ExitSpawn : room.EntrySpawn;
+            Vector3 spawn = spawnT != null ? spawnT.position : room.transform.position;
+            AttackDebugLog.Log("searcher", $"プレイヤーの部屋（{playerRoom}）へ{(viaExit ? "出口" : "入口")}の扉から入室開始 " + DebugBrief());
             _space = playerRoom;
             _inspectRoom = room;
             _enterRoomTimer = 0f;
+            _approachRoom = null;
             SetFrozen(false);
 
             // ---- 入場演出 ----
             // いきなり部屋の中に現れて追ってくると避けようがないので、
             // 入口の扉が開き、扉の外の暗い廊下から室内へ踏み込み、背後で扉が閉まるまでは追跡しない
-            _door = RoomTransitionSystem.Instance != null ? RoomTransitionSystem.Instance.RoomDoorSwing(playerRoom, false) : null;
+            _door = RoomTransitionSystem.Instance != null ? RoomTransitionSystem.Instance.RoomDoorSwing(playerRoom, viaExit) : null;
             if (_door != null)
             {
                 Vector3 inward = Flat(_door.transform.forward);       // 扉のユニットの +Z = 室内
@@ -650,6 +688,52 @@ namespace EscapeProto
         }
 
         // ============= 移動ヘルパー =============
+
+        // 回廊は中心を囲む四角い輪。輪の中心線に沿った位置（北西の角から時計回りの道のり）で扱う
+
+        private static float RingParam(Vector3 p)
+        {
+            float c = C;
+            if (Mathf.Abs(p.z) >= Mathf.Abs(p.x))
+                return p.z > 0f ? Mathf.Clamp(p.x, -c, c) + c : 4f * c + (c - Mathf.Clamp(p.x, -c, c));
+            return p.x > 0f ? 2f * c + (c - Mathf.Clamp(p.z, -c, c)) : 6f * c + (Mathf.Clamp(p.z, -c, c) + c);
+        }
+
+        private static Vector3 RingPoint(float s)
+        {
+            float c = C;
+            s = Mathf.Repeat(s, 8f * c);
+            int side = Mathf.Min(3, Mathf.FloorToInt(s / (2f * c)));
+            float u = s - side * 2f * c;
+            switch (side)
+            {
+                case 0: return new Vector3(-c + u, 0f, c);
+                case 1: return new Vector3(c, 0f, c - u);
+                case 2: return new Vector3(c - u, 0f, -c);
+                default: return new Vector3(-c, 0f, -c + u);
+            }
+        }
+
+        /// <summary>回廊を歩いた時の道のり（輪を近い方へ回る）</summary>
+        public static float RingDistance(Vector3 a, Vector3 b)
+        {
+            float per = 8f * C;
+            float d = Mathf.Repeat(RingParam(b) - RingParam(a), per);
+            return Mathf.Min(d, per - d);
+        }
+
+        /// <summary>回廊を近い方へ回って target へ step だけ進む（見えていない間の移動。当たり判定は使わない）。着いたら true</summary>
+        private bool StepAlongRing(Vector3 target, float step)
+        {
+            float per = 8f * C;
+            float s = RingParam(transform.position);
+            float d = Mathf.Repeat(RingParam(target) - s, per);
+            float dist = Mathf.Min(d, per - d);
+            Vector3 p = dist <= step ? target : RingPoint(s + (d <= per * 0.5f ? step : -step));
+            p.y = transform.position.y;
+            Teleport(p);
+            return dist <= step;
+        }
 
         private static Vector3 NextCorner(Vector3 p, int dir)
         {

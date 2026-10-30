@@ -490,7 +490,7 @@ def crt_screen(w=512, h=384):
         if os.path.exists(p):
             f = ImageFont.truetype(p, 22)
             break
-    lines = ["RENASCITA  MEMORY TERMINAL", "v0.9  (c)2015 OGAWA INST.", "-" * 26, "SUBJECT   NINOMIYA H.",
+    lines = ["RENASCITA  MEMORY TERMINAL", "v0.9  (c)2015 MIKI INST.", "-" * 26, "SUBJECT   KUGA N.",
              "SESSION   0001", "STATUS    AWAKE", "", "> RECORD STATE", "  READY_"]
     for i, s in enumerate(lines):
         d.text((34, 30 + i * 34), s, font=f, fill=(120, 255, 150))

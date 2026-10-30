@@ -64,14 +64,14 @@ namespace EscapeProto
                     "《ご来訪の皆さまへ》\n\n" +
                     "当研究所では、損傷した記憶領域をAIで補完し、\n" +
                     "［人格の連続性］を維持する研究を進めております。\n\n" +
-                    "本日のご案内は、［主任研究員補佐］の［佐伯］が務めます。\n\n" +
-                    "　　　　　　　　　小川脳神経総合研究所",
+                    "本日のご案内は、［神経計測担当］の［松原］が務めます。\n\n" +
+                    "　　　　　　　　　三木脳神経総合研究所",
                 Hints = new[] { "lab_summary", "lab_members", "lab_members" },
-                Comment = "佐伯……名簿で、ひとりだけ顔の残っていた男だ。",
+                Comment = "松原……名簿で、ひとりだけ顔の残っていた男だ。",
             },
             new FillDocDef
             {
-                RoomId = "saeki_home", Id = "diarypage", Title = "佐伯の日記（欠けたページ）", ContainerName = "書斎机の引き出し",
+                RoomId = "saeki_home", Id = "diarypage", Title = "松原の日記（欠けたページ）", ContainerName = "書斎机の引き出し",
                 Template =
                     "《日記》\n\n" +
                     "4月2日　所長から「例の件」を打ち明けられた。\n" +
@@ -82,14 +82,14 @@ namespace EscapeProto
                     "所長の返事は「［今は結論を出すな］」。\n\n" +
                     "4月21日　今夜、［解析室］で、あの人と話す。\n" +
                     "もし僕に何かあったら──机の引き出しを。",
-                Hints = new[] { "ward_girlfile", "analysis_anomaly", "study_scrap", "saeki_home_plog" },
+                Hints = new[] { "ward_girlfile", "core_ante_wmemo", "study_scrap", "saeki_home_plog" },   // 「研究員」は川崎のメモ（異常報告の差し替えで載らなくなった）
                 Comment = "「例の件」は、あの少女のことだったのか。",
             },
             new FillDocDef
             {
-                RoomId = "ward", Id = "page303", Title = "303号の観察記録（欠けたページ）", ContainerName = "水野のロッカー",
+                RoomId = "ward", Id = "page303", Title = "303号の観察記録（欠けたページ）", ContainerName = "川崎のロッカー",
                 Template =
-                    "《患者観察記録》　記録者: 水野\n\n" +
+                    "《患者観察記録》　記録者: 川崎\n\n" +
                     "・303号　名前は、まだ書かない。お父さんとの約束。\n" +
                     "　今日も［お父さんの声のときだけ］、目が動いた。\n" +
                     "　絵本は『［おやすみ］』。\n" +
@@ -97,22 +97,22 @@ namespace EscapeProto
                     "・私がこの仕事を選んだのは、［眠っている人を起こす］ため。\n" +
                     "　この子を起こすのは、薬じゃない。たぶん、あの声だ。",
                 Hints = new[] { "ward_tape", "ward_tape", "mizuno_apart_diary" },
-                Comment = "303号。……あの子の担当は、水野だったのか。",
+                Comment = "303号。……あの子の担当は、川崎だったのか。",
             },
             new FillDocDef
             {
-                RoomId = "kuroda_home", Id = "kmemo2", Title = "黒田のメモ（破り取られた後半）", ContainerName = "書き物机",
+                RoomId = "kuroda_home", Id = "kmemo2", Title = "海尾のメモ（破り取られた後半）", ContainerName = "書き物机",
                 Template =
-                    "《個人メモ　後半》　筆跡: 黒田\n\n" +
+                    "《個人メモ　後半》　筆跡: 海尾\n\n" +
                     "「──と、書いたのは間違いだった。\n" +
                     "主任はその夜、［札幌］にいた。\n" +
                     "第12研究室に入ったのは、［主任じゃない］。\n" +
                     "主任のIDを持ち出せたのは、主任に招かれ、\n" +
                     "書斎に出入りできた人間だけだ。\n" +
-                    "［二宮秀樹］。毎晩、病棟で絵本を読んでいる、あの父親だ。\n" +
+                    "［久賀 夏樹］。毎晩、病棟で絵本を読んでいる、あの父親だ。\n" +
                     "明日、本人と話す。［正しいこと］をしに行く」",
                 Hints = new[] { "data_room_minutes", "system_room_gaplog", "study_invite", "kuroda_home_rules" },
-                Comment = "黒田は、私だと分かっていて、それでも会いに来た。",
+                Comment = "海尾は、私だと分かっていて、それでも会いに来た。",
             },
         };
 

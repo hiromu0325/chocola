@@ -31,7 +31,7 @@ namespace EscapeProto
     /// <summary>音声記録の1行（話者が空なら物音・状況の説明）</summary>
     public struct TapeLine
     {
-        public string Speaker;   // 表示名（佐伯・水野…）。空＝物音
+        public string Speaker;   // 表示名（松原・川崎…）。空＝物音
         public string Text;
     }
 
@@ -159,11 +159,11 @@ namespace EscapeProto
         {
             { "lab.guide", "黒く塗り潰されている。……抜けた言葉は、この部屋のどこかに書いてあるはずだ。" },
             { "lab.visitlog", "目を覚まさない娘……。新聞の一行が、また頭をよぎる。\n\n所長は、なぜこの父親にだけ、ここまでしたんだ。" },
-            { "saeki_home.diarypage", "佐伯の日記だ。……肝心な所だけが、黒く抜け落ちている。" },
-            { "saeki_home.envelope", "佐伯は、最後まで「あの人」の名前を書かなかった。……書けなかったのか。" },
-            { "ward.page303", "水野の観察記録の、続きのページだ。303号……名前が、無い。" },
+            { "saeki_home.diarypage", "松原の日記だ。……肝心な所だけが、黒く抜け落ちている。" },
+            { "saeki_home.envelope", "松原は、最後まで「あの人」の名前を書かなかった。……書けなかったのか。" },
+            { "ward.page303", "川崎の観察記録の、続きのページだ。303号……名前が、無い。" },
             { "ward.letter303", "……私は、この人に何をした。" },
-            { "kuroda_home.kmemo2", "データ管理室で見たメモの、破り取られた後半だ。……黒田は、何に気づいた。" },
+            { "kuroda_home.kmemo2", "データ管理室で見たメモの、破り取られた後半だ。……海尾は、何に気づいた。" },
             { "kuroda_home.letters", "「怖いからやめる、は正しくない」。……この人の言葉は、最後まで正しかった。" },
         };
 
@@ -182,14 +182,14 @@ namespace EscapeProto
 
         private static readonly Dictionary<string, string> SpeakerNames = new Dictionary<string, string>
         {
-            { "saeki", "佐伯" }, { "mizuno", "水野" }, { "kuroda", "黒田" }, { "ninomiya", "二宮" }, { "ogawa", "小川" },
+            { "saeki", "松原" }, { "mizuno", "川崎" }, { "kuroda", "海尾" }, { "ninomiya", "久賀" }, { "ogawa", "三木" },
         };
 
         /// <summary>組み込みの台詞（テキスト表が無い時の文面と、話者）。GenAssets/gen_tape_voices.py と同じ並び</summary>
         private static readonly Dictionary<string, (string sp, string text)[]> Tapes = new Dictionary<string, (string, string)[]>
         {
             { "mizuno_apart.recorder", new[] {
-                ("mizuno", "佐伯さん、電話に出ない。黒田さんも会議中。主任も出ない。"),
+                ("mizuno", "松原さん、電話に出ない。海尾さんも会議中。主任も出ない。"),
                 ("mizuno", "……決めた。今夜、外部の窓口に全部話す。荷物まとめて、いったん実家に──"),
                 ("", "（ドアの開く音）"),
                 ("mizuno", "……あれ。どうして、ここが──あ、"),
@@ -201,7 +201,7 @@ namespace EscapeProto
                 ("kuroda", "……そうか。その顔が、答えか。"),
                 ("", "（記録はここで破損している）") } },
             { "core_main.message", new[] {
-                ("ogawa", "二宮さん。ここまで来たなら、もう思い出しましたね。"),
+                ("ogawa", "久賀さん。ここまで来たなら、もう思い出しましたね。"),
                 ("ogawa", "あなたは3人に薬を使い、脳を丸ごと写し取って登録した。3人は今も、病棟で眠っています。"),
                 ("ogawa", "私はそれに気づきながら、告発しなかった。……私にも、救えなかった息子がいたからです。"),
                 ("ogawa", "3人分でも、娘さんは戻らなかった。欠けていた最後のひとつは、『娘さんを知っている記憶』──あなた自身だ。"),
@@ -210,11 +210,11 @@ namespace EscapeProto
                 ("ogawa", "最後の工程──どの記憶が本当に娘さんのものかを選り分けることは、父親のあなたにしか、できない。"),
                 ("ogawa", "全ての部屋を、もう一度回ってきなさい。") } },
             { "analysis.tape", new[] {
-                ("saeki", "補完試験、第12回。記録、佐伯。"),
+                ("saeki", "補完試験、第12回。記録、松原。"),
                 ("saeki", "被験データの再構成で、また同じ現象が出た。本人が経験していないはずの記憶が、補完領域に生成されている。"),
                 ("saeki", "生成元を追うと……研究員の脳の癖に似ている。まさか、とは思うが。"),
-                ("ninomiya", "佐伯さん。その補完に使う脳情報は、何人分あれば足りるんですか。"),
-                ("saeki", "……二宮さん。録音中です。"),
+                ("ninomiya", "松原さん。その補完に使う脳情報は、何人分あれば足りるんですか。"),
+                ("saeki", "……久賀さん。録音中です。"),
                 ("saeki", "──記録、ここまで。") } },
             { "saeki_home.tape", new[] {
                 ("", "（留守番電話の発信音）"),
@@ -225,7 +225,7 @@ namespace EscapeProto
                 ("ninomiya", "……じゃあ、今日も読むよ。『おやすみ』。"),
                 ("ninomiya", "おつきさま、おやすみ。まどのそとの、ふくろうも、おやすみ。"),
                 ("ninomiya", "……最後のページだ。ほら、みんな眠った。……おやすみ。"),
-                ("mizuno", "二宮さん。いま、目が動きました。お父さんの声のときだけ、動くんです。"),
+                ("mizuno", "久賀さん。いま、目が動きました。お父さんの声のときだけ、動くんです。"),
                 ("ninomiya", "……そうですか。……そうですか。") } },
             { "kuroda_home.tape", new[] {
                 ("", "（留守番電話の発信音）"),

@@ -91,10 +91,10 @@ namespace EscapeProto
             _bg = UiTheme.Fill(rt, "Fill", Bg);
             UiTheme.Stretch(_bg.rectTransform, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline);
 
-            var kind = UiTheme.Label(rt, "Kind", UiTheme.FsSmall, TextAnchor.UpperLeft, solved ? UiTheme.Positive : UiTheme.Accent, shadow: false);
+            var kind = UiTheme.Label(rt, "Kind", UiTheme.FsSmall, TextAnchor.UpperLeft, solved ? UiTheme.Positive : UiTheme.Accent, shadow: false, sharp: true);
             Put(kind.rectTransform, PadX, 16f, Width - PadX * 2f, 28f);
             kind.text = solved ? "黒塗りの資料　── 埋まった（資料の一覧に綴じた）" : "黒塗りの資料";
-            var title = UiTheme.Label(rt, "Title", 26, TextAnchor.UpperLeft, UiTheme.Text, display: true, shadow: false);
+            var title = UiTheme.Label(rt, "Title", 26, TextAnchor.UpperLeft, UiTheme.Text, display: true, shadow: false, sharp: true);
             Put(title.rectTransform, PadX, 46f, Width - PadX * 2f, 38f);
             title.text = Def.TitleText;
             var rule = UiTheme.Fill(rt, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.6f));
@@ -118,7 +118,7 @@ namespace EscapeProto
                         Slots.Add(slot);
                         continue;
                     }
-                    var t = UiTheme.Label(rt, "Text", Fs, TextAnchor.MiddleLeft, BodyColor, shadow: false);
+                    var t = UiTheme.Label(rt, "Text", Fs, TextAnchor.MiddleLeft, BodyColor, shadow: false, sharp: true);
                     t.horizontalOverflow = HorizontalWrapMode.Overflow;
                     t.text = part.Text;
                     float w = t.preferredWidth;
@@ -128,7 +128,7 @@ namespace EscapeProto
                 y += LineH;
             }
 
-            _footer = UiTheme.Label(rt, "Footer", UiTheme.FsSmall, TextAnchor.UpperLeft, UiTheme.TextSub, shadow: false);
+            _footer = UiTheme.Label(rt, "Footer", UiTheme.FsSmall, TextAnchor.UpperLeft, UiTheme.TextSub, shadow: false, sharp: true);
             Put(_footer.rectTransform, PadX, y + 14f, Width - PadX * 2f, 30f);
             _footer.text = solved ? "右クリック／Delete でボードから外す　　ダブルクリック／Enter で読む"
                                   : "切り取った言葉のカードを、黒塗りの所へ運ぶ　　全部埋めると確かめる";
@@ -295,7 +295,7 @@ namespace EscapeProto
             btn.targetGraphic = edge;
             var fill = UiTheme.Fill(rt, "Fill", Bar);
             UiTheme.Stretch(fill.rectTransform, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline, UiTheme.Hairline);
-            var label = UiTheme.Label(rt, "Label", fs - 2, TextAnchor.MiddleCenter, Color.white, shadow: false);
+            var label = UiTheme.Label(rt, "Label", fs - 2, TextAnchor.MiddleCenter, Color.white, shadow: false, sharp: true);
             UiTheme.Stretch(label.rectTransform, 4f, 4f, 0f, 0f);
             // 空欄はふつう言葉に合わせて広がる。1行に入らない長い言葉だけ、字を小さくし折り返して全文を入れる
             label.horizontalOverflow = HorizontalWrapMode.Wrap;

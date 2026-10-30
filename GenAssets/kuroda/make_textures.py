@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""黒田の自宅（kuroda_home）のテクスチャを手続き的に作る（継ぎ目なし＋法線マップ）。
+"""海尾の自宅（kuroda_home）のテクスチャを手続き的に作る（継ぎ目なし＋法線マップ）。
 
     python GenAssets/kuroda/make_textures.py
 
@@ -169,7 +169,7 @@ def family_photo(w=480, h=360):
 
 
 def notebook_rules():
-    """黒田の手帳（開いた頁：規則と、娘たちのこと）"""
+    """海尾の手帳（開いた頁：規則と、娘たちのこと）"""
     w, h = 1000, 700
     img = Image.new("RGB", (w, h), (244, 242, 232))
     d = ImageDraw.Draw(img)

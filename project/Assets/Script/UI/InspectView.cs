@@ -73,6 +73,13 @@ namespace EscapeProto
         private CanvasGroup _group, _readGroup;
         private Text _title, _guide, _status, _readTitle, _readNote;
         private MarkerText _marker;
+        private ScrollRect _readScroll;          // 長い資料はホイールで縦に送る
+        private RectTransform _readContent;
+        private const float ReadViewW = 920f, ReadViewH = 640f;
+        // 行間（Text.lineSpacing）。ルビのある文はルビ（親文字の半分）が行の間に入るだけ広げる
+        private const float ReadLineSpacing = 1.35f, ReadLineSpacingRuby = 1.65f, RubyTopPad = 16f;
+        private RubyText _readRuby;
+        private readonly List<Ruby.Span> _readSpans = new List<Ruby.Span>();
         private Image _guideBar;
         private GameObject _readPanel;
 
@@ -141,7 +148,7 @@ namespace EscapeProto
             _tookControl = gm != null && gm.State == GameState.Playing;
             if (_tookControl) gm.SetBusy(true);
 
-            _title.text = req.Title ?? "";
+            _title.text = Ruby.Strip(req.Title ?? "");
             _loaded = false;
             _reelL = _reelR = null;
             BuildItem(req.Info, req.Title, req.Body);
@@ -494,13 +501,31 @@ namespace EscapeProto
                 string body = _req.Info.Audio ? DocCatalog.Transcript(_req.RoomId, _req.DocId) : _req.Body;
                 // 新聞は日付の行を右上の欄へ分け、段落ごとに空けて読みやすく（DocCatalog.ReadingBody）
                 body = DocCatalog.ReadingBody(_req.RoomId, _req.DocId, body, out var dateline);
-                _readTitle.text = _req.Title ?? "";
+                // ルビの印（｜漢字《かんじ》）を外して親文字だけの文に。メモの文字番号はこの文で数える
+                body = Ruby.ParseForDisplay(body, _readSpans);
+                bool ruby = _readSpans.Count > 0;
+                _readTitle.text = Ruby.Strip(_req.Title ?? "");
                 _readNote.text = _req.Info.Audio ? "書き起こし" : (dateline ?? "");
-                // 文字の大きさは3通りから選ぶ（自動調整は文字の画像を作りすぎるので使わない）
+                // 文字の大きさは3通りから選ぶ（自動調整は文字の画像を作りすぎるので使わない）。
+                // どれでも窓に収まらない長い資料は、読みやすい大きさのまま枠を伸ばしてホイールで送る
                 var bt = _marker.Text;
-                bt.fontSize = UiTheme.FitFontSize(body, bt.rectTransform.rect.width, bt.rectTransform.rect.height, bt.lineSpacing,
-                                                  UiTheme.FsBody, 22, 19);
+                bt.lineSpacing = ruby ? ReadLineSpacingRuby : ReadLineSpacing;   // ルビがある文は行間をルビの分だけ広げる
+                bt.rectTransform.anchoredPosition = new Vector2(0f, ruby ? -RubyTopPad : 0f);   // 1行目のルビが窓の上で切れないように
+                bt.rectTransform.sizeDelta = new Vector2(ReadViewW, ReadViewH);
+                bt.fontSize = UiTheme.FitFontSize(body, ReadViewW, ReadViewH, bt.lineSpacing, UiTheme.FsBody, 22, 19);
                 _marker.SetBody(_req.EntryId, body);
+                float need = LayoutUtility.GetPreferredHeight(bt.rectTransform);
+                if (need > ReadViewH)
+                {
+                    bt.fontSize = 22;
+                    need = LayoutUtility.GetPreferredHeight(bt.rectTransform);
+                }
+                float h = Mathf.Max(ReadViewH, need + 24f);
+                bt.rectTransform.sizeDelta = new Vector2(ReadViewW, h);
+                _readContent.sizeDelta = new Vector2(0f, h + (ruby ? RubyTopPad : 0f));
+                _readRuby.SetSpans(_readSpans);
+                _readContent.anchoredPosition = Vector2.zero;   // 先頭から
+                _marker.SyncLayout();
                 _marker.ReadOnly = _req.NoMarker;
                 Notebook.Unflag(_req.EntryId);
             }
@@ -518,7 +543,8 @@ namespace EscapeProto
                 string mark = _req != null && _req.NoMarker
                     ? "黒塗りの所は、メモのボードで言葉を当てはめる"
                     : "なぞる 線を引く（被った文字をメモへ）　　線をクリック 消す";
-                _guide.text = $"{mark}　　{UiTheme.Key("M", "RB")} メモ　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
+                string scroll = _readContent != null && _readContent.sizeDelta.y > ReadViewH + 1f ? "ホイール 送る　　" : "";
+                _guide.text = $"{mark}　　{scroll}{UiTheme.Key("M", "RB")} メモ　　{toModel}{UiTheme.Key("Esc", "B")} {back}{closeAll}";
             }
             else
             {
@@ -846,12 +872,44 @@ namespace EscapeProto
             UiTheme.Place(_readNote.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(920f, 30f));
             var rrule = UiTheme.Fill(prt, "Rule", UiTheme.WithAlpha(UiTheme.Accent, 0.7f));
             UiTheme.Place(rrule.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 0.5f), new Vector2(-460f, -96f), new Vector2(120f, UiTheme.Hairline));
+            // 本文の窓（長い資料はホイールで縦に送る。本文の上をなぞるとマーカー、ほかの所のホイールで送る）
+            var view = UiTheme.Fill(prt, "BodyView", new Color(0f, 0f, 0f, 0f), raycast: true);
+            UiTheme.Place(view.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -122f), new Vector2(ReadViewW + 40f, ReadViewH));
+            view.gameObject.AddComponent<RectMask2D>();
+            _readContent = UiTheme.Rect(view.rectTransform, "Content");
+            _readContent.anchorMin = new Vector2(0f, 1f); _readContent.anchorMax = new Vector2(1f, 1f);
+            _readContent.pivot = new Vector2(0.5f, 1f);
+            _readContent.anchoredPosition = Vector2.zero;
+            _readContent.sizeDelta = new Vector2(0f, ReadViewH);
             // 本文はふだん少し落ち着いた色。マーカーで拾った文字だけが白く浮き上がる（MarkerGlyphs）
-            var body = UiTheme.Label(prt, "Body", UiTheme.FsBody, TextAnchor.UpperLeft, Color.Lerp(UiTheme.TextSub, UiTheme.Text, 0.25f), shadow: false);
-            UiTheme.Place(body.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -122f), new Vector2(920f, 640f));
-            body.lineSpacing = 1.35f;
-            body.verticalOverflow = VerticalWrapMode.Truncate;
-            _marker = MarkerText.Create(prt, body);
+            var body = UiTheme.Label(_readContent, "Body", UiTheme.FsBody, TextAnchor.UpperLeft, Color.Lerp(UiTheme.TextSub, UiTheme.Text, 0.25f), shadow: false);
+            UiTheme.Place(body.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 0f), new Vector2(ReadViewW, ReadViewH));
+            body.lineSpacing = ReadLineSpacing;
+            body.verticalOverflow = VerticalWrapMode.Overflow;
+            _readScroll = view.gameObject.AddComponent<ScrollRect>();
+            _readScroll.viewport = view.rectTransform;
+            _readScroll.content = _readContent;
+            _readScroll.horizontal = false;
+            _readScroll.movementType = ScrollRect.MovementType.Clamped;
+            _readScroll.scrollSensitivity = 40f;
+            _readScroll.inertia = false;
+            // 送れる時だけ出る細い目盛り（右端）
+            var bar = UiTheme.Fill(view.rectTransform, "Scrollbar", UiTheme.WithAlpha(UiTheme.Text, 0.06f), raycast: true);
+            var brt = bar.rectTransform;
+            brt.anchorMin = new Vector2(1f, 0f); brt.anchorMax = new Vector2(1f, 1f); brt.pivot = new Vector2(1f, 0.5f);
+            brt.sizeDelta = new Vector2(6f, 0f); brt.anchoredPosition = Vector2.zero;
+            var handle = UiTheme.Fill(brt, "Handle", UiTheme.WithAlpha(UiTheme.Accent, 0.55f), raycast: true);
+            UiTheme.Stretch(handle.rectTransform);
+            var sb = bar.gameObject.AddComponent<Scrollbar>();
+            sb.direction = Scrollbar.Direction.BottomToTop;
+            sb.handleRect = handle.rectTransform;
+            sb.targetGraphic = handle;
+            sb.transition = Selectable.Transition.None;
+            sb.navigation = new Navigation { mode = Navigation.Mode.None };
+            _readScroll.verticalScrollbar = sb;
+            _readScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            _marker = MarkerText.Create(_readContent, body);
+            _readRuby = RubyText.Attach(body);
             _marker.Marker = UiTheme.WithAlpha(UiTheme.Text, 0.22f);   // 文字と同系色の控えめな線。拾った文字は白く浮き上がる
             _marker.OnAdded = s => { UiSound.Decide(); ToastUI.Show("メモに書き写した"); };
             _marker.OnRemoved = () => UiSound.Cancel();

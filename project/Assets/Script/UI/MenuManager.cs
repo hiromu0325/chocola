@@ -26,7 +26,7 @@ namespace EscapeProto
         private Text _continueNote, _saveInfoText, _pauseStatusText, _pausePlace, _pauseObjective, _pauseDolls, _guide;
         private Slider _volumeSlider, _sensSlider;
         private Text _volumeValue, _sensValue;
-        private Text _invertXValue, _invertYValue;
+        private Text _invertXValue, _invertYValue, _rubyValue;
         private GameObject _guideRoot;
         private bool _guidePad;
 
@@ -326,8 +326,10 @@ namespace EscapeProto
             _invertXValue = ValueOnRight(invX);
             var invY = UiTheme.MenuItem(col, "上下反転", ToggleInvertY, 900f);
             _invertYValue = ValueOnRight(invY);
+            var ruby = UiTheme.MenuItem(col, "ルビ（読み仮名）", ToggleRuby, 900f);
+            _rubyValue = ValueOnRight(ruby);
             var back = UiTheme.MenuItem(col, "戻る", () => { CloseOptions(); }, 900f);
-            UiTheme.ChainVertical(new List<Selectable> { _volumeSlider, _sensSlider, invX, invY, back });
+            UiTheme.ChainVertical(new List<Selectable> { _volumeSlider, _sensSlider, invX, invY, ruby, back });
             UpdateOptionLabels();
         }
 
@@ -343,6 +345,11 @@ namespace EscapeProto
         {
             GameSettings.InvertX = !GameSettings.InvertX; GameSettings.Apply(); UpdateOptionLabels();
         }
+        private void ToggleRuby()
+        {
+            GameSettings.RubyOn = !GameSettings.RubyOn; UpdateOptionLabels();
+        }
+
         private void ToggleInvertY()
         {
             GameSettings.InvertY = !GameSettings.InvertY; GameSettings.Apply(); UpdateOptionLabels();
@@ -354,6 +361,7 @@ namespace EscapeProto
             if (_sensValue != null) _sensValue.text = $"{GameSettings.Sensitivity:0.000}";
             if (_invertXValue != null) _invertXValue.text = OnOff(GameSettings.InvertX);
             if (_invertYValue != null) _invertYValue.text = OnOff(GameSettings.InvertY);
+            if (_rubyValue != null) _rubyValue.text = OnOff(GameSettings.RubyOn);
         }
 
         private static string OnOff(bool on) =>

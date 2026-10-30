@@ -165,7 +165,7 @@ def signs():
     d.rectangle([0, 0, 1024, 90], fill=(200, 40, 32))
     d.text((30, 14), "立入制限区域", font=_font(60, mincho=False), fill=(255, 255, 255))
     d.text((30, 120), "B2  CORE 前室", font=_font(72, mincho=False), fill=(30, 30, 30))
-    d.text((30, 228), "許可なき者の立入を禁ず　小川脳神経総合研究所", font=_font(34, mincho=False), fill=(60, 60, 60))
+    d.text((30, 228), "許可なき者の立入を禁ず　三木脳神経総合研究所", font=_font(34, mincho=False), fill=(60, 60, 60))
     save("sign_restricted", img)
     img = Image.new("RGB", (1024, 128), (40, 110, 180))
     d = ImageDraw.Draw(img)
@@ -222,7 +222,7 @@ def manual():
 
 
 def wmemo():
-    """水野の発見メモ（メモ用紙、急いだ筆跡）"""
+    """川崎の発見メモ（メモ用紙、急いだ筆跡）"""
     w, h = 780, 540
     img = Image.new("RGB", (w, h), (250, 248, 236))
     d = ImageDraw.Draw(img)

@@ -29,7 +29,10 @@ namespace EscapeProto
                 if (data != null)
                 {
                     data.renderPostProcessing = true;
-                    data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
+                    // 縁のギザギザは描画設定の MSAA（PC は4倍）で取る。MSAA が無い時だけ FXAA（文字や紙の絵までぼかすので重ねない）
+                    var rp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+                    data.antialiasing = rp != null && rp.msaaSampleCount > 1
+                        ? AntialiasingMode.None : AntialiasingMode.FastApproximateAntialiasing;
                     data.dithering = true;
                 }
             }

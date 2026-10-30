@@ -88,8 +88,11 @@ namespace EscapeProto
         // ---- 引用元の文章ウィンドウ（カードをダブルクリック） ----
         private GameObject _docWin;
         private Text _docTitle, _docBody;
+        private RubyText _docRuby;
+        private readonly List<Ruby.Span> _docSpans = new List<Ruby.Span>();
         private ScrollRect _docScroll;
         private const float DocWinH = 700f, DocViewTop = 120f, DocViewBottom = 84f;
+        private const float DocLineSpacing = 1.45f, DocLineSpacingRuby = 1.75f;   // ルビのある文は行間を広げる
         private MarkerGlyphs _docGlyphs;
         private MemoSnippet _docSnippet;
         private int _docClosedFrame = -1;
@@ -1248,12 +1251,13 @@ namespace EscapeProto
             brt.pivot = new Vector2(0.5f, 1f);
             brt.anchoredPosition = Vector2.zero;
             brt.sizeDelta = Vector2.zero;
-            _docBody.lineSpacing = 1.45f;
+            _docBody.lineSpacing = DocLineSpacing;
             _docBody.supportRichText = false;   // 文字の番号を本文とそろえる（マーカーの白い文字）
             _docBody.horizontalOverflow = HorizontalWrapMode.Wrap;
             _docBody.verticalOverflow = VerticalWrapMode.Overflow;
             _docBody.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             _docGlyphs = _docBody.gameObject.AddComponent<MarkerGlyphs>();
+            _docRuby = RubyText.Attach(_docBody);
             _docScroll = view.gameObject.AddComponent<ScrollRect>();
             _docScroll.viewport = view.rectTransform;
             _docScroll.content = brt;
@@ -1281,7 +1285,9 @@ namespace EscapeProto
             bool same = _docWin.activeSelf && _docSnippet != null && _docSnippet.entryId == s.entryId;
             _docSnippet = s;
             _docTitle.text = title;
-            _docBody.text = body;
+            _docBody.text = Ruby.ParseForDisplay(body, _docSpans);   // 親文字だけの文（メモの文字番号はこれで数える）
+            _docBody.lineSpacing = _docSpans.Count > 0 ? DocLineSpacingRuby : DocLineSpacing;
+            _docRuby.SetSpans(_docSpans);
             _docWin.SetActive(true);
             _docWin.transform.SetAsLastSibling();
             RefreshDoc();
@@ -1381,6 +1387,7 @@ namespace EscapeProto
             // 調べる画面と同じ組み方の本文（メモの文字番号がこれで数えてある）
             if (DocCatalog.TryParseEntry(entryId, out var rRoom, out var rDoc))
                 body = DocCatalog.ReadingBody(rRoom, rDoc, body, out _);
+            title = title != null ? Ruby.Strip(title) : null;
             title = title ?? entryId;
             return true;
         }
@@ -1576,7 +1583,7 @@ namespace EscapeProto
 
         public static SnippetCard Create(RectTransform parent, NotebookUI owner, MemoSnippet s, float minW, float maxW)
         {
-            var btn = UiTheme.MenuItem(parent, "", null, maxW, 60f, 24);
+            var btn = UiTheme.MenuItem(parent, "", null, maxW, 60f, 24, sharp: true);   // ボードの拡大・縮小に合わせた細かさで描く
             var go = btn.gameObject;
             go.name = "Card_" + s.id;
             var rt = (RectTransform)go.transform;

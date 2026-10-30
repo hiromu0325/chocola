@@ -15,6 +15,7 @@ namespace EscapeProto
         public static float Sensitivity = 0.10f;   // マウス感度（0.01..0.50 推奨）
         public static bool InvertX = false;         // 左右反転
         public static bool InvertY = false;         // 上下反転
+        public static bool RubyOn = true;           // ルビ（読み仮名）を出す
 
         public const float SensMin = 0.01f;
         public const float SensMax = 0.50f;
@@ -23,6 +24,7 @@ namespace EscapeProto
         private const string KSensitivity = "opt_mouse_sensitivity_v2";
         private const string KInvertX = "opt_invert_x";
         private const string KInvertY = "opt_invert_y";
+        private const string KRuby = "opt_ruby_on";
 
         public static void LoadAndApply()
         {
@@ -36,6 +38,7 @@ namespace EscapeProto
             Sensitivity = PlayerPrefs.GetFloat(KSensitivity, 0.10f);
             InvertX = PlayerPrefs.GetInt(KInvertX, 0) != 0;
             InvertY = PlayerPrefs.GetInt(KInvertY, 0) != 0;
+            RubyOn = PlayerPrefs.GetInt(KRuby, 1) != 0;
         }
 
         public static void Save()
@@ -44,6 +47,7 @@ namespace EscapeProto
             PlayerPrefs.SetFloat(KSensitivity, Sensitivity);
             PlayerPrefs.SetInt(KInvertX, InvertX ? 1 : 0);
             PlayerPrefs.SetInt(KInvertY, InvertY ? 1 : 0);
+            PlayerPrefs.SetInt(KRuby, RubyOn ? 1 : 0);
             PlayerPrefs.Save();
         }
 

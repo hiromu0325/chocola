@@ -241,7 +241,7 @@ def whiteboard():
     d.text((100, 580), "Φ(t) = ∫ w·m(t) dt", font=fs, fill=black)
     d.text((1780, 60), "2015.4.9", font=fs, fill=black)
     d.line([(1760, 110), (1990, 110)], fill=black, width=2)
-    d.text((1760, 130), "佐伯さんに", font=fs, fill=red)
+    d.text((1760, 130), "松原さんに", font=fs, fill=red)
     d.text((1760, 175), "確認！", font=fs, fill=red)
     # 消し跡
     a = np.asarray(img).astype(float)
@@ -284,7 +284,7 @@ def member_board():
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, w, 90], fill=(40, 60, 96))
     d.text((40, 16), "研究メンバー　／　社員名簿", font=_font(52, mincho=False), fill=(240, 240, 240))
-    names = [("佐伯 恒一", "主任研究員補佐"), ("水野 美奈", "臨床研究員"), ("黒田 恒一", "上席研究員"), ("――――", "所長")]
+    names = [("松原 翼", "研究員・神経計測担当"), ("川崎 千咲都", "研究員・AI解析担当"), ("海尾 諒多郎", "研究員・臨床評価担当"), ("――――", "所長")]
     for i, (nm, role) in enumerate(names):
         x0 = 150 + i * 350
         ph = _id_photo(220, 280, i == 0, 271 + i)

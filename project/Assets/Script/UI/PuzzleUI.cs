@@ -74,8 +74,8 @@ namespace EscapeProto
         public void ShowDocument(string title, string body)
         {
             _mode = Mode.Document;
-            _titleText.text = title;
-            _bodyText.text = body;
+            _titleText.text = Ruby.Strip(title);
+            _bodyText.text = Ruby.Strip(body);   // ルビは出せない画面なので印を外す
             _footerText.text = "[E] / [Esc] / 「閉じる」で閉じる";
             ApplyModeLayout();
             Open();
