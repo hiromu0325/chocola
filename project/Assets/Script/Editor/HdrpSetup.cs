@@ -205,7 +205,11 @@ namespace EscapeProto.EditorTools
             s.supportSSGI = true;
             s.supportSSAO = true;
             s.supportMotionVectors = true;
-            s.supportDecals = true;
+            // デカール・半透明の裏面パス・LOD のクロスフェードは使っていない。
+            // 残すと半透明の Lit（窓ガラス・レース等）の Forward がビルドで
+            // "out of memory during compilation"（FXC）になり、描かれなくなる
+            s.supportDecals = false;
+            s.supportTransparentBackface = false;
             s.supportCustomPass = true;
             asset.currentPlatformRenderPipelineSettings = s;
             EditorUtility.SetDirty(asset);
@@ -216,6 +220,7 @@ namespace EscapeProto.EditorTools
             {
                 QualitySettings.SetQualityLevel(i, false);
                 QualitySettings.renderPipeline = asset;
+                QualitySettings.enableLODCrossFade = false;
             }
             QualitySettings.SetQualityLevel(current, false);
             AssetDatabase.SaveAssets();

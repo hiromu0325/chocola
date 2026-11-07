@@ -243,7 +243,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 0
     supportDistortion: 1
-    supportTransparentBackface: 1
+    supportTransparentBackface: 0
     supportTransparentDepthPrepass: 1
     supportTransparentDepthPostpass: 1
     colorBufferFormat: 74
@@ -260,7 +260,7 @@ MonoBehaviour:
       m_Values: 800000000001000000020000
       m_SchemaId:
         m_Id: With3Levels
-    supportDecals: 1
+    supportDecals: 0
     supportDecalLayers: 0
     supportSurfaceGradient: 1
     decalNormalBufferHP: 0
