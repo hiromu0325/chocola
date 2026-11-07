@@ -298,6 +298,15 @@ namespace EscapeProto
             _objPlate.rectTransform.sizeDelta = new Vector2(w + 48f, h + 62f + pad);
         }
 
+        /// <summary>
+        /// 目標の暗幕の下端（キャンバスの上端からの位置。負の値）。目標が出ていなければ NaN。
+        /// 左上の知らせ（RoomTitleUI）が目標に重ならないよう、そのすぐ下に並べるのに使う
+        /// </summary>
+        public float ObjectiveBottom =>
+            _objGroup != null && _objGroup.alpha > 0.01f && _hudGroup.alpha > 0.01f
+                ? -UiTheme.SafeY + 18f - _objPlate.rectTransform.sizeDelta.y
+                : float.NaN;
+
         /// <summary>[E] のような操作キーを真鍮色に</summary>
         private static string HighlightKeys(string s) =>
             KeyTag.Replace(s, $"<color={UiTheme.Rgb(UiTheme.Accent)}>[$1]</color>");

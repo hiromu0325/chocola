@@ -1,3 +1,6 @@
 # ビルド成果物（build_rom.bat の出力）
 /Build/
 *.log
+
+# Python のキャッシュ（GenAssets のスクリプト）
+__pycache__/

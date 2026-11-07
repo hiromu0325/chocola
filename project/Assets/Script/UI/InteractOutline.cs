@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.Rendering.Universal;
 
 namespace EscapeProto
@@ -14,6 +15,7 @@ namespace EscapeProto
     /// その縁だけを画面に重ねる（ポストエフェクトの後＝色調補正でくすまず、UI と同じ真鍮色のまま）
     /// → 物の形や面の向きに関係なく、画面上で一定の太さの線になる。明るい所でも暗い所でも読めるよう、
     /// 真鍮の線の外側に薄い黒の縁を付ける。描画の設定アセットは触らず、ゲームのカメラが描く直前に描画パスを差し込む。
+    /// HDRP の時は、同じ2つの描画をカスタムパス（InteractOutlineHdrpPass）で描く。
     /// ※AddComponent で作るのでファイル名と一致させてある
     /// </summary>
     public class InteractOutline : MonoBehaviour
@@ -28,9 +30,9 @@ namespace EscapeProto
         public float HaloWidth = 1.6f, HaloAlpha = 0.45f;
 
         private Component _target;
-        private readonly List<(Renderer r, int subs)> _renderers = new List<(Renderer, int)>();
+        internal readonly List<(Renderer r, int subs)> Renderers = new List<(Renderer, int)>();
         // 見た目の無い物（部屋のモデルに作り込まれた端末や扉など）は、隠した箱か当たり判定の箱の形で（深度なしで塗る）
-        private readonly List<(Mesh mesh, Transform t, Matrix4x4 local)> _shapes = new List<(Mesh, Transform, Matrix4x4)>();
+        internal readonly List<(Mesh mesh, Transform t, Matrix4x4 local)> Shapes = new List<(Mesh, Transform, Matrix4x4)>();
         private MaskPass _maskPass;
         private CompositePass _compositePass;
         private Material _mask, _composite;
@@ -39,14 +41,37 @@ namespace EscapeProto
         private void Awake()
         {
             Instance = this;
-            var maskShader = Resources.Load<Shader>("Shaders/OutlineMask");
-            var compShader = Resources.Load<Shader>("Shaders/OutlineComposite");
+            bool hdrp = HdrpCompat.Active;
+            var maskShader = Resources.Load<Shader>(hdrp ? "Shaders/OutlineMaskHDRP" : "Shaders/OutlineMask");
+            var compShader = Resources.Load<Shader>(hdrp ? "Shaders/OutlineCompositeHDRP" : "Shaders/OutlineComposite");
             if (maskShader == null || compShader == null) { enabled = false; return; }
             _mask = new Material(maskShader) { hideFlags = HideFlags.HideAndDontSave };
             _composite = new Material(compShader) { hideFlags = HideFlags.HideAndDontSave };
+            if (hdrp)
+            {
+                AddHdrpPass(InteractOutlineHdrpPass.Step.Mask, CustomPassInjectionPoint.BeforePostProcess);
+                AddHdrpPass(InteractOutlineHdrpPass.Step.Composite, CustomPassInjectionPoint.AfterPostProcess);
+                return;
+            }
             _maskPass = new MaskPass(this) { renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing };
             _compositePass = new CompositePass(this) { renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing };
         }
+
+        /// <summary>HDRP：カスタムパスの入れ物を作る（場面全体に効く。描くのはゲームのカメラだけ）</summary>
+        private void AddHdrpPass(InteractOutlineHdrpPass.Step kind, CustomPassInjectionPoint at)
+        {
+            var go = new GameObject("InteractOutline_" + kind);
+            go.SetActive(false);
+            go.transform.SetParent(transform, false);
+            var vol = go.AddComponent<CustomPassVolume>();
+            vol.isGlobal = true;
+            vol.injectionPoint = at;
+            vol.customPasses.Add(new InteractOutlineHdrpPass { name = "Interact Outline " + kind, Kind = kind, Owner = this });
+            go.SetActive(true);
+        }
+
+        internal Material MaskMaterial => _mask;
+        internal Material CompositeMaterial => _composite;
 
         private void OnEnable() => RenderPipelineManager.beginCameraRendering += OnBeginCamera;
         private void OnDisable() => RenderPipelineManager.beginCameraRendering -= OnBeginCamera;
@@ -72,8 +97,8 @@ namespace EscapeProto
         /// </summary>
         private void Collect()
         {
-            _renderers.Clear();
-            _shapes.Clear();
+            Renderers.Clear();
+            Shapes.Clear();
             if (_target == null) return;
 
             bool hasArea = false;
@@ -93,25 +118,26 @@ namespace EscapeProto
                          : r.TryGetComponent<MeshFilter>(out var mf) && mf.sharedMesh != null ? mf.sharedMesh.subMeshCount : 0;
                 if (subs == 0) continue;
                 all.Add((r, subs));
-                if (!hasArea || area.Contains(r.bounds.center)) _renderers.Add((r, subs));
+                if (!hasArea || area.Contains(r.bounds.center)) Renderers.Add((r, subs));
             }
-            if (_renderers.Count == 0) _renderers.AddRange(all);
-            if (_renderers.Count > 0) return;
+            if (Renderers.Count == 0) Renderers.AddRange(all);
+            if (Renderers.Count > 0) return;
 
             foreach (var mf in _target.GetComponentsInChildren<MeshFilter>(true))
-                if (mf.sharedMesh != null && mf.gameObject.activeInHierarchy) _shapes.Add((mf.sharedMesh, mf.transform, Matrix4x4.identity));
-            if (_shapes.Count > 0) return;
+                if (mf.sharedMesh != null && mf.gameObject.activeInHierarchy) Shapes.Add((mf.sharedMesh, mf.transform, Matrix4x4.identity));
+            if (Shapes.Count > 0) return;
 
             if (_cube == null) _cube = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
             foreach (var bc in _target.GetComponentsInChildren<BoxCollider>())
-                if (bc.enabled) _shapes.Add((_cube, bc.transform, Matrix4x4.TRS(bc.center, Quaternion.identity, bc.size)));
+                if (bc.enabled) Shapes.Add((_cube, bc.transform, Matrix4x4.TRS(bc.center, Quaternion.identity, bc.size)));
         }
 
-        private bool HasShapes => _target != null && (_renderers.Count > 0 || _shapes.Count > 0);
+        internal bool HasShapes => _target != null && (Renderers.Count > 0 || Shapes.Count > 0);
 
         private void OnBeginCamera(ScriptableRenderContext ctx, Camera cam)
         {
             if (!HasShapes || cam.cameraType != CameraType.Game) return;
+            if (HdrpCompat.Active) return;   // HDRP はカスタムパス（AddHdrpPass）が描く
             var data = cam.GetUniversalAdditionalCameraData();
             if (data == null || data.renderType != CameraRenderType.Base || data.scriptableRenderer == null) return;
             data.scriptableRenderer.EnqueuePass(_maskPass);
@@ -161,8 +187,8 @@ namespace EscapeProto
 
                 using (var builder = renderGraph.AddRasterRenderPass<Data>("Interact Outline Mask", out var d))
                 {
-                    d.renderers = _o._renderers;
-                    d.shapes = _o._shapes;
+                    d.renderers = _o.Renderers;
+                    d.shapes = _o.Shapes;
                     d.material = _o._mask;
                     d.pass = depth ? 0 : 1;
                     builder.SetRenderAttachment(mask, 0, AccessFlags.Write);

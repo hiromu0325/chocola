@@ -15,7 +15,7 @@ MonoBehaviour:
   Languages:
   - ja
   - en
-  SourceInfo: GameText.xlsx / 2026-10-31 02:32
+  SourceInfo: GameText.xlsx / 2026-11-08 01:42
   Entries:
   - id: room/dim.name
     values:

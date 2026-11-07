@@ -20,6 +20,9 @@ namespace EscapeProto
     /// ・初めて見た資料には、主人公のひと言が字幕で出る（UIの板ではなく字幕）
     /// 描画：メインカメラに重ねる URP のオーバーレイカメラが Inspect レイヤーだけを描く（常に手前に出る）。
     ///       専用の光は Rendering Layer で実物だけを照らす（部屋は照らさない）。
+    ///       HDRP にはカメラの重ね合わせが無いので、実物・暗幕・専用の光をまとめて縮め（HdrpRigScale）、
+    ///       目から数cmの所に置いてふだんのカメラで描く。画面に映る大きさは同じで、壁やつり革は体の当たり判定に
+    ///       押し返されてそこまで近づけないので、実物と目の間に入らない。専用の光も届く範囲が数cmになり部屋を照らさない。
     /// ※AddComponent で作るのでファイル名と一致させてある
     /// </summary>
     public class InspectView : MonoBehaviour
@@ -52,6 +55,13 @@ namespace EscapeProto
         private const float OpenDistance = 0.5f, MinDistance = 0.18f, MaxDistance = 1.3f;
         private const float ZoomStep = 0.84f;           // ホイール1目盛りで距離を何倍にするか（近いほど細かく動く）
         private const float TargetSize = 0.3f;       // 実物の長辺を何mに見せるか（0.5m先で画面の約半分）
+        private const float DimDistance = 1.5f;      // 暗幕の板の距離（実物より奥）
+        private const float InspectNearClip = 0.01f; // 実物を描く時のカメラの近さの限界（寄せきっても実物が切れない）
+        // HDRP：調べる画面の一式（置き台・暗幕・専用の光）を縮める倍率。0.5m 先の実物が 2.5cm 先になる（暗幕は 7.5cm 先）
+        private const float HdrpRigScale = 0.05f;
+        private static float RigScale => HdrpCompat.Active ? HdrpRigScale : 1f;
+        private Camera _nearCam;          // HDRP：開いている間だけ近さの限界を縮めたカメラ（閉じたら戻す）
+        private float _savedNear;
 
         private bool _open;
         private Mode _mode;
@@ -223,6 +233,7 @@ namespace EscapeProto
             if (_item != null) { Destroy(_item); _item = null; }
             if (_dimCanvas != null) _dimCanvas.SetActive(false);
             if (_cam != null) _cam.enabled = false;
+            RestoreNearClip();
             _group.alpha = 0f;
             _group.blocksRaycasts = false;
             _readPanel.SetActive(false);
@@ -273,25 +284,59 @@ namespace EscapeProto
                     od.renderType = CameraRenderType.Overlay;
                     od.renderShadows = false;
                     _cam.clearFlags = CameraClearFlags.Depth;
-                    _cam.nearClipPlane = 0.01f;
+                    _cam.nearClipPlane = InspectNearClip;
                     _cam.farClipPlane = 4f;
                     _cam.cullingMask = 1 << Layer;
+                    go.transform.localScale = Vector3.one * RigScale;   // 子（置き台・暗幕・光）の位置はそのまま縮む
                     BuildStage(go.transform);
                 }
                 _cam.transform.SetParent(main.transform, false);
                 _cam.transform.localPosition = Vector3.zero;
                 _cam.transform.localRotation = Quaternion.identity;
-                var md = main.GetUniversalAdditionalCameraData();
-                if (!md.cameraStack.Contains(_cam)) md.cameraStack.Add(_cam);
-                _cam.GetUniversalAdditionalCameraData().renderPostProcessing = md.renderPostProcessing;
-                main.cullingMask &= ~(1 << Layer);   // メインカメラには描かせない
+                if (HdrpCompat.Active)
+                {
+                    // HDRP にはカメラの重ね合わせが無いので、縮めた実物と暗幕をふだんのカメラで描く（クラスの説明）
+                    main.cullingMask |= 1 << Layer;
+                    if (_dimCanvas != null)
+                    {
+                        // 画面に合わせるキャンバスは親の縮みを見ずに大きさを決めるので、縮めた一式の外（カメラの直下）に置く
+                        _dimCanvas.transform.SetParent(main.transform, false);
+                        var dc = _dimCanvas.GetComponent<Canvas>();
+                        dc.worldCamera = main;
+                        dc.planeDistance = DimDistance * HdrpRigScale;
+                    }
+                }
+                else
+                {
+                    var md = main.GetUniversalAdditionalCameraData();
+                    if (!md.cameraStack.Contains(_cam)) md.cameraStack.Add(_cam);
+                    _cam.GetUniversalAdditionalCameraData().renderPostProcessing = md.renderPostProcessing;
+                    main.cullingMask &= ~(1 << Layer);   // メインカメラには描かせない
+                }
             }
             if (_cam != null)
             {
                 _cam.fieldOfView = _mainCam != null ? _mainCam.fieldOfView : 60f;
-                _cam.enabled = true;
+                _cam.enabled = !HdrpCompat.Active;
+            }
+            if (HdrpCompat.Active && _mainCam != null)
+            {
+                // 縮めて目の前に置いた実物が切れないよう、開いている間だけ近さの限界を同じ割合で縮める
+                if (_nearCam != _mainCam)
+                {
+                    RestoreNearClip();
+                    _nearCam = _mainCam;
+                    _savedNear = _mainCam.nearClipPlane;
+                }
+                _mainCam.nearClipPlane = InspectNearClip * HdrpRigScale;
             }
             if (_dimCanvas != null) _dimCanvas.SetActive(true);
+        }
+
+        private void RestoreNearClip()
+        {
+            if (_nearCam != null) _nearCam.nearClipPlane = _savedNear;
+            _nearCam = null;
         }
 
         /// <summary>実物の置き台（回転の中心）・背景の暗幕・専用の光</summary>
@@ -312,7 +357,7 @@ namespace EscapeProto
             var dc = dimGo.AddComponent<Canvas>();
             dc.renderMode = RenderMode.ScreenSpaceCamera;
             dc.worldCamera = cam.GetComponent<Camera>();
-            dc.planeDistance = 1.5f;
+            dc.planeDistance = DimDistance;
             var img = new GameObject("Dim", typeof(RectTransform)).AddComponent<RawImage>();
             img.gameObject.layer = Layer;
             img.transform.SetParent(dimGo.transform, false);
@@ -341,12 +386,20 @@ namespace EscapeProto
             var l = go.AddComponent<Light>();
             l.type = type;
             l.color = color;
-            l.intensity = intensity;
-            l.range = 2f;
+            // 一式を縮めた分だけ光源も近づくので、届く範囲を縮め、明るさは距離の2乗の分だけ弱める（実物の明るさは同じ）
+            float s = RigScale;
+            l.intensity = intensity * s * s;
+            l.range = 2f * s;
             l.spotAngle = 70f;
             l.shadows = LightShadows.None;
+            if (HdrpCompat.Active)
+            {
+                // 光源の大きさ（ハイライトのぼけ方）も同じ割合に
+                var hd = HdrpCompat.EnsureLightData(l);
+                if (hd != null) hd.shapeRadius *= s;
+            }
             // URP は Light.renderingLayerMask ではなく追加データの renderingLayers を見る（既定は Default＝部屋を照らしてしまう）
-            l.GetUniversalAdditionalLightData().renderingLayers = RenderingBit;
+            else l.GetUniversalAdditionalLightData().renderingLayers = RenderingBit;
         }
 
         private static Texture2D VignetteTexture()
@@ -394,10 +447,11 @@ namespace EscapeProto
                 else if (t.name == "ReelR") _reelR = t;
             }
 
-            // 大きさをそろえ、見た目の中心を回転の中心に
+            // 大きさをそろえ、見た目の中心を回転の中心に（大きさは置き台の目盛りで。HDRP では一式ごと縮んでいる）
             var b = Bounds(_item);
             float longest = Mathf.Max(b.size.x, b.size.y, b.size.z * 0.6f);
-            float k = longest > 0.0001f ? TargetSize * Mathf.Lerp(1f, scale, 0.5f) / longest : 1f;
+            float unit = _spin.lossyScale.x;
+            float k = longest > 1e-7f ? TargetSize * unit * Mathf.Lerp(1f, scale, 0.5f) / longest : 1f;
             _item.transform.localScale *= k;
             b = Bounds(_item);
             _item.transform.position -= b.center - _spin.position;

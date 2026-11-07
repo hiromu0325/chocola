@@ -148,7 +148,7 @@ namespace EscapeProto
             if (_offCache.TryGetValue(on, out var off)) return off;
             off = new Material(on) { name = on.name + " (Off)" };
             off.DisableKeyword("_EMISSION");
-            if (off.HasProperty("_EmissionColor")) off.SetColor("_EmissionColor", Color.black);
+            HdrpCompat.SetEmission(off, Color.black);   // HDRP の発光の色も消す
             off.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
             // 灯っていないガラス・笠は少し沈んだ色にする
             if (off.HasProperty("_BaseColor")) off.SetColor("_BaseColor", off.GetColor("_BaseColor") * 0.55f);
@@ -221,7 +221,7 @@ namespace EscapeProto
             {
                 if (off == null || on == null || !done.Add(off)) continue;
                 if (off.HasProperty("_EmissionColor") && on.HasProperty("_EmissionColor"))
-                    off.SetColor("_EmissionColor", on.GetColor("_EmissionColor") * k);
+                    HdrpCompat.SetEmission(off, on.GetColor("_EmissionColor") * k);
                 if (off.HasProperty("_BaseColor") && on.HasProperty("_BaseColor"))
                     off.SetColor("_BaseColor", on.GetColor("_BaseColor") * Mathf.Lerp(0.55f, 1f, k));
             }
@@ -248,7 +248,7 @@ namespace EscapeProto
             {
                 if (off == null) continue;
                 off.DisableKeyword("_EMISSION");
-                if (off.HasProperty("_EmissionColor")) off.SetColor("_EmissionColor", Color.black);
+                HdrpCompat.SetEmission(off, Color.black);
             }
             foreach (var kv in _offCache)
                 if (kv.Value != null && kv.Key != null && kv.Value.HasProperty("_BaseColor") && kv.Key.HasProperty("_BaseColor"))

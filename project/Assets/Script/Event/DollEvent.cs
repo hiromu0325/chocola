@@ -204,12 +204,12 @@ namespace EscapeProto
                 {
                     r.material.color = c;
                     r.material.EnableKeyword("_EMISSION");
-                    r.material.SetColor("_EmissionColor", c * intensity);
+                    HdrpCompat.SetEmission(r.material, c * intensity);
                 }
                 else
                 {
                     r.material.color = new Color(0.1f, 0.08f, 0.08f);
-                    r.material.SetColor("_EmissionColor", Color.black);
+                    HdrpCompat.SetEmission(r.material, Color.black);
                 }
             }
         }

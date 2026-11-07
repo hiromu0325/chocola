@@ -112,6 +112,23 @@ namespace EscapeProto
             return Main($"『{target.Name}』{DoorHint(target)}の扉へ向かう");
         }
 
+        /// <summary>
+        /// 目標が向かわせている部屋（回廊の扉の表示灯で一番強く灯す扉）。無ければ null。
+        /// 警報中は警報の部屋、終章では次のおもちゃの部屋、おもちゃが揃ったら最初の部屋
+        /// </summary>
+        public static LoopRoomRoot TargetRoom()
+        {
+            var bs = BreakerSystem.Instance;
+            if (bs != null && bs.DownRoomId != null) return LoopRooms.Get(bs.DownRoomId);
+            var fin = LoopFinale.Instance;
+            if (fin != null && fin.Started)
+            {
+                if (fin.Completed) return null;
+                return fin.AllToysCollected ? LoopRooms.Get(LoopProgress.StartRoomId) : fin.NextToyRoom();
+            }
+            return NextRoom();
+        }
+
         /// <summary>まだ完了していない、入れる部屋のうち最も段階の進んだもの</summary>
         public static LoopRoomRoot NextRoom()
         {

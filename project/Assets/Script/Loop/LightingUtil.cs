@@ -54,6 +54,12 @@ namespace EscapeProto
             foreach (var p in Object.FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None))
             {
                 if (p == null || !p.isActiveAndEnabled) continue;
+                // HDRP のプローブは「次に映る時に撮る」と頼む
+                if (p.TryGetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalReflectionData>(out var hd) && HdrpCompat.Active)
+                {
+                    hd.RequestRenderNextUpdate();
+                    continue;
+                }
                 if (p.mode != ReflectionProbeMode.Realtime || p.refreshMode != ReflectionProbeRefreshMode.ViaScripting) continue;
                 p.RenderProbe();
             }

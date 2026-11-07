@@ -100,9 +100,14 @@ namespace EscapeProto
             BuildRooms();
             AttachAudioRecords();
             PlaceHiddenSushi();
+            // 床を滑らせて置く（FloorPlaceTool）で手で置き直した物は、記録した位置へ
+            EditorTools.LoopLayout.Apply(scene);
             BuildLighting();
             var player = BuildPlayer();
             BuildManagers(player, corridor);
+
+            // HDRP の時は、作った場面のライト・反射プローブと、URP の値で作った材質を HDRP 用に直す
+            if (HdrpCompat.Active) Debug.Log("[LoopPrototype] HDRP へ変換: " + EditorTools.HdrpSetup.ConvertBuilt());
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[LoopPrototype] 生成完了: {ScenePath}");
@@ -757,7 +762,7 @@ namespace EscapeProto
             var shade = GetMat("LP_LampShade", new Color(0.95f, 0.85f, 0.6f), 0.2f);
             shade.EnableKeyword("_EMISSION");
             shade.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            shade.SetColor("_EmissionColor", new Color(1f, 0.88f, 0.6f) * 2.5f);
+            HdrpCompat.SetEmission(shade, new Color(1f, 0.88f, 0.6f) * 2.5f);
             Box(lamp.transform, "Shade", new Vector3(0f, 0.42f, 0f), new Vector3(0.24f, 0.14f, 0.24f), shade);
             bool hqLamp = Visual(lamp.transform, HqModel("dim", "Lamp"), Vector3.zero) != null;
             if (hqLamp) HideRenderers(lamp.transform, "Base", "Pole", "Shade");
@@ -820,7 +825,7 @@ namespace EscapeProto
             var screenMat = GetMat("LP_SaveScreen", new Color(0.1f, 0.3f, 0.15f), 0.2f);
             screenMat.EnableKeyword("_EMISSION");
             screenMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            screenMat.SetColor("_EmissionColor", new Color(0.25f, 1f, 0.4f) * 1.6f);
+            HdrpCompat.SetEmission(screenMat, new Color(0.25f, 1f, 0.4f) * 1.6f);
             var savePc = new GameObject("SavePc");
             savePc.transform.SetParent(t, false);
             savePc.transform.localPosition = new Vector3(-hw + 0.9f, 0f, hd - 1.0f);
@@ -881,9 +886,7 @@ namespace EscapeProto
                 (new Vector3(0f, 0.425f, -0.005f), new Vector3(0.92f, 0.85f, 0.46f)));
             HqProp(t, "dim", "Wardrobe", new Vector3(hw - 0.39f, 0f, -2.4f), -90f,
                 (new Vector3(0f, 0.95f, -0.005f), new Vector3(1.06f, 1.9f, 0.61f)));
-            HqProp(t, "dim", "Chair", new Vector3(hw - 1.5f, 0f, 0.02f), 8f,
-                (new Vector3(0f, 0.225f, 0f), new Vector3(0.42f, 0.45f, 0.4f)),
-                (new Vector3(0f, 0.675f, -0.175f), new Vector3(0.42f, 0.45f, 0.05f)));
+            Pushable(HqProp(t, "dim", "Chair", new Vector3(hw - 1.5f, 0f, 0.02f), 8f, WoodChairCols), desk);
 
             // ---- 起床カットシーン（ベッドから起き上がる）----
             BuildIntroCutscene(t, new Vector3(-hw + 1.2f, 0f, -1.0f), hd);
@@ -900,17 +903,16 @@ namespace EscapeProto
             bool hq = AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("study", "Desk")) != null;
             // 書き物机（部屋中央やや奥）＋椅子
             var desk = Desk(t, "Desk", new Vector3(0f, 0f, 1.4f), wood);
-            Box(t, "Chair", new Vector3(0f, 0.25f, 0.35f), new Vector3(0.5f, 0.5f, 0.5f), wood);
             if (hq)
             {
-                // 品質重視の両袖机と木の椅子（当たり判定は元の箱＋袖の箱）
+                // 品質重視の両袖机（当たり判定は元の箱＋袖の箱）と、押せる木の椅子
                 Visual(desk.transform, HqModel("study", "Desk"), Vector3.zero);
                 HideRenderers(desk.transform, "Top", "Leg");
                 Solid(desk.transform, "PedCol", new Vector3(-0.49f, 0.35f, 0f), new Vector3(0.42f, 0.7f, 0.66f));
                 Solid(desk.transform, "PedCol", new Vector3(0.49f, 0.35f, 0f), new Vector3(0.42f, 0.7f, 0.66f));
-                HideRenderers(t, "Chair");
-                HqProp(t, "study", "Chair", new Vector3(0f, 0f, 0.35f), 4f);
+                Pushable(HqProp(t, "study", "Chair", new Vector3(0f, 0f, 0.35f), 4f, WoodChairCols), desk);
             }
+            else Box(t, "Chair", new Vector3(0f, 0.25f, 0.35f), new Vector3(0.5f, 0.5f, 0.5f), wood);
             // 本棚（両壁。天井高に合わせる）
             float shelfH = Mathf.Min(2.1f, h - 0.4f);
             if (hq)
@@ -1071,7 +1073,7 @@ namespace EscapeProto
                 adMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
                 adMat.SetTexture("_EmissionMap", adTex);
                 adMat.SetTextureScale("_EmissionMap", fit);
-                adMat.SetColor("_EmissionColor", Color.white * 0.4f);
+                HdrpCompat.SetEmission(adMat, Color.white * 0.4f);
                 EditorUtility.SetDirty(adMat);
             }
 
@@ -1290,7 +1292,7 @@ namespace EscapeProto
                 if (hq)
                 {
                     d = LabDesk(t, $"ResearcherDesk_{i + 1}", deskPos[i]);
-                    LabChair(t, deskPos[i] + new Vector3(0f, 0f, -0.8f), (i * 37) % 30 - 15f);
+                    LabChair(t, d, deskPos[i] + new Vector3(0f, 0f, -0.8f), (i * 37) % 30 - 15f);
                 }
                 else
                 {
@@ -1325,8 +1327,8 @@ namespace EscapeProto
                 for (int i = 0; i < deskPos.Length; i++)
                 {
                     var p = deskPos[i] + new Vector3(deskPos[i].x < 0f ? 1.4f : -1.4f, 0f, 0f);
-                    LabDesk(t, $"SharedDesk_{i + 1}", p);
-                    LabChair(t, p + new Vector3(0f, 0f, -0.8f), (i * 53) % 40 - 20f);
+                    var shared = LabDesk(t, $"SharedDesk_{i + 1}", p);
+                    LabChair(t, shared, p + new Vector3(0f, 0f, -0.8f), (i * 53) % 40 - 20f);
                 }
 
             // 研究メンバー表（北壁のボード。写真4人分・うち3人は判読不能）
@@ -1426,8 +1428,8 @@ namespace EscapeProto
             {
                 if (hq && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("lab", "Desk")) != null)
                 {
-                    LabDesk(t, "Workstation", new Vector3(hw - 1.2f, 0f, z));
-                    LabChair(t, new Vector3(hw - 1.2f, 0f, z - 0.8f), z > 0 ? -20f : 10f);
+                    var ws = LabDesk(t, "Workstation", new Vector3(hw - 1.2f, 0f, z));
+                    LabChair(t, ws, new Vector3(hw - 1.2f, 0f, z - 0.8f), z > 0 ? -20f : 10f);
                     continue;
                 }
                 if (Prop(t, "Workstation", new Vector3(hw - 1.2f, 0f, z)) == null)
@@ -1723,9 +1725,9 @@ namespace EscapeProto
                         GetMat($"LP_Book_{k % 3}", bookColors[k % 3], 0.15f));
             var desk = Desk(t, "Desk", new Vector3(-hw + 1.2f, 0f, -1.8f), wood);
             if (hq)
-                HqProp(t, "saeki_home", "Chair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f,
+                Pushable(HqProp(t, "saeki_home", "Chair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f,
                     (new Vector3(0f, 0.23f, 0f), new Vector3(0.44f, 0.46f, 0.4f)),
-                    (new Vector3(0f, 0.68f, -0.17f), new Vector3(0.42f, 0.44f, 0.05f)));
+                    (new Vector3(0f, 0.68f, -0.17f), new Vector3(0.42f, 0.44f, 0.05f))), desk);
             else if (Prop(t, "DiningChair", new Vector3(-hw + 1.2f, 0f, -2.6f), 0f) == null)
                 Box(t, "DeskChair", new Vector3(-hw + 1.2f, 0.24f, -2.55f), new Vector3(0.45f, 0.48f, 0.45f), wood);
             Deco(desk.transform, "DeskLamp", new Vector3(0.5f, 0.95f, 0.2f), new Vector3(0.2f, 0.12f, 0.2f),
@@ -1940,7 +1942,7 @@ namespace EscapeProto
                     (new Vector3(0.51f, 0.36f, 0f), new Vector3(0.38f, 0.72f, 0.66f)),
                     (new Vector3(0f, 0.54f, 0.375f), new Vector3(1.5f, 1.08f, 0.05f)),
                     (new Vector3(0f, 1.065f, 0.46f), new Vector3(1.56f, 0.03f, 0.32f)));
-                LabChair(t, new Vector3(1.45f, 0f, -hd + 0.85f), 0f);
+                LabChair(t, nurse, new Vector3(1.45f, 0f, -hd + 0.85f), 0f);
             }
             else
             {
@@ -2079,6 +2081,7 @@ namespace EscapeProto
             }
 
             // 端末デスク（モニターは全て暗転＝画面マテリアルを消灯に差し替え）と倒れた椅子
+            GameObject chairConsole = null;   // 椅子のそばの制御卓（一番奥）
             for (int i = 0; i < 3; i++)
             {
                 var tpos = new Vector3(-hw + 1.2f, 0f, -2.2f + i * 1.9f);
@@ -2086,6 +2089,7 @@ namespace EscapeProto
                 {
                     // 品質重視の制御卓（見た目は CoreAnte_Interior）：天板・両脇・奥の傾斜盤と画面の当たり判定
                     var c = new GameObject($"Console_{i}");
+                    if (i == 2) chairConsole = c;
                     c.transform.SetParent(t, false);
                     c.transform.localPosition = tpos;
                     Solid(c.transform, "TopCol", new Vector3(0f, 0.735f, 0f), new Vector3(1.4f, 0.03f, 0.7f));
@@ -2104,7 +2108,7 @@ namespace EscapeProto
             if (hq && AssetDatabase.LoadAssetAtPath<GameObject>(HqModel("lab", "Chair")) != null)
             {
                 // 研究所と同じ椅子（1脚は倒れている）
-                LabChair(t, new Vector3(-hw + 1.2f, 0f, 1.6f - 0.8f), -25f);
+                LabChair(t, chairConsole, new Vector3(-hw + 1.2f, 0f, 1.6f - 0.8f), -25f);
                 fallen = new GameObject("FallenChair");
                 fallen.transform.SetParent(t, false);
                 fallen.transform.localPosition = new Vector3(-hw + 2.2f, 0.27f, -0.5f);
@@ -2473,7 +2477,7 @@ namespace EscapeProto
 
             // 管理者デスク：CRTと入退室記録、読みかけの眼鏡（椅子は引かれたまま）
             var admin = Desk(t, "AdminDesk", new Vector3(hw - 1.5f, 0f, hd - 1.6f), cab);
-            if (hq) LabChair(t, new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
+            if (hq) LabChair(t, admin, new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
             else Prop(t, "OfficeChair", new Vector3(hw - 1.3f, 0f, hd - 2.5f), 15f);
             Box(admin.transform, "CrtBody", new Vector3(0f, 0.95f, 0.18f), new Vector3(0.45f, 0.4f, 0.4f), rack);
             Deco(admin.transform, "CrtScreen", new Vector3(0f, 0.95f, -0.04f), new Vector3(0.36f, 0.3f, 0.02f), crt);
@@ -2645,7 +2649,7 @@ namespace EscapeProto
                     (new Vector3(0.68f, 0.36f, 0f), new Vector3(0.04f, 0.72f, 0.66f)),
                     (new Vector3(0f, 0.41f, 0.315f), new Vector3(1.32f, 0.62f, 0.03f)),
                     (new Vector3(0f, 1.06f, 0.2f), new Vector3(1.5f, 0.34f, 0.12f)));
-                LabChair(t, new Vector3(2.1f, 0f, -hd + 0.75f), 25f);
+                LabChair(t, console, new Vector3(2.1f, 0f, -hd + 0.75f), 25f);
             }
             else
             {
@@ -3788,7 +3792,7 @@ namespace EscapeProto
             var m = GetMat(name, baseColor, 0.2f);
             m.EnableKeyword("_EMISSION");
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            m.SetColor("_EmissionColor", emission);
+            HdrpCompat.SetEmission(m, emission);
             EditorUtility.SetDirty(m);
             return m;
         }
@@ -4000,12 +4004,32 @@ namespace EscapeProto
             return d;
         }
 
-        /// <summary>研究所のメッシュチェア（机の方 = +Z）</summary>
-        private static GameObject LabChair(Transform parent, Vector3 pos, float yaw)
+        /// <summary>研究所のメッシュチェア（机の方 = +Z）。押すと滑る（desk から離れすぎない）</summary>
+        private static GameObject LabChair(Transform parent, GameObject desk, Vector3 pos, float yaw)
         {
-            return HqProp(parent, "lab", "Chair", pos, yaw,
+            return Pushable(HqProp(parent, "lab", "Chair", pos, yaw,
                 (new Vector3(0f, 0.26f, 0f), new Vector3(0.5f, 0.52f, 0.5f)),
-                (new Vector3(0f, 0.85f, -0.26f), new Vector3(0.46f, 0.46f, 0.06f)));
+                (new Vector3(0f, 0.85f, -0.26f), new Vector3(0.46f, 0.46f, 0.06f))), desk);
+        }
+
+        /// <summary>薄暗い部屋・書斎の木の椅子（同じ形のモデル）の当たり判定：座面と背もたれ（背もたれ = -Z）</summary>
+        private static readonly (Vector3 center, Vector3 size)[] WoodChairCols =
+        {
+            (new Vector3(0f, 0.225f, 0f), new Vector3(0.42f, 0.45f, 0.4f)),
+            (new Vector3(0f, 0.675f, -0.175f), new Vector3(0.42f, 0.45f, 0.05f)),
+        };
+
+        /// <summary>
+        /// 人が当たると押されて床を滑る家具にする（PushableProp）。desk から置いた時より一定以上は離れない。
+        /// モデルが無くて null の時は何もしない
+        /// </summary>
+        private static GameObject Pushable(GameObject unit, GameObject desk)
+        {
+            if (unit == null) return null;
+            var p = unit.AddComponent<PushableProp>();
+            if (desk != null) p.Desk = desk.transform;
+            else Debug.LogWarning($"[LoopPrototype] 押せる椅子のそばの机が無い（どこまでも押せる）：{unit.name}", unit);
+            return unit;
         }
 
         /// <summary>品質重視モデル用のテクスチャ（法線マップは取り込み設定を合わせる）</summary>
@@ -4189,13 +4213,13 @@ namespace EscapeProto
             {
                 m.EnableKeyword("_EMISSION");
                 m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                m.SetColor("_EmissionColor", emission.Value);
+                HdrpCompat.SetEmission(m, emission.Value);
                 m.SetTexture("_EmissionMap", emissionMap);
             }
             else
             {
                 m.DisableKeyword("_EMISSION");
-                m.SetColor("_EmissionColor", Color.black);
+                HdrpCompat.SetEmission(m, Color.black);
                 m.SetTexture("_EmissionMap", null);
             }
             EditorUtility.SetDirty(m);
@@ -4329,7 +4353,7 @@ namespace EscapeProto
                     m.SetFloat("_Cull", 0f);
                     m.SetFloat("_SpecularHighlights", 0f); m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
                     m.SetFloat("_EnvironmentReflections", 0f); m.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
-                    m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", new Color(1f, 0.98f, 0.92f) * 0.08f);
+                    m.EnableKeyword("_EMISSION"); HdrpCompat.SetEmission(m, new Color(1f, 0.98f, 0.92f) * 0.08f);
                     EditorUtility.SetDirty(m);
                     return m;
                 }

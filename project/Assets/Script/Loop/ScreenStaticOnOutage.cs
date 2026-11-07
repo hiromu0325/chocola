@@ -82,7 +82,8 @@ namespace EscapeProto
             _next = Time.time + 1f / 30f;
             _mat.mainTextureOffset = new Vector2(Random.value, Random.value);
             float b = Random.Range(0.72f, 1.0f);
-            _mat.color = new Color(b, b, b * 1.02f);
+            var c = new Color(b, b, b * 1.02f);
+            _mat.color = _mat.shader.name == "HDRP/Unlit" ? HdrpCompat.UnlitColor(c) : c;   // HDRP の無照明の色は露出の分だけ下げて渡す
         }
 
         /// <summary>全部屋（非表示の部屋も含む）の画面を拾う（予兆〜停電の間は同じ一覧を使う）</summary>

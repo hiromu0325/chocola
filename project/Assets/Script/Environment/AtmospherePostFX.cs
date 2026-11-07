@@ -22,6 +22,7 @@ namespace EscapeProto
 
         private void Start()
         {
+            if (HdrpCompat.Active) return;   // HDRP の時は同じ値を HdrpEnvironment が HDRP の設定で作る
             var cam = Camera.main;
             if (cam != null)
             {
